@@ -1,8 +1,18 @@
-#include <stdio.h>
 #include <core/logging.h>
 
 int main()
 {
-    GDF_DEBUG("HOI");
+    init_logging();
+    GDF_DEBUG("HOI %f", 3.14f);
+    GDF_DEBUG("HOI %f", 3.14f);
+    GDF_DEBUG("HOI %f", 3.14f);
+    GDF_DEBUG("HOI %f", 3.14f);
+    GDF_DEBUG("HOI %f", 3.14f);
+    GDF_DEBUG("HOI %f", 3.14f);
+    GDF_DEBUG("HOI %f", 3.14f);
+    GDF_DEBUG("HOI %f", 3.14f);
+    GDF_DEBUG("HOI %f", 3.14f);
+    GDF_DEBUG("HOI %f", 3.14f);
+    GDF_FATAL("BRUH GG");
     return 0;
 }

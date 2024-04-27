@@ -9,7 +9,8 @@
             "defines": [
                 "_DEBUG",
                 "UNICODE",
-                "_UNICODE"
+                "_UNICODE",
+                "GDFEXPORT"
             ],
             "compilerPath": "/usr/bin/clang",
             "cStandard": "c17",
@@ -25,7 +26,8 @@
             "defines": [
                 "_DEBUG",
                 "UNICODE",
-                "_UNICODE"
+                "_UNICODE",
+                "GDFEXPORT"
             ],
             "windowsSdkVersion": "10.0.18362.0",
             "compilerPath": "E:\\Program Files\\LLVM\\bin\\clang.exe",

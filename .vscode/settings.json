@@ -58,6 +58,8 @@
         "vulkan_platform.h": "c",
         "renderer_frontend.h": "c",
         "stdbool.h": "c",
-        "system_error": "cpp"
+        "system_error": "cpp",
+        "stdio.h": "c",
+        "logging.h": "c"
     }
 }
