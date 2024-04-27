@@ -1,4 +1,3 @@
-#include "def.h"
 #include <stdio.h>
 #include <core/logging.h>
 
