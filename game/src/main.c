@@ -1,7 +1,9 @@
 #include "def.h"
-#include <test.h>
+#include <stdio.h>
+#include <core/logging.h>
 
-int main() {
-    hiworld(1511);
+int main()
+{
+    GDF_DEBUG("HOI");
     return 0;
 }
