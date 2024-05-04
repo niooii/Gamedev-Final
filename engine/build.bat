@@ -20,4 +20,4 @@ SET linkerFlags=-luser32 -lvulkan-1 -L%VULKAN_SDK%/Lib
 SET defines=-D_DEBUG -DGDFEXPORT -D_CRT_SECURE_NO_WARNINGS
 
 ECHO "Building %assembly%%..."
-clang %cFilenames% %compilerFlags% -o ../bin/%assembly%.dll %defines% %includeFlags% %linkerFlags% -v
+clang %cFilenames% %compilerFlags% -o ../bin/%assembly%.dll %defines% %includeFlags% %linkerFlags%

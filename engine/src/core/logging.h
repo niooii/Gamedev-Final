@@ -37,14 +37,14 @@ typedef struct {
 extern const ll_string_and_color level_strings[6];
 
 // LOGGING
-#define LOG_WARN
-#define LOG_INFO
-#define LOG_DEBUG
-#define LOG_TRACE
+#define GDF_WARN
+#define GDF_INFO
+#define GDF_DEBUG
+#define GDF_TRACE
 
 #ifdef GDF_RELEASE
-    #undef LOG_DEBUG
-    #undef LOG_TRACE
+    #undef GDF_DEBUG
+    #undef GDF_TRACE
 #endif
 
 typedef enum log_level {
@@ -64,32 +64,32 @@ void shutdown_logging();
 GDFAPI void log_stdout(log_level level, const char* message, ...);
 
 // should be available wherever lol unlucky
-#define GDF_FATAL(message, ...) log_stdout(LOG_LEVEL_FATAL, message, ##__VA_ARGS__);
+#define LOG_FATAL(message, ...) log_stdout(LOG_LEVEL_FATAL, message, ##__VA_ARGS__);
 
 #ifndef GDF_ERR
-    #define GDF_ERR(message, ...) log_stdout(LOG_LEVEL_ERR, message, ##__VA_ARGS__);
+    #define LOG_ERR(message, ...) log_stdout(LOG_LEVEL_ERR, message, ##__VA_ARGS__);
 #endif
 
-#ifdef LOG_WARN
-    #define GDF_WARN(message, ...) log_stdout(LOG_LEVEL_WARN, message, ##__VA_ARGS__);
+#ifdef GDF_WARN
+    #define LOG_WARN(message, ...) log_stdout(LOG_LEVEL_WARN, message, ##__VA_ARGS__);
 #else
-    #define GDF_WARN(message, ...)
+    #define LOG_WARN(message, ...)
 #endif
 
-#ifdef LOG_INFO
-    #define GDF_INFO(message, ...) log_stdout(LOG_LEVEL_INFO, message, ##__VA_ARGS__);
+#ifdef GDF_INFO
+    #define LOG_INFO(message, ...) log_stdout(LOG_LEVEL_INFO, message, ##__VA_ARGS__);
 #else
-    #define GDF_INFO(message, ...)
+    #define LOG_INFO(message, ...)
 #endif
 
-#ifdef LOG_DEBUG
-    #define GDF_DEBUG(message, ...) log_stdout(LOG_LEVEL_DEBUG, message, ##__VA_ARGS__);
+#ifdef GDF_DEBUG
+    #define LOG_DEBUG(message, ...) log_stdout(LOG_LEVEL_DEBUG, message, ##__VA_ARGS__);
 #else
-    #define GDF_DEBUG(message, ...)
+    #define LOG_DEBUG(message, ...)
 #endif
 
-#ifdef LOG_TRACE
-    #define GDF_TRACE(message, ...) log_stdout(LOG_LEVEL_TRACE, message, ##__VA_ARGS__);
+#ifdef GDF_TRACE
+    #define LOG_TRACE(message, ...) log_stdout(LOG_LEVEL_TRACE, message, ##__VA_ARGS__);
 #else
-    #define GDF_TRACE(message, ...)
+    #define LOG_TRACE(message, ...)
 #endif

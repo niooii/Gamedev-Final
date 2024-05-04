@@ -1,33 +1,33 @@
 #include "app.h"
 
-typedef struct app_stateaa
-{
+typedef struct AppState {
     bool is_running;
     bool is_suspended;
     i16 width;
     i16 height;
     f64 last_time;
-} app_state;
+} AppState;
 
 static bool initialized = false;
-static app_state state;
+static AppState state;
+static GDF_Window* main_window;
 
-bool app_create(app_config* config) 
+bool app_create(GDF_AppConfig* config) 
 {
     if (initialized) 
     {
-        GDF_ERR("sooo we're initilaizing multiple times");
+        LOG_ERR("sooo we're initilaizing multiple times");
         return false;
     }
 
     init_logging();
 
-    state.is_running= true;
-    state.is_suspended= false;
+    state.is_running = true;
+    state.is_suspended = false;
 
     initialized = true;
 
-    GDF_CreateWindow(10, 10, 10, 10, "yeo chat");
+    main_window = GDF_CreateWindow(config->spawn_x, config->spawn_y, config->spawn_w, config->spawn_h, config->window_name);
     return true;
 }
 
