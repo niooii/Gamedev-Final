@@ -10,7 +10,18 @@ static u16 MAX_MSG_LEN = 32768;
 static char* OUT_MSG;
 static char* PREPENDED_OUT_MSG;
 
-bool init_logging() {
+const ll_string_and_color level_strings[6] = 
+{
+    {"[FATAL]: ", STYLE_COMBO(ANSI_STYLE_BOLD, ANSI_COLOR_RED)}, 
+    {"[ERROR]: ", ANSI_COLOR_MAGENTA}, 
+    {"[WARN]:  ", ANSI_COLOR_YELLOW}, 
+    {"[INFO]:  ", ANSI_COLOR_WHITE}, 
+    {"[DEBUG]: ", ANSI_COLOR_CYAN}, 
+    {"[TRACE]: ", ANSI_COLOR_WHITE}
+};
+
+bool init_logging() 
+{
     OUT_MSG = malloc(MAX_MSG_LEN);
     PREPENDED_OUT_MSG = malloc(MAX_MSG_LEN);
     
@@ -18,14 +29,16 @@ bool init_logging() {
     return true;
 }
 
-void shutdown_logging() {
+void shutdown_logging() 
+{
     free(OUT_MSG);
     free(PREPENDED_OUT_MSG);
 
     // TODO: cleanup logging/write queued entries.
 }
 
-void log_stdout(log_level level, const char* message, ...) {
+void log_stdout(log_level level, const char* message, ...) 
+{
     memset(OUT_MSG, 0, MAX_MSG_LEN);
 
     __builtin_va_list arg_ptr;
@@ -38,6 +51,7 @@ void log_stdout(log_level level, const char* message, ...) {
     printf("%s", PREPENDED_OUT_MSG);
 }
 
-void report_assertion_failure(const char* expression, const char* message, const char* file, i32 line) {
+void report_assertion_failure(const char* expression, const char* message, const char* file, i32 line) 
+{
     log_stdout(LOG_LEVEL_FATAL, "Assertion Failure: %s, message: '%s', in file: %s, line: %d\n", expression, message, file, line);
 }

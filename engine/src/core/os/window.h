@@ -1,0 +1,14 @@
+#pragma once
+
+#include "def.h"
+
+#define WIN_CENTERED 32767
+
+typedef struct GDF_Window {
+    u16 id;
+} GDF_Window;
+
+bool GDF_CreateWindow(i16 x, i16 y, i16 w, i16 h, const char* title);
+bool GDF_SetWindowPos(i16 dest_x, i16 dest_y);
+bool GDF_SetWindowSize(i16 w, i16 h);
+bool GDF_DestroyWindow();

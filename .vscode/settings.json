@@ -60,6 +60,9 @@
         "stdbool.h": "c",
         "system_error": "cpp",
         "stdio.h": "c",
-        "logging.h": "c"
+        "logging.h": "c",
+        "app.h": "c",
+        "window.h": "c",
+        "socket.h": "c"
     }
 }

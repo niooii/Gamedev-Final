@@ -16,6 +16,13 @@
     #endif
 #endif
 
+#if defined _WIN32 || defined _WIN64
+    #define OS_WINDOWS
+#elif defined __linux__
+    #define OS_LINUX
+    // because fuck mac users amirite
+#endif
+
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -29,9 +36,6 @@ typedef int32_t i32;
 typedef int64_t i64;
 typedef float f32;
 typedef double f64;
-typedef uint8_t boolean;
-#define true 1
-#define false 0
 
 #if defined(__clang__) || defined(__gcc__)
 #define STATIC_ASSERT _Static_assert

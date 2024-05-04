@@ -1,18 +1,17 @@
-#include <core/logging.h>
+#include <core/app.h>
 
 int main()
 {
-    init_logging();
-    GDF_DEBUG("HOI %f", 3.14f);
-    GDF_DEBUG("HOI %f", 3.14f);
-    GDF_DEBUG("HOI %f", 3.14f);
-    GDF_DEBUG("HOI %f", 3.14f);
-    GDF_DEBUG("HOI %f", 3.14f);
-    GDF_DEBUG("HOI %f", 3.14f);
-    GDF_DEBUG("HOI %f", 3.14f);
-    GDF_DEBUG("HOI %f", 3.14f);
-    GDF_DEBUG("HOI %f", 3.14f);
-    GDF_DEBUG("HOI %f", 3.14f);
-    GDF_FATAL("BRUH GG");
+    app_config config = {
+        .spawn_x = 200,
+        .spawn_y = 200,
+        .spawn_w = 200,
+        .spawn_h = 200,
+        .window_name = "test"
+    };
+    app_create(&config);
+    GDF_DEBUG("test %f", 3.14f);
+    GDF_FATAL("a GG");
+    app_run();
     return 0;
 }

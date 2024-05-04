@@ -34,14 +34,7 @@ typedef struct {
     const char* color_code;
 } ll_string_and_color;
 
-const ll_string_and_color level_strings[6] = {
-    {"[FATAL]: ", STYLE_COMBO(ANSI_STYLE_BOLD, ANSI_COLOR_RED)}, 
-    {"[ERROR]: ", ANSI_COLOR_MAGENTA}, 
-    {"[WARN]:  ", ANSI_COLOR_YELLOW}, 
-    {"[INFO]:  ", ANSI_COLOR_WHITE}, 
-    {"[DEBUG]: ", ANSI_COLOR_CYAN}, 
-    {"[TRACE]: ", ANSI_COLOR_WHITE}
-};
+extern const ll_string_and_color level_strings[6];
 
 // LOGGING
 #define LOG_WARN
@@ -56,7 +49,7 @@ const ll_string_and_color level_strings[6] = {
 
 typedef enum log_level {
     LOG_LEVEL_FATAL,
-    LOG_LEVEL_ERROR,
+    LOG_LEVEL_ERR,
     LOG_LEVEL_WARN,
     LOG_LEVEL_INFO,
     LOG_LEVEL_DEBUG,
@@ -73,8 +66,8 @@ GDFAPI void log_stdout(log_level level, const char* message, ...);
 // should be available wherever lol unlucky
 #define GDF_FATAL(message, ...) log_stdout(LOG_LEVEL_FATAL, message, ##__VA_ARGS__);
 
-#ifndef GDF_ERROR
-    #define GDF_ERROR(message, ...) log_stdout(LOG_LEVEL_ERROR, message, ##__VA_ARGS__);
+#ifndef GDF_ERR
+    #define GDF_ERR(message, ...) log_stdout(LOG_LEVEL_ERR, message, ##__VA_ARGS__);
 #endif
 
 #ifdef LOG_WARN
