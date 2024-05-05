@@ -4,7 +4,7 @@
 #include "settings/settings.h"
 
 typedef struct Game {
-    Settings settings;
+    Settings* settings;
 } Game;
 
 bool GDF_InitGame();

@@ -11,3 +11,6 @@ typedef struct Settings {
     MovementSettings movement;
     GraphicSettings graphics;
 } Settings;
+
+// search for settings.gdf or something like taht idk
+Settings* GDF_LoadSettings();
