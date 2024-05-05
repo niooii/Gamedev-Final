@@ -1,7 +1,7 @@
 #pragma once
 #include "def.h"
 
-#define WIN_CENTERED 32767
+#define GDF_WIN_CENTERED 32767
 
 typedef struct GDF_Window {
     u16 id;

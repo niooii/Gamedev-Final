@@ -83,8 +83,11 @@ LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
     return DefWindowProc(hwnd, msg, w_param, l_param);
 }
 
-GDF_Window* GDF_CreateWindow(i16 x, i16 y, i16 w, i16 h, const char* title) 
+GDF_Window* GDF_CreateWindow(i16 x_, i16 y_, i16 w, i16 h, const char* title) 
 {
+    // TODO!
+    i16 x = x_ == GDF_WIN_CENTERED ?  300 /*calc later*/ : x_;
+    i16 y = y_ == GDF_WIN_CENTERED ?  300 /*calc later*/ : y_;
     // create window and stuff
 
     GDF_Window* window = malloc(sizeof(GDF_Window));

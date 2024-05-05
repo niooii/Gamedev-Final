@@ -12,7 +12,7 @@ static bool initialized = false;
 static AppState state;
 static GDF_Window* main_window;
 
-bool app_create(GDF_AppConfig* config) 
+bool GDF_InitApp(GDF_AppConfig* config) 
 {
     if (initialized) 
     {
@@ -28,12 +28,16 @@ bool app_create(GDF_AppConfig* config)
     initialized = true;
 
     main_window = GDF_CreateWindow(config->spawn_x, config->spawn_y, config->spawn_w, config->spawn_h, config->window_name);
-    GDF_InitTimeSystem();
     return true;
 }
 
-bool app_run() 
+bool GDF_Run() 
 {
+    if (!initialized)
+    {
+        LOG_ERR("You didnt initialize the app yet. dipshit. you're a bad person, yk that?");
+        return false;
+    }
     while(state.is_running) 
     {
         GDF_PumpMessages();

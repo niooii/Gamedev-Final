@@ -1,4 +1,4 @@
-#include "time.h"
+#include "info.h"
 
 #ifdef OS_WINDOWS
 #include <Windows.h>
@@ -6,7 +6,7 @@
 static f64 clock_freq;
 static LARGE_INTEGER start_time;
 
-bool GDF_InitTimeSystem()
+bool GDF_InitInfo()
 {
     LARGE_INTEGER freq;
     QueryPerformanceFrequency(&freq);
@@ -25,6 +25,16 @@ f64 GDF_GetAbsoluteTime()
 void GDF_Sleep(u64 ms)
 {
     Sleep(ms);
+}
+
+DisplayInfo GetDisplayInfo()
+{
+    DisplayInfo di = {
+        .screen_width = GetSystemMetrics(SM_CXSCREEN),
+        .screen_height = GetSystemMetrics(SM_CYSCREEN)
+    };
+
+    return di;
 }
 
 #endif

@@ -87,6 +87,7 @@
         "span": "c",
         "utility": "c",
         "xstring": "c",
-        "xutility": "c"
+        "xutility": "c",
+        "io.h": "c"
     }
 }
