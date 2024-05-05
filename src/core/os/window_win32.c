@@ -15,6 +15,71 @@ typedef struct {
 
 LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
 {
+    switch (msg)
+    {
+        case WM_ERASEBKGND:
+        {
+            return 1;
+        }
+        case WM_CLOSE:
+        {
+
+        }
+        case WM_DESTROY:
+        {
+            PostQuitMessage(0);
+            return 0;
+        }
+        case WM_SIZE: 
+        {
+            // RECT r;
+            // GetClientRect(hwnd, &r);
+            // u32 width = r.right - r.left;
+            // u32 height = r.bottom - r.top;
+
+            // TODO: Fire an event for window resize
+            break;
+        } 
+        case WM_KEYDOWN:
+        case WM_SYSKEYDOWN:
+        case WM_KEYUP:
+        case WM_SYSKEYUP: 
+        {
+            // Key pressed/released
+            //b8 pressed = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
+            // TODO: input processing
+
+        } break;
+        case WM_MOUSEMOVE: 
+        {
+            // Mouse move
+            //i32 x_position = GET_X_LPARAM(l_param);
+            //i32 y_position = GET_Y_LPARAM(l_param);
+            // TODO: input processing
+            break;
+        }
+        case WM_MOUSEWHEEL: 
+        {
+            // i32 z_delta = GET_WHEEL_DELTA_WPARAM(w_param);
+            // if (z_delta != 0) {
+            //     // Flatten the input to an OS-independent (-1, 1)
+            //     z_delta = (z_delta < 0) ? -1 : 1;
+            //     // TODO: input processing.
+            // }
+        } break;
+        case WM_LBUTTONDOWN:
+        case WM_MBUTTONDOWN:
+        case WM_RBUTTONDOWN:
+        case WM_LBUTTONUP:
+        case WM_MBUTTONUP:
+        case WM_RBUTTONUP: 
+        {
+            // bool pressed = msg == WM_LBUTTONDOWN || msg == WM_RBUTTONDOWN || msg == WM_MBUTTONDOWN;
+            // TODO: input processing
+            break;
+        } 
+    }
+
     return DefWindowProc(hwnd, msg, w_param, l_param);
 }
 
@@ -26,7 +91,7 @@ GDF_Window* GDF_CreateWindow(i16 x, i16 y, i16 w, i16 h, const char* title)
     window->internals = malloc(sizeof(InternalWindowState));
     window->id = current_window_id++;
 
-    InternalWindowState* internals = (InternalWindowState*)window->internals;
+    InternalWindowState* internals = (InternalWindowState*) window->internals;
 
     internals->h_instance = GetModuleHandleA(0);
 
@@ -87,20 +152,13 @@ GDF_Window* GDF_CreateWindow(i16 x, i16 y, i16 w, i16 h, const char* title)
         window_style, x, y, w, h,
         0, 0, internals->h_instance, 0);
 
-    DWORD last_err = GetLastError();
-    LOG_DEBUG("%d", last_err);
-  
     if (handle == NULL) 
     {
+        LOG_FATAL("Could not create window: %d", GetLastError());
         MessageBoxA(NULL, "Window creation failed!", "Error!", MB_ICONEXCLAMATION | MB_OK);
-
-        LOG_FATAL("Could not create window: %d", last_err);
         return NULL;
     } 
-    else 
-    {
-        internals->hwnd = handle;
-    }
+    internals->hwnd = handle;
 
     // Show the window
     bool should_activate = true;  // TODO: if the window should not accept input, this should be false.
@@ -122,9 +180,26 @@ bool GDF_SetWindowSize(i16 w, i16 h)
     return false;
 }
 
+bool GDF_PumpMessages()
+{
+    MSG msg;
+    while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE)) 
+    {
+        TranslateMessage(&msg);
+        DispatchMessageA(&msg);
+    }
+
+    return true;
+}
+
 bool GDF_DestroyWindow(GDF_Window* window)
 {
-    return false;
+    InternalWindowState* internals = (InternalWindowState*) window->internals;
+    if (internals->hwnd) 
+    {
+        DestroyWindow(internals->hwnd);
+    }
+    return true;
 }
 
 #endif

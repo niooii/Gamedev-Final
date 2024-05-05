@@ -2,6 +2,8 @@
 #include "def.h"
 #include "logging.h"
 #include "os/window.h"
+#include "os/time.h"
+#include "os/io.h"
 
 typedef struct GDF_AppConfig 
 {
@@ -14,6 +16,6 @@ typedef struct GDF_AppConfig
 } GDF_AppConfig;
 
 
-GDFAPI bool app_create(GDF_AppConfig* config);
+ bool app_create(GDF_AppConfig* config);
 
-GDFAPI bool app_run();
+ bool app_run();

@@ -1,16 +1,22 @@
 @ECHO OFF
-REM Build Everything
+SetLocal EnableDelayedExpansion
 
-ECHO "Building engine + game.."
+REM Get a list of all the .c files.
+SET cFilenames=
+FOR /R %%f in (*.c) do (
+    SET cFilenames=!cFilenames! %%f
+)
 
-PUSHD engine
-CALL build.bat
-POPD
-IF %ERRORLEVEL% NEQ 0 (echo Error:%ERRORLEVEL% && exit)
+IF NOT EXIST .\bin\NUL MKDIR .\bin
 
-PUSHD game
-CALL build.bat
-POPD
-IF %ERRORLEVEL% NEQ 0 (echo Error:%ERRORLEVEL% && exit)
+REM echo "Files:" %cFilenames%
 
-ECHO "All assemblies built successfully."
+SET assembly=gdf
+SET compilerFlags=-g -Wvarargs -Wall -Werror
+REM -Wall -Werror
+SET includeFlags=-Isrc
+SET linkerFlags=-luser32 -lvulkan-1 -L%VULKAN_SDK%/Lib
+SET defines=-D_DEBUG -DGDFIMPORT -D_CRT_SECURE_NO_WARNINGS
+
+ECHO "Building %assembly%%..."
+clang %cFilenames% %compilerFlags% -o ./bin/%assembly%.exe %defines% %includeFlags% %linkerFlags%

@@ -3,7 +3,7 @@
         {
             "name": "Linux",
             "includePath": [
-                "${workspaceFolder}/engine/src/**",
+                "${workspaceFolder}/src/**",
                 "${VULKAN_SDK}/include"
             ],
             "defines": [
@@ -20,7 +20,7 @@
         {
             "name": "Win32",
             "includePath": [
-                "${workspaceFolder}/engine/src/**",
+                "${workspaceFolder}/src/**",
                 "${VULKAN_SDK}/include"
             ],
             "defines": [

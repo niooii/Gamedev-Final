@@ -28,6 +28,7 @@ bool app_create(GDF_AppConfig* config)
     initialized = true;
 
     main_window = GDF_CreateWindow(config->spawn_x, config->spawn_y, config->spawn_w, config->spawn_h, config->window_name);
+    GDF_InitTimeSystem();
     return true;
 }
 
@@ -35,7 +36,7 @@ bool app_run()
 {
     while(state.is_running) 
     {
-        
+        GDF_PumpMessages();
     }
 
     return true;

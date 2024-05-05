@@ -1,21 +1,5 @@
 #pragma once
 
-#ifdef GDFEXPORT
-    // Exports
-    #ifdef _MSC_VER
-        #define GDFAPI __declspec(dllexport)
-        #else
-        #define GDFAPI __attribute__((visibility("default")))
-    #endif
-#else
-// Imports
-    #ifdef _MSC_VER
-        #define GDFAPI __declspec(dllimport)
-        #else
-        #define GDFAPI
-    #endif
-#endif
-
 #if defined _WIN32 || defined _WIN64
     #define OS_WINDOWS
 #elif defined __linux__

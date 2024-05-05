@@ -12,7 +12,7 @@
 #define debugBreak() __builtin_trap()
 #endif
 
-GDFAPI void report_assertion_failure(const char* expression, const char* message, const char* file, i32 line);
+void report_assertion_failure(const char* expression, const char* message, const char* file, i32 line);
 
 #define GDF_ASSERT(expr)                                                \
     {                                                                   \
