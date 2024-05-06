@@ -8,13 +8,13 @@ typedef struct AppState {
     f64 last_time;
 } AppState;
 
-static bool initialized = false;
-static AppState state;
-static GDF_Window* main_window;
+static bool INITIALIZED = false;
+static AppState APP_STATE;
+static GDF_Window* MAIN_WINDOW;
 
 bool GDF_InitApp(GDF_AppConfig* config) 
 {
-    if (initialized) 
+    if (INITIALIZED) 
     {
         LOG_ERR("sooo we're initilaizing multiple times");
         return false;
@@ -22,12 +22,12 @@ bool GDF_InitApp(GDF_AppConfig* config)
 
     init_logging();
 
-    state.is_running = true;
-    state.is_suspended = false;
+    APP_STATE.is_running = true;
+    APP_STATE.is_suspended = false;
 
-    initialized = true;
+    INITIALIZED = true;
 
-    main_window = GDF_CreateWindow(config->spawn_x, config->spawn_y, config->spawn_w, config->spawn_h, config->window_name);
+    MAIN_WINDOW = GDF_CreateWindow(config->spawn_x, config->spawn_y, config->spawn_w, config->spawn_h, config->window_name);
     if (config->show_console)
     {
         GDF_ShowConsole();
@@ -41,12 +41,12 @@ bool GDF_InitApp(GDF_AppConfig* config)
 
 bool GDF_Run() 
 {
-    if (!initialized)
+    if (!INITIALIZED)
     {
         LOG_ERR("You didnt initialize the app yet. dipshit. you're a bad person, yk that?");
         return false;
     }
-    while(state.is_running) 
+    while(APP_STATE.is_running) 
     {
         GDF_PumpMessages();
     }

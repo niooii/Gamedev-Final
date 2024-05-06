@@ -5,6 +5,7 @@
 
 typedef struct Game {
     Settings* settings;
+    
 } Game;
 
 bool GDF_InitGame();
