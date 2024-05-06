@@ -89,6 +89,7 @@
         "xstring": "c",
         "xutility": "c",
         "io.h": "c",
-        "game.h": "c"
+        "game.h": "c",
+        "item.h": "c"
     }
 }
