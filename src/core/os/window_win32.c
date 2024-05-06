@@ -152,7 +152,7 @@ GDF_Window* GDF_CreateWindow(i16 x_, i16 y_, i16 w, i16 h, const char* title)
 
     HWND handle = CreateWindowExA(
         window_ex_style, win_class_name, title,
-        window_style, x, y, w, h,
+        window_style, window_x, window_y, window_width, window_height,
         0, 0, internals->h_instance, 0);
 
     if (handle == NULL) 
