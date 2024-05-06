@@ -1,9 +1,9 @@
 #include "settings.h"
 
 static const char* SETTINGS_PATH = "./settings.gdf";
-static Settings* LOADED_SETTINGS = NULL;
+static GDF_Settings* LOADED_SETTINGS = NULL;
 
-Settings* GDF_LoadSettings() 
+GDF_Settings* GDF_LoadSettings() 
 {
     if (LOADED_SETTINGS != NULL) 
     {

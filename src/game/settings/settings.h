@@ -6,13 +6,13 @@
 #include "graphics.h"
 #include "mouse.h"
 
-typedef struct Settings {
-    Keybinds keybinds;
-    MouseSettings mouse;
-    MovementSettings movement;
-    GraphicSettings graphics;
-} Settings;
+typedef struct GDF_Settings {
+    GDF_Keybinds keybinds;
+    GDF_MouseSettings mouse;
+    GDF_MovementSettings movement;
+    GDF_GraphicSettings graphics;
+} GDF_Settings;
 
 // search for settings.gdf or something like taht idk
-Settings* GDF_LoadSettings();
+GDF_Settings* GDF_LoadSettings();
 void GDF_SaveSettings();

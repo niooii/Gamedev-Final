@@ -3,6 +3,6 @@
 
 #include "def.h"
 
-typedef struct GraphicSettings {
+typedef struct GDF_GraphicSettings {
     
-} GraphicSettings;
+} GDF_GraphicSettings;

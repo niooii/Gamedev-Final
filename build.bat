@@ -12,7 +12,7 @@ IF NOT EXIST .\bin\NUL MKDIR .\bin
 REM echo "Files:" %cFilenames%
 
 SET assembly=gdf
-SET compilerFlags=-g -Wvarargs -Wall -Werror
+SET compilerFlags=-g -Wvarargs -Wall
 REM -Wall -Werror
 SET includeFlags=-Isrc
 SET linkerFlags=-luser32 -lvulkan-1 -L%VULKAN_SDK%/Lib

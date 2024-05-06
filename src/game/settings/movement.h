@@ -2,6 +2,6 @@
 
 #include "def.h"
 
-typedef struct MovementSettings {
+typedef struct GDF_MovementSettings {
     
-} MovementSettings;
+} GDF_MovementSettings;

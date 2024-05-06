@@ -3,10 +3,10 @@
 #include "def.h"
 #include "settings/settings.h"
 
-typedef struct Game {
-    Settings* settings;
+typedef struct GDF_Game {
+    GDF_Settings* settings;
     
-} Game;
+} GDF_Game;
 
 bool GDF_InitGame();
 bool GDF_GameUpdate();

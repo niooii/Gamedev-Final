@@ -2,6 +2,6 @@
 
 #include "def.h"
 
-typedef struct Keybinds {
+typedef struct GDF_Keybinds {
     
-} Keybinds;
+} GDF_Keybinds;

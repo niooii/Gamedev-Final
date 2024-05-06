@@ -2,8 +2,8 @@
 
 #include "def.h"
 
-typedef struct DeveloperSettings {
+typedef struct GDF_DevSettings {
     bool can_fly;
     bool noclip;
     bool draw_wireframe;
-} DeveloperSettings;
+} GDF_DevSettings;
