@@ -28,6 +28,14 @@ bool GDF_InitApp(GDF_AppConfig* config)
     initialized = true;
 
     main_window = GDF_CreateWindow(config->spawn_x, config->spawn_y, config->spawn_w, config->spawn_h, config->window_name);
+    if (config->show_console)
+    {
+        GDF_ShowConsole();
+    }
+    else
+    {
+        GDF_HideConsole();
+    }
     return true;
 }
 

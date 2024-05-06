@@ -2,7 +2,7 @@
 
 #ifdef OS_WINDOWS
 #include "core/logging.h"
-#include "mem.h"
+#include "pmem.h"
 #include <Windows.h>
 
 const char win_class_name[] = "gdf_window";

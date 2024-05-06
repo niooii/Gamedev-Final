@@ -11,6 +11,7 @@ typedef struct GDF_AppConfig {
     i16 spawn_w;
     i16 spawn_h;
     char* window_name;
+    bool show_console;
 } GDF_AppConfig;
 
 bool GDF_InitApp(GDF_AppConfig* config);
