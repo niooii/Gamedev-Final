@@ -53,15 +53,25 @@ void GDF_WriteConsole(const char* msg, u8 color)
     WriteConsoleA(stdout_, msg, (DWORD)len, 0, 0);    
 }
 
+char* GDF_GetAbsolutePath(const char* rel_path)
+{
+    TCHAR* dir = malloc(sizeof(TCHAR) * 4000);
+
+    StringCchCopy(dir, 4000, EXECUTABLE_PATH);
+    StringCchCat(dir, 4000, rel_path);
+
+    return dir;
+}
+
 // TODO! return once dynamic growbale array yes
 GDF_DirInfo* GDF_GetDirInfo(const char* rel_path) 
 {
     HANDLE hFind;
     WIN32_FIND_DATA FindData;
+    TCHAR* tmp_dir = GDF_GetAbsolutePath(rel_path);
     TCHAR dir[4000];
-
-    StringCchCopy(dir, 4000, EXECUTABLE_PATH);
-    StringCchCat(dir, 4000, rel_path);
+    StringCchCopy(dir, 4000, tmp_dir);
+    free(tmp_dir);
     // Find the last occurrence of '\'
     bool last_char_is_backslash = rel_path[strlen(rel_path) - 1] == '\\';
     bool last_char_is_slash = rel_path[strlen(rel_path) - 1] == '/'; 
@@ -74,7 +84,7 @@ GDF_DirInfo* GDF_GetDirInfo(const char* rel_path)
     else if (last_char_is_slash)
     {
         size_t strlength = strlen(dir);
-        *(dir + strlength - 1) = '\\'; // replace with '\'
+        *(dir + strlength - 1) = (char)'\\'; // replace with '\'
     }
     LOG_DEBUG("something something %s", dir);
     TCHAR search_path[4000];

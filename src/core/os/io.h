@@ -16,9 +16,16 @@ void GDF_IOInit();
 void GDF_ShowConsole();
 void GDF_HideConsole();
 void GDF_WriteConsole(const char* msg, u8 color);
+// must be freed
+char* GDF_GetAbsolutePath(const char* rel_path);
 char* GDF_ReadFromFile(const char* rel_path);
 // Example:
-// GDF_GetDirStructure("worlds") // gets ./worlds folder form executable folder
+// GDF_GetDirInfo("worlds") // gets ./worlds folder form executable folder
+// Also valid:
+// GDF_GetDirInfo("worlds/")
+// GDF_GetDirInfo("worlds\\")
+// GDF_GetDirInfo("worlds/players")
+// ASSUMES THE RELATIVE PATH IS A VALID DIRECTORY
 GDF_DirInfo* GDF_GetDirInfo(const char* rel_path);
 char* GDF_StrcatNoOverwrite(const char* s1, const char* s2);
 
