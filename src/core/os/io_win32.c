@@ -18,7 +18,6 @@ void GDF_IOInit()
     char* lastBackslash = strrchr(EXECUTABLE_PATH, '\\');
     if (lastBackslash != NULL) {
         *(lastBackslash+1) = '\0'; // Null-terminate the string at the last '\'
-        // Find the second last occurrence of '\'
     }
 }
 
@@ -48,6 +47,7 @@ void GDF_WriteConsole(const char* msg, u8 color)
     // FATAL,ERROR,WARN,INFO,DEBUG,TRACE
     static u8 levels[6] = {64, 4, 6, 2, 1, 8};
     SetConsoleTextAttribute(stdout_, levels[color]);
+
     OutputDebugStringA(msg);
     u64 len = strlen(msg);
     WriteConsoleA(stdout_, msg, (DWORD)len, 0, 0);    
@@ -58,7 +58,7 @@ char** GDF_ListDirs(const char* rel_path)
     return NULL;
 }
 
-char** GDF_ListFiles(const char* rel_path) 
+char** GDF_GetDirStructure(const char* rel_path) 
 {
     HANDLE hFind;
     WIN32_FIND_DATA FindData;
@@ -66,17 +66,50 @@ char** GDF_ListFiles(const char* rel_path)
 
     StringCchCopy(dir, 4000, EXECUTABLE_PATH);
     StringCchCat(dir, 4000, rel_path);
-    StringCchCat(dir, 4000, TEXT("\\*.*"));
+    // Find the last occurrence of '\'
+    bool last_char_is_backslash = rel_path[strlen(rel_path)] == '\\' || rel_path[strlen(rel_path)] == '/';
+    if (!last_char_is_backslash) {
+        printf("last char on string %s is not / or \\\n", rel_path);
+        size_t strlength = strlen(dir);
+        *(dir + strlength) = '\\'; // add one ourself '\'
+        *(dir + strlength + 1) = '\0'; // null terminate
+    }
+    LOG_DEBUG("something something %s", dir);
+    TCHAR search_path[4000];
+    StringCchCopy(search_path, 4000, dir);
+    StringCchCat(search_path, 4000, TEXT("*"));
     LOG_DEBUG("%s", EXECUTABLE_PATH);
 
-    hFind = FindFirstFile(dir, &FindData);
+    hFind = FindFirstFile(search_path, &FindData);
     LOG_INFO("%s", FindData.cFileName);
 
     while(FindNextFile(hFind, &FindData))
     {
+        // if (GetFileAttributesA(FindData))
         LOG_INFO("%s", FindData.cFileName);
+        const char* full_path = GDF_StrcatNoOverwrite(dir, FindData.cFileName);
+        LOG_INFO("found @ %s", full_path);
     }
     return NULL;
 }
+
+// MUST CALL FREE AFTER USE
+char* GDF_StrcatNoOverwrite(const char* s1,const char* s2)
+{
+  char* p = malloc(strlen(s1) + strlen(s2) + 1);
+
+  char* start = p;
+  if (p != NULL)
+  {
+       while (*s1 != '\0')
+       *p++ = *s1++;
+       while (*s2 != '\0')
+       *p++ = *s2++;
+      *p = '\0';
+ }
+
+  return start;
+}
+
 
 #endif

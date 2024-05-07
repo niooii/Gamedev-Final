@@ -47,7 +47,7 @@ bool GDF_Run()
         LOG_ERR("You didnt initialize the app yet. dipshit. you're a bad person, yk that?");
         return false;
     }
-    GDF_ListFiles("./worlds");
+    GDF_GetDirStructure("worlds/");
     while(APP_STATE.is_running) 
     {
         GDF_PumpMessages();
