@@ -53,12 +53,8 @@ void GDF_WriteConsole(const char* msg, u8 color)
     WriteConsoleA(stdout_, msg, (DWORD)len, 0, 0);    
 }
 
-char** GDF_ListDirs(const char* rel_path) 
-{
-    return NULL;
-}
-
-char** GDF_GetDirStructure(const char* rel_path) 
+// TODO! return once dynamic growbale array yes
+GDF_DirInfo* GDF_GetDirInfo(const char* rel_path) 
 {
     HANDLE hFind;
     WIN32_FIND_DATA FindData;
@@ -67,12 +63,18 @@ char** GDF_GetDirStructure(const char* rel_path)
     StringCchCopy(dir, 4000, EXECUTABLE_PATH);
     StringCchCat(dir, 4000, rel_path);
     // Find the last occurrence of '\'
-    bool last_char_is_backslash = rel_path[strlen(rel_path)] == '\\' || rel_path[strlen(rel_path)] == '/';
-    if (!last_char_is_backslash) {
-        printf("last char on string %s is not / or \\\n", rel_path);
+    bool last_char_is_backslash = rel_path[strlen(rel_path) - 1] == '\\';
+    bool last_char_is_slash = rel_path[strlen(rel_path) - 1] == '/'; 
+    if (!last_char_is_backslash && !last_char_is_slash) 
+    {
         size_t strlength = strlen(dir);
         *(dir + strlength) = '\\'; // add one ourself '\'
         *(dir + strlength + 1) = '\0'; // null terminate
+    }
+    else if (last_char_is_slash)
+    {
+        size_t strlength = strlen(dir);
+        *(dir + strlength - 1) = '\\'; // replace with '\'
     }
     LOG_DEBUG("something something %s", dir);
     TCHAR search_path[4000];
@@ -85,10 +87,14 @@ char** GDF_GetDirStructure(const char* rel_path)
 
     while(FindNextFile(hFind, &FindData))
     {
-        // if (GetFileAttributesA(FindData))
+        // y no work
+        // if (strcmp(FindData.cFileName, ".") || strcmp(FindData.cFileName, "..")) 
+        //     continue;
         LOG_INFO("%s", FindData.cFileName);
         const char* full_path = GDF_StrcatNoOverwrite(dir, FindData.cFileName);
         LOG_INFO("found @ %s", full_path);
+        bool is_dir = FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+        LOG_INFO("IS DIR: %d", is_dir);
     }
     return NULL;
 }
@@ -111,5 +117,17 @@ char* GDF_StrcatNoOverwrite(const char* s1,const char* s2)
   return start;
 }
 
+void GDF_FreeDirInfo(GDF_DirInfo* dir_info)
+{
+    for (int i = 0; i < dir_info->num_nodes; i++)
+    {
+        GDF_DirInfoNode node = dir_info->nodes[i];
+        free(node.full_path);
+        free(node.name);
+    }
+
+    // TODO! replace with allocator
+    free(dir_info);
+}
 
 #endif
