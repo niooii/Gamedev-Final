@@ -1,5 +1,5 @@
 #pragma once
 
-#include "def.h"
+#include "core.h"
 
 char* GDF_SerializeWorld();

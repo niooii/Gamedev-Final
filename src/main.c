@@ -1,6 +1,7 @@
 #include "game/game.h"
 #include "core/os/info.h"
 #include "app.h"
+#include "core/asserts.h"
 
 int main()
 {
@@ -16,6 +17,8 @@ int main()
     };
     GDF_InitApp(&config);
     LOG_DEBUG("test logging %f", 3.14f);
+    int x = 3;
+    GDF_ASSERT(x == 3);
     GDF_Run();
 
     return 0;

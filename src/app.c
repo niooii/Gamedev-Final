@@ -21,6 +21,7 @@ bool GDF_InitApp(GDF_AppConfig* config)
     }
 
     init_logging();
+    GDF_IOInit();
 
     APP_STATE.is_running = true;
     APP_STATE.is_suspended = false;
@@ -46,6 +47,7 @@ bool GDF_Run()
         LOG_ERR("You didnt initialize the app yet. dipshit. you're a bad person, yk that?");
         return false;
     }
+    GDF_ListFiles("./worlds");
     while(APP_STATE.is_running) 
     {
         GDF_PumpMessages();

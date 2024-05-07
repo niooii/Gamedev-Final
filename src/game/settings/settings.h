@@ -1,6 +1,6 @@
 #pragma once
 
-#include "def.h"
+#include "core.h"
 #include "movement.h"
 #include "keybinds.h"
 #include "graphics.h"

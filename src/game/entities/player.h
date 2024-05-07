@@ -1,6 +1,6 @@
 #pragma once
 
-#include "def.h"
+#include "core.h"
 #include "entity.h"
 
 typedef struct GDF_Player {

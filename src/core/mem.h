@@ -1,6 +1,6 @@
 #pragma once
 
-#include "def.h"
+#include "core.h"
 
 typedef enum memory_tag {
     // For temporary use. Should be assigned one of the below or have a new tag created.

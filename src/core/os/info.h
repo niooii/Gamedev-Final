@@ -1,5 +1,5 @@
 #pragma once
-#include "def.h"
+#include "core.h"
 
 typedef struct DisplayInfo {
     u16 screen_width;

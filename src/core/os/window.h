@@ -1,5 +1,5 @@
 #pragma once
-#include "def.h"
+#include "core.h"
 
 #define GDF_WIN_CENTERED 32767
 

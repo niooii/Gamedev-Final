@@ -90,6 +90,8 @@
         "xutility": "c",
         "io.h": "c",
         "game.h": "c",
-        "item.h": "c"
+        "item.h": "c",
+        "assert.h": "c",
+        "info.h": "c"
     }
 }

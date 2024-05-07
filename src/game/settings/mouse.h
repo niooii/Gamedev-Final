@@ -1,6 +1,6 @@
 #pragma once
 
-#include "def.h"
+#include "core.h"
 
 typedef struct GDF_MouseSettings {
     f32 x_sensitivity;

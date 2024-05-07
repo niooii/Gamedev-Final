@@ -1,5 +1,5 @@
 #pragma once
-#include "def.h"
+#include "core.h"
 
 // platform memory allocate
 void* pAlloc(u64 size, bool alligned);

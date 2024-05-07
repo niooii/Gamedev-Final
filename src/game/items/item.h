@@ -1,6 +1,6 @@
 #pragma once
 
-#include "def.h"
+#include "core.h"
 #include "game/entities/player.h"
 
 typedef enum GDF_ITEM_ID {

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "def.h"
+#include "core.h"
 #include "game/items/item.h"
 #include "item_slot.h"
 

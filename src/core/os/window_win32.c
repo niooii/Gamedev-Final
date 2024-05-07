@@ -83,6 +83,11 @@ LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
     return DefWindowProc(hwnd, msg, w_param, l_param);
 }
 
+bool GDF_InitWindowing()
+{
+
+}
+
 GDF_Window* GDF_CreateWindow(i16 x_, i16 y_, i16 w, i16 h, const char* title) 
 {
     // TODO!

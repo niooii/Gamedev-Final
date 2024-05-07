@@ -1,6 +1,6 @@
 #pragma once
 
-#include "def.h"
+#include "core.h"
 #include "game/entities/player.h"
 
 typedef struct GDF_World {
