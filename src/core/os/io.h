@@ -12,7 +12,7 @@ typedef struct GDF_DirInfo {
     size_t num_nodes;
 } GDF_DirInfo;
 
-void GDF_IOInit();
+void GDF_InitIO();
 void GDF_ShowConsole();
 void GDF_HideConsole();
 void GDF_WriteConsole(const char* msg, u8 color);
@@ -27,6 +27,8 @@ char* GDF_ReadFromFile(const char* rel_path);
 // GDF_GetDirInfo("worlds/players")
 // ASSUMES THE RELATIVE PATH IS A VALID DIRECTORY
 GDF_DirInfo* GDF_GetDirInfo(const char* rel_path);
+bool GDF_MakeFile(const char* rel_path);
+bool GDF_MakeDir(const char* rel_path);
 char* GDF_StrcatNoOverwrite(const char* s1, const char* s2);
 
 // free resources

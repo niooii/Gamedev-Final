@@ -7,9 +7,9 @@
 
 const char win_class_name[] = "gdf_window";
 static u16 current_window_id = 0;
+static HMODULE class_h_instance = NULL;
 
 typedef struct {
-    HMODULE h_instance;
     HWND hwnd;
 } InternalWindowState;
 
@@ -85,7 +85,29 @@ LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
 
 bool GDF_InitWindowing()
 {
+    // resgister window class
+    // HICON icon = LoadIconA(internals->h_instance, IDI_APPLICATION);
 
+    WNDCLASSA win_class;
+    memset(&win_class, 0, sizeof(win_class));
+    win_class.style = CS_DBLCLKS;
+    win_class.lpfnWndProc = process_msg;
+    win_class.cbClsExtra = 0;
+    win_class.cbWndExtra = 0;
+    win_class.hInstance = class_h_instance;
+    win_class.hIcon = NULL;
+    win_class.hCursor = LoadCursor(NULL, IDC_ARROW);
+    win_class.hbrBackground = NULL;
+    win_class.lpszClassName = win_class_name;
+
+    if (RegisterClassA(&win_class) == 0)
+    {
+        MessageBoxA(0,"Window registration failed", "Error", MB_ICONEXCLAMATION | MB_OK);
+        LOG_FATAL("Could not register window class.");
+        return false;
+    }
+    class_h_instance = GetModuleHandleA(0);
+    return true;
 }
 
 GDF_Window* GDF_CreateWindow(i16 x_, i16 y_, i16 w, i16 h, const char* title) 
@@ -100,30 +122,6 @@ GDF_Window* GDF_CreateWindow(i16 x_, i16 y_, i16 w, i16 h, const char* title)
     window->id = current_window_id++;
 
     InternalWindowState* internals = (InternalWindowState*) window->internals;
-
-    internals->h_instance = GetModuleHandleA(0);
-
-    // resgister window class
-    // HICON icon = LoadIconA(internals->h_instance, IDI_APPLICATION);
-
-    WNDCLASSA win_class;
-    memset(&win_class, 0, sizeof(win_class));
-    win_class.style = CS_DBLCLKS;
-    win_class.lpfnWndProc = process_msg;
-    win_class.cbClsExtra = 0;
-    win_class.cbWndExtra = 0;
-    win_class.hInstance = internals->h_instance;
-    win_class.hIcon = NULL;
-    win_class.hCursor = LoadCursor(NULL, IDC_ARROW);
-    win_class.hbrBackground = NULL;
-    win_class.lpszClassName = win_class_name;
-
-    if (RegisterClassA(&win_class) == 0)
-    {
-        MessageBoxA(0,"Window registration failed", "Error", MB_ICONEXCLAMATION | MB_OK);
-        LOG_FATAL("Could not register window class.");
-        return NULL;
-    }
     
     // create window
     u32 client_x = x;
@@ -158,7 +156,7 @@ GDF_Window* GDF_CreateWindow(i16 x_, i16 y_, i16 w, i16 h, const char* title)
     HWND handle = CreateWindowExA(
         window_ex_style, win_class_name, title,
         window_style, window_x, window_y, window_width, window_height,
-        0, 0, internals->h_instance, 0);
+        0, 0, class_h_instance, 0);
 
     if (handle == NULL) 
     {

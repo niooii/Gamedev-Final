@@ -92,6 +92,7 @@
         "game.h": "c",
         "item.h": "c",
         "assert.h": "c",
-        "info.h": "c"
+        "info.h": "c",
+        "sstream": "c"
     }
 }

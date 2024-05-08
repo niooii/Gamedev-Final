@@ -9,7 +9,7 @@
 static HWND console_window = NULL;
 static const char* EXECUTABLE_PATH;
 
-void GDF_IOInit() 
+void GDF_InitIO() 
 {
     EXECUTABLE_PATH = malloc(40000);
     GetModuleFileName(NULL, EXECUTABLE_PATH, 40000);
@@ -31,6 +31,21 @@ void GDF_ShowConsole()
     ShowWindow(console_window, SW_SHOW);
 }
 
+static void ReplaceFrontSlashWithBack(char* str) 
+{
+    // ??
+    register int i = 0;
+    while(str[i] != '\0') 
+    {
+        if (str[i] == '/')
+        {
+            // printf("replacing slash");
+            str[i] = '\\';
+        }
+        i++;
+    }
+}
+
 void GDF_HideConsole()
 {
     if (console_window == NULL)
@@ -49,16 +64,21 @@ void GDF_WriteConsole(const char* msg, u8 color)
     SetConsoleTextAttribute(stdout_, levels[color]);
 
     OutputDebugStringA(msg);
+    
     u64 len = strlen(msg);
     WriteConsoleA(stdout_, msg, (DWORD)len, 0, 0);    
 }
 
 char* GDF_GetAbsolutePath(const char* rel_path)
 {
+    // TODO! 
+    // ReplaceFrontSlashWithBack
     TCHAR* dir = malloc(sizeof(TCHAR) * 4000);
 
     StringCchCopy(dir, 4000, EXECUTABLE_PATH);
     StringCchCat(dir, 4000, rel_path);
+
+    ReplaceFrontSlashWithBack(dir);
 
     return dir;
 }
@@ -86,27 +106,65 @@ GDF_DirInfo* GDF_GetDirInfo(const char* rel_path)
         size_t strlength = strlen(dir);
         *(dir + strlength - 1) = (char)'\\'; // replace with '\'
     }
-    LOG_DEBUG("something something %s", dir);
     TCHAR search_path[4000];
     StringCchCopy(search_path, 4000, dir);
     StringCchCat(search_path, 4000, TEXT("*"));
-    LOG_DEBUG("%s", EXECUTABLE_PATH);
 
     hFind = FindFirstFile(search_path, &FindData);
     LOG_INFO("%s", FindData.cFileName);
 
     while(FindNextFile(hFind, &FindData))
-    {
+    {       
         // y no work
         // if (strcmp(FindData.cFileName, ".") || strcmp(FindData.cFileName, "..")) 
         //     continue;
-        LOG_INFO("%s", FindData.cFileName);
+        // LOG_INFO("%s", FindData.cFileName);
         const char* full_path = GDF_StrcatNoOverwrite(dir, FindData.cFileName);
         LOG_INFO("found @ %s", full_path);
         bool is_dir = FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
-        LOG_INFO("IS DIR: %d", is_dir);
+        // LOG_INFO("IS DIR: %d", is_dir);
     }
     return NULL;
+}
+
+bool GDF_MakeFile(const char* rel_path) {
+    const char* path = GDF_GetAbsolutePath(rel_path);
+    HANDLE h = CreateFile(path, GENERIC_READ | GENERIC_WRITE, 0, 0, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, 0);
+    bool success = h != INVALID_HANDLE_VALUE;
+    if (!success)
+    {
+        if (GetLastError() == ERROR_FILE_EXISTS)
+        {
+            LOG_WARN("File already exists: %s", path);
+        }
+        else
+        {
+            LOG_WARN("Failed to create file: %s", path);
+        }
+    }
+    free(path);
+    return success;
+}
+
+bool GDF_MakeDir(const char* rel_path) {
+    char* path = GDF_GetAbsolutePath(rel_path);
+    bool success = CreateDirectoryA(path, NULL);
+    // TODO! replace with custom allocator
+    if (!success) 
+    {
+        if (GetLastError() == ERROR_ALREADY_EXISTS) 
+        {
+            LOG_WARN("Directory already exists: %s", path);
+        }
+        else
+        {
+            LOG_WARN("Failed to create directory: %s", path);
+        }
+    }
+    free(path);
+
+    // back to only 0 and 1s not some random value from win32 api
+    return success != 0;
 }
 
 // MUST CALL FREE AFTER USE

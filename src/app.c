@@ -21,7 +21,8 @@ bool GDF_InitApp(GDF_AppConfig* config)
     }
 
     init_logging();
-    GDF_IOInit();
+    GDF_InitIO();
+    GDF_InitWindowing();
 
     APP_STATE.is_running = true;
     APP_STATE.is_suspended = false;
@@ -47,6 +48,13 @@ bool GDF_Run()
         LOG_ERR("You didnt initialize the app yet. dipshit. you're a bad person, yk that?");
         return false;
     }
+    if (!GDF_MakeFile("recursive/dir/yes.txt")) {
+        ;
+    }
+    GDF_MakeDir("recursive");
+    // TODO! convert / to \\ 
+    GDF_MakeDir("recursive/dir");
+    GDF_MakeDir("recursive/dir/test");
     GDF_GetDirInfo("worlds");
     while(APP_STATE.is_running) 
     {
