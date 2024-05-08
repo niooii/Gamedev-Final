@@ -129,7 +129,7 @@ GDF_DirInfo* GDF_GetDirInfo(const char* rel_path)
 
 bool GDF_MakeFile(const char* rel_path) {
     const char* path = GDF_GetAbsolutePath(rel_path);
-    HANDLE h = CreateFile(path, GENERIC_READ | GENERIC_WRITE, 0, 0, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, 0);
+    HANDLE h = CreateFile(path, GENERIC_WRITE, 0, 0, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, 0);
     bool success = h != INVALID_HANDLE_VALUE;
     if (!success)
     {
@@ -142,7 +142,12 @@ bool GDF_MakeFile(const char* rel_path) {
             LOG_WARN("Failed to create file: %s", path);
         }
     }
+    else
+    {
+        LOG_INFO("Created file: %s", path);
+    }
     free(path);
+    CloseHandle(h);
     return success;
 }
 
@@ -160,6 +165,10 @@ bool GDF_MakeDir(const char* rel_path) {
         {
             LOG_WARN("Failed to create directory: %s", path);
         }
+    }
+    else
+    {
+        LOG_INFO("Created directory: %s", path);
     }
     free(path);
 

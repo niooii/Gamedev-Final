@@ -48,13 +48,10 @@ bool GDF_Run()
         LOG_ERR("You didnt initialize the app yet. dipshit. you're a bad person, yk that?");
         return false;
     }
-    if (!GDF_MakeFile("recursive/dir/yes.txt")) {
-        ;
+    if (!GDF_MakeFile("testfile.txt")) {
+        
     }
-    GDF_MakeDir("recursive");
-    // TODO! convert / to \\ 
-    GDF_MakeDir("recursive/dir");
-    GDF_MakeDir("recursive/dir/test");
+    GDF_MakeDir("testdir");
     GDF_GetDirInfo("worlds");
     while(APP_STATE.is_running) 
     {
