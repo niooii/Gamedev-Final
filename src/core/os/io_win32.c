@@ -198,7 +198,7 @@ bool GDF_MakeDir(const char* rel_path) {
 bool GDF_WriteFile(const char* rel_path, const char* data) {
     const char* path[MAX_PATH_LEN];
     GDF_GetAbsolutePath(rel_path, path);
-    HANDLE h = CreateFileW(path, GENERIC_WRITE, 0, 0, TRUNCATE_EXISTING, 0, 0);
+    HANDLE h = CreateFile(path, GENERIC_WRITE, 0, 0, TRUNCATE_EXISTING, 0, 0);
     bool success = h != INVALID_HANDLE_VALUE;
     if (!success)
     {   
