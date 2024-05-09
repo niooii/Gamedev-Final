@@ -11,8 +11,8 @@ static const char* EXECUTABLE_PATH;
 
 void GDF_InitIO() 
 {
-    EXECUTABLE_PATH = malloc(40000);
-    GetModuleFileName(NULL, EXECUTABLE_PATH, 40000);
+    EXECUTABLE_PATH = malloc(MAX_PATH_LEN);
+    GetModuleFileName(NULL, EXECUTABLE_PATH, MAX_PATH_LEN);
 
     // Find the last occurrence of '\'
     char* lastBackslash = strrchr(EXECUTABLE_PATH, '\\');
@@ -69,18 +69,14 @@ void GDF_WriteConsole(const char* msg, u8 color)
     WriteConsoleA(stdout_, msg, (DWORD)len, 0, 0);    
 }
 
-char* GDF_GetAbsolutePath(const char* rel_path)
+void GDF_GetAbsolutePath(const char* rel_path, char* out_buf)
 {
     // TODO! 
-    // ReplaceFrontSlashWithBack
-    TCHAR* dir = malloc(sizeof(TCHAR) * 4000);
+    // magic number :devio:
+    StringCchCopy(out_buf, MAX_PATH_LEN, EXECUTABLE_PATH);
+    StringCchCat(out_buf, MAX_PATH_LEN, rel_path);
 
-    StringCchCopy(dir, 4000, EXECUTABLE_PATH);
-    StringCchCat(dir, 4000, rel_path);
-
-    ReplaceFrontSlashWithBack(dir);
-
-    return dir;
+    ReplaceFrontSlashWithBack(out_buf);
 }
 
 // TODO! return once dynamic growbale array yes
@@ -88,10 +84,10 @@ GDF_DirInfo* GDF_GetDirInfo(const char* rel_path)
 {
     HANDLE hFind;
     WIN32_FIND_DATA FindData;
-    TCHAR* tmp_dir = GDF_GetAbsolutePath(rel_path);
-    TCHAR dir[4000];
-    StringCchCopy(dir, 4000, tmp_dir);
-    free(tmp_dir);
+    char* tmp_dir[MAX_PATH_LEN];
+    GDF_GetAbsolutePath(rel_path, tmp_dir);
+    TCHAR dir[MAX_PATH_LEN];
+    StringCchCopy(dir, MAX_PATH_LEN, tmp_dir);
     // Find the last occurrence of '\'
     bool last_char_is_backslash = rel_path[strlen(rel_path) - 1] == '\\';
     bool last_char_is_slash = rel_path[strlen(rel_path) - 1] == '/'; 
@@ -106,29 +102,56 @@ GDF_DirInfo* GDF_GetDirInfo(const char* rel_path)
         size_t strlength = strlen(dir);
         *(dir + strlength - 1) = (char)'\\'; // replace with '\'
     }
-    TCHAR search_path[4000];
-    StringCchCopy(search_path, 4000, dir);
-    StringCchCat(search_path, 4000, TEXT("*"));
+    TCHAR search_path[MAX_PATH_LEN];
+    StringCchCopy(search_path, MAX_PATH_LEN, dir);
+    StringCchCat(search_path, MAX_PATH_LEN, TEXT("*"));
 
     hFind = FindFirstFile(search_path, &FindData);
-    LOG_INFO("%s", FindData.cFileName);
-
+    LOG_INFO("searched for path %s", search_path);
+    // for some reason this never triggers. it always works.
+    // even when given a random ass path it somehow manages
+    // to return a valid handle and quite frankly, i am
+    // very pressed about it. according to the docs, this 
+    // is SUPPOSED to work. but of course, why would anything
+    // work as documented, right? i am quite distressed about
+    // the lack of error handling in the FindFirstFileW function
+    // and will pray that this functionality will remain the same
+    // in future versions of windows. 
+    // if (FindData.cFileName == INVALID_HANDLE_VALUE)
+    // {
+    //     LOG_WARN("Could not search directory %s", search_path);
+    //     return NULL;
+    // }
+    int found_files = 0;
     while(FindNextFile(hFind, &FindData))
     {       
         // y no work
         // if (strcmp(FindData.cFileName, ".") || strcmp(FindData.cFileName, "..")) 
         //     continue;
-        // LOG_INFO("%s", FindData.cFileName);
+        LOG_INFO("%s", FindData.cFileName);
         const char* full_path = GDF_StrcatNoOverwrite(dir, FindData.cFileName);
-        LOG_INFO("found @ %s", full_path);
+        // LOG_INFO("found @ %s", full_path);
         bool is_dir = FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
         // LOG_INFO("IS DIR: %d", is_dir);
+        found_files++;
     }
+    FindClose(hFind);
+
+    if (found_files == 0)
+    {
+        // we should have found the .. directory and
+        // found_files wouldve been 1, so this
+        // can only mean the directory is invalid.
+        LOG_WARN("Could not search directory: %s", dir);
+        return NULL;
+    }
+
     return NULL;
 }
 
 bool GDF_MakeFile(const char* rel_path) {
-    const char* path = GDF_GetAbsolutePath(rel_path);
+    const char* path[MAX_PATH_LEN];
+    GDF_GetAbsolutePath(rel_path, path);
     HANDLE h = CreateFile(path, GENERIC_WRITE, 0, 0, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, 0);
     bool success = h != INVALID_HANDLE_VALUE;
     if (!success)
@@ -146,13 +169,13 @@ bool GDF_MakeFile(const char* rel_path) {
     {
         LOG_INFO("Created file: %s", path);
     }
-    free(path);
     CloseHandle(h);
     return success;
 }
 
 bool GDF_MakeDir(const char* rel_path) {
-    char* path = GDF_GetAbsolutePath(rel_path);
+    char* path[MAX_PATH_LEN];
+    GDF_GetAbsolutePath(rel_path, path);
     bool success = CreateDirectoryA(path, NULL);
     // TODO! replace with custom allocator
     if (!success) 
@@ -170,7 +193,6 @@ bool GDF_MakeDir(const char* rel_path) {
     {
         LOG_INFO("Created directory: %s", path);
     }
-    free(path);
 
     // back to only 0 and 1s not some random value from win32 api
     return success != 0;

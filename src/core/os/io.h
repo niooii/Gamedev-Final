@@ -1,6 +1,8 @@
 #pragma once
 #include "core.h"
 
+#define MAX_PATH_LEN 4000
+
 typedef struct GDF_DirInfoNode {
     const char* name;
     const char* full_path;
@@ -17,8 +19,7 @@ void GDF_ShowConsole();
 void GDF_HideConsole();
 void GDF_WriteConsole(const char* msg, u8 color);
 // must be freed
-char* GDF_GetAbsolutePath(const char* rel_path);
-char* GDF_ReadFromFile(const char* rel_path);
+void GDF_GetAbsolutePath(const char* rel_path, char* out_buf);
 // Example:
 // GDF_GetDirInfo("worlds") // gets ./worlds folder form executable folder
 // Also valid:
@@ -26,9 +27,12 @@ char* GDF_ReadFromFile(const char* rel_path);
 // GDF_GetDirInfo("worlds\\")
 // GDF_GetDirInfo("worlds/players")
 // ASSUMES THE RELATIVE PATH IS A VALID DIRECTORY
+// RETURNS NULL
 GDF_DirInfo* GDF_GetDirInfo(const char* rel_path);
 bool GDF_MakeFile(const char* rel_path);
 bool GDF_MakeDir(const char* rel_path);
+bool GDF_WriteFile(const char* rel_path, const char* data);
+bool GDF_ReadFile(const char* rel_path, char* out_buf);
 char* GDF_StrcatNoOverwrite(const char* s1, const char* s2);
 
 // free resources

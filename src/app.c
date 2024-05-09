@@ -52,7 +52,7 @@ bool GDF_Run()
         
     }
     GDF_MakeDir("testdir");
-    GDF_GetDirInfo("worlds");
+    GDF_GetDirInfo("testdir");
     while(APP_STATE.is_running) 
     {
         GDF_PumpMessages();
