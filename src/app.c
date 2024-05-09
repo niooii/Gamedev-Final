@@ -53,7 +53,6 @@ bool GDF_Run()
     }
     GDF_MakeDir("testdir");
     GDF_GetDirInfo("testdir");
-    GDF_MakeDir("SOMEETHING AFTER GETDIRINFO");
     char* content = "RCOA";
     GDF_WriteFile("a.txt", content);
     while(APP_STATE.is_running) 

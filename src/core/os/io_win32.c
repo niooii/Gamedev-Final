@@ -183,7 +183,7 @@ bool GDF_MakeDir(const char* rel_path) {
         }
         else
         {
-            LOG_WARN("Failed to create directory: %s", path);
+            LOG_ERR("Unknown error creating directory: %s", path);
         }
     }
     else
@@ -208,7 +208,7 @@ bool GDF_WriteFile(const char* rel_path, const char* data) {
         }
         else
         {
-            LOG_WARN("Unknown error while opening write handle to file: %s", path);
+            LOG_WARN("Unknown error opening write handle to file: %s", path);
         }
         return false;
     }
@@ -219,7 +219,7 @@ bool GDF_WriteFile(const char* rel_path, const char* data) {
     }
     else
     {
-        LOG_ERR("Unknown error while writing to file: %s", path);
+        LOG_ERR("Unknown error writing to file: %s", path);
     }
     CloseHandle(h);
     return w_success;
