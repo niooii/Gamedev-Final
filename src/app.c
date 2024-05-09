@@ -48,11 +48,14 @@ bool GDF_Run()
         LOG_ERR("You didnt initialize the app yet. dipshit. you're a bad person, yk that?");
         return false;
     }
-    if (!GDF_MakeFile("testfile.txt")) {
+    if (!GDF_MakeFile("a.txt")) {
         
     }
     GDF_MakeDir("testdir");
     GDF_GetDirInfo("testdir");
+    GDF_MakeDir("SOMEETHING AFTER GETDIRINFO");
+    char* content = "RCOA";
+    GDF_WriteFile("a.txt", content);
     while(APP_STATE.is_running) 
     {
         GDF_PumpMessages();

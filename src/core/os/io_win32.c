@@ -33,13 +33,11 @@ void GDF_ShowConsole()
 
 static void ReplaceFrontSlashWithBack(char* str) 
 {
-    // ??
-    register int i = 0;
+    int i = 0;
     while(str[i] != '\0') 
     {
         if (str[i] == '/')
         {
-            // printf("replacing slash");
             str[i] = '\\';
         }
         i++;
@@ -107,7 +105,6 @@ GDF_DirInfo* GDF_GetDirInfo(const char* rel_path)
     StringCchCat(search_path, MAX_PATH_LEN, TEXT("*"));
 
     hFind = FindFirstFile(search_path, &FindData);
-    LOG_INFO("searched for path %s", search_path);
     // for some reason this never triggers. it always works.
     // even when given a random ass path it somehow manages
     // to return a valid handle and quite frankly, i am
@@ -152,7 +149,7 @@ GDF_DirInfo* GDF_GetDirInfo(const char* rel_path)
 bool GDF_MakeFile(const char* rel_path) {
     const char* path[MAX_PATH_LEN];
     GDF_GetAbsolutePath(rel_path, path);
-    HANDLE h = CreateFile(path, GENERIC_WRITE, 0, 0, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, 0);
+    HANDLE h = CreateFile(path, 0, 0, 0, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, 0);
     bool success = h != INVALID_HANDLE_VALUE;
     if (!success)
     {
@@ -196,6 +193,36 @@ bool GDF_MakeDir(const char* rel_path) {
 
     // back to only 0 and 1s not some random value from win32 api
     return success != 0;
+}
+
+bool GDF_WriteFile(const char* rel_path, const char* data) {
+    const char* path[MAX_PATH_LEN];
+    GDF_GetAbsolutePath(rel_path, path);
+    HANDLE h = CreateFileW(path, GENERIC_WRITE, 0, 0, TRUNCATE_EXISTING, 0, 0);
+    bool success = h != INVALID_HANDLE_VALUE;
+    if (!success)
+    {   
+        if (GetLastError() == ERROR_FILE_NOT_FOUND)
+        {
+            LOG_ERR("Could not write to non-existent file: %s", path);
+        }
+        else
+        {
+            LOG_WARN("Unknown error while opening write handle to file: %s", path);
+        }
+        return false;
+    }
+    bool w_success = WriteFile(h, data, strlen(data), NULL, NULL);
+    if (w_success)
+    {
+        LOG_INFO("Wrote to file: %s", path);
+    }
+    else
+    {
+        LOG_ERR("Unknown error while writing to file: %s", path);
+    }
+    CloseHandle(h);
+    return w_success;
 }
 
 // MUST CALL FREE AFTER USE
