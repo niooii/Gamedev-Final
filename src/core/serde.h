@@ -1,24 +1,22 @@
 #pragma once
 
 #include "core.h"
-
+#include "core/d_structs/map.h"
 // what im thinking:
 /*
 save in .gdf file with format:
-1=3
-2=2
-3=6
+CAN_FLY=3
+NOCLIP=2
+DRAW_WIREFRAME=6
 a=b where
-a is type GDF_MKEY
-b is some other integral enum type or some float idk 
+a is type GDF_MKEY converted into a string with GDF_MKEY_ToString(...);
+b is of type GDF_MapEntry
 
 */
-typedef enum GDF_MKEY {
-    GDF_MKEY_SETTINGS_DEV_CAN_FLY,
-    GDF_MKEY_SETTINGS_DEV_NOCLIP,
-    GDF_MKEY_SETTINGS_DEV_DRAW_WIREFRAME,
 
-    GDF_MKEY_MAX // is this needed?
-} GDF_MKEY;
+/* TODO! this is the hard part :sob: */
 
-char* GDF_SerializeWorld();
+// serializes into format .gdf
+bool GDF_SerializeMap(GDF_Map* map, char* out_buf);
+// deserializes from format .gdf
+bool GDF_DeserializeMap(char* data, GDF_Map* out_map);
