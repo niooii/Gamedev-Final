@@ -24,6 +24,9 @@ bool GDF_InitApp(GDF_AppConfig* config)
     GDF_InitIO();
     GDF_InitWindowing();
 
+    // create required files and directory
+    GDF_CreateRequiredFiles();
+
     APP_STATE.is_running = true;
     APP_STATE.is_suspended = false;
 
@@ -41,6 +44,11 @@ bool GDF_InitApp(GDF_AppConfig* config)
     return true;
 }
 
+bool GDF_CreateRequiredFiles()
+{
+    GDF_MakeFile("settings.gdf");
+}
+
 bool GDF_Run() 
 {
     if (!INITIALIZED)
@@ -48,13 +56,6 @@ bool GDF_Run()
         LOG_ERR("You didnt initialize the app yet. dipshit. you're a bad person, yk that?");
         return false;
     }
-    if (!GDF_MakeFile("a.txt")) {
-        
-    }
-    GDF_MakeDir("testdir");
-    GDF_GetDirInfo("testdir");
-    char* content = "RCOA";
-    GDF_WriteFile("a.txt", content);
     while(APP_STATE.is_running) 
     {
         GDF_PumpMessages();

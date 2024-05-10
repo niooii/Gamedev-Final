@@ -16,9 +16,6 @@ int main()
         .show_console = true
     };
     GDF_InitApp(&config);
-    LOG_DEBUG("test logging %f", 3.14f);
-    int x = 3;
-    GDF_ASSERT(x == 3);
     GDF_Run();
 
     return 0;

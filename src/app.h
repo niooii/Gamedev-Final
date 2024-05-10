@@ -15,5 +15,5 @@ typedef struct GDF_AppConfig {
 } GDF_AppConfig;
 
 bool GDF_InitApp(GDF_AppConfig* config);
-
+bool GDF_CreateRequiredFiles();
 bool GDF_Run();
