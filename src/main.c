@@ -2,10 +2,11 @@
 #include "core/os/info.h"
 #include "app.h"
 #include "core/asserts.h"
+#include "core/subsystems.h"
 
 int main()
 {
-    GDF_InitInfo();
+    GDF_InitSubsystems();
     DisplayInfo display_info = GetDisplayInfo();
     GDF_AppConfig config = {
         .spawn_x = GDF_WIN_CENTERED,

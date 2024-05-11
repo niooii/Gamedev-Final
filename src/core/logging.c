@@ -20,7 +20,7 @@ const char* level_strings[6] =
     "[TRACE]: ",
 };
 
-bool init_logging() 
+bool GDF_InitLogging() 
 {
     OUT_MSG = malloc(MAX_MSG_LEN);
     PREPENDED_OUT_MSG = malloc(MAX_MSG_LEN);
@@ -29,7 +29,7 @@ bool init_logging()
     return true;
 }
 
-void shutdown_logging() 
+void GDF_ShutdownLogging() 
 {
     free(OUT_MSG);
     free(PREPENDED_OUT_MSG);

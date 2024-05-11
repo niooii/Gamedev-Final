@@ -102,12 +102,18 @@ bool GDF_InitWindowing()
 
     if (RegisterClassA(&win_class) == 0)
     {
+        LOG_FATAL("Could not register window class. Last error: %d", GetLastError());
         MessageBoxA(0,"Window registration failed", "Error", MB_ICONEXCLAMATION | MB_OK);
-        LOG_FATAL("Could not register window class.");
         return false;
     }
     class_h_instance = GetModuleHandleA(0);
     return true;
+}
+
+void GDF_ShutdownWindowing()
+{
+    // TODO! destroy windows then unregisterclass 
+    // even though it should be automatic but its fine
 }
 
 GDF_Window* GDF_CreateWindow(i16 x_, i16 y_, i16 w, i16 h, const char* title) 

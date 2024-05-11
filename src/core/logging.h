@@ -26,8 +26,8 @@ typedef enum log_level {
     LOG_LEVEL_TRACE
 } log_level;
 
-bool init_logging();
-void shutdown_logging();
+bool GDF_InitLogging();
+void GDF_ShutdownLogging();
 
 // #define  __declspec(dllexport)
 

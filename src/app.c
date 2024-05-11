@@ -20,9 +20,7 @@ bool GDF_InitApp(GDF_AppConfig* config)
         return false;
     }
 
-    init_logging();
-    GDF_InitIO();
-    GDF_InitWindowing();
+    GDF_InitSubsystems();
 
     // create required files and directory
     GDF_CreateRequiredFiles();
