@@ -6,6 +6,7 @@
 #include "core/os/io.h"
 #include "core/subsystems.h"
 #include "core/d_structs/map.h"
+#include "core/serde.h"
 
 typedef struct GDF_AppConfig {
     i16 spawn_x;

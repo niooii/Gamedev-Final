@@ -11,7 +11,7 @@ rushed one-purpose map implementation
 solely for providing a common serialization interface.
 */
 // needed for serialization
-void GDF_InitLookupTable();
+void GDF_InitMkeyLookupTable();
 
 typedef enum GDF_MKEY {
     GDF_MKEY_SETTINGS_DEV_CAN_FLY,
@@ -30,6 +30,7 @@ void GDF_MKEY_FromString(const char* str, GDF_MKEY* out_key);
 
 typedef enum GDF_MAP_DTYPE {
     GDF_MAP_DTYPE_INT,
+    GDF_MAP_DTYPE_BOOL,
     GDF_MAP_DTYPE_FLOAT,
     GDF_MAP_DTYPE_STRING,
     // HEHEHEAW
