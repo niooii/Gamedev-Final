@@ -21,9 +21,9 @@ typedef enum GDF_MKEY {
 
 
 // returns NULL on failure
-const char* GDF_MKEY_ToString(GDF_MKEY key);
+void GDF_MKEY_ToString(GDF_MKEY key, char* out_str);
 // returns GDF_MKEY_ERROR_KEY on failure
-const char* GDF_MKEY_FromString(GDF_MKEY key);
+void GDF_MKEY_FromString(const char* str, GDF_MKEY* out_key);
 
 typedef enum GDF_MAP_DTYPE {
     GDF_MAP_DTYPE_INT,
@@ -35,10 +35,11 @@ typedef enum GDF_MAP_DTYPE {
 
 // heap allocated horrific map implementation
 typedef struct GDF_Map {
-    GDF_MapEntry entries;
+    GDF_MapEntry entries[1];
 } GDF_Map;
 
 typedef struct GDF_MapEntry {
+    GDF_MKEY key;
     void* value;
     GDF_MAP_DTYPE dtype;
 } GDF_MapEntry;
