@@ -20,8 +20,6 @@ bool GDF_InitApp(GDF_AppConfig* config)
         return false;
     }
 
-    GDF_InitSubsystems();
-
     // create required files and directory
     GDF_CreateRequiredFiles();
 
@@ -54,6 +52,8 @@ bool GDF_Run()
         LOG_ERR("You didnt initialize the app yet. dipshit. you're a bad person, yk that?");
         return false;
     }
+    // test serialization
+    GDF_InitLookupTable();
     while(APP_STATE.is_running) 
     {
         GDF_PumpMessages();

@@ -2,6 +2,7 @@
 
 #include "core.h"
 #include "core/d_structs/map.h"
+#include <string.h>
 // what im thinking:
 /*
 save in .gdf file with format:

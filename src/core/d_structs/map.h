@@ -1,6 +1,8 @@
 #pragma once
 
 #include "core.h"
+#include <string.h>
+#include <stdio.h>
 
 /*
 ATTENTION ACTUAL GOOD PROGRAMMERS:
@@ -8,6 +10,8 @@ this is not a real map. this is a
 rushed one-purpose map implementation
 solely for providing a common serialization interface.
 */
+// needed for serialization
+void GDF_InitLookupTable();
 
 typedef enum GDF_MKEY {
     GDF_MKEY_SETTINGS_DEV_CAN_FLY,
@@ -18,8 +22,7 @@ typedef enum GDF_MKEY {
     GDF_MKEY_NUM_KEYS, // is this needed?
     GDF_MKEY_ERROR_KEY // this shouldnt be used at all to index anything
 } GDF_MKEY;
-
-
+typedef struct { char* str; GDF_MKEY key; } t_symstruct;
 // returns NULL on failure
 void GDF_MKEY_ToString(GDF_MKEY key, char* out_str);
 // returns GDF_MKEY_ERROR_KEY on failure
@@ -34,7 +37,6 @@ typedef enum GDF_MAP_DTYPE {
 } GDF_MAP_DTYPE;
 
 typedef struct GDF_MapEntry {
-    GDF_MKEY key;
     void* value;
     GDF_MAP_DTYPE dtype;
 } GDF_MapEntry;
@@ -47,7 +49,10 @@ typedef struct GDF_Map {
 // allocates a map pointer
 GDF_Map* GDF_CreateMap();
 
+// void* value is copied and allocated on the heap.
+bool GDF_AddMapEntry(GDF_Map* map, GDF_MKEY key, void* value, GDF_MAP_DTYPE dtype);
+
 // should return null if none
-GDF_MapEntry* GDF_GetMapEntry(GDF_MKEY key);
+GDF_MapEntry* GDF_GetMapEntry(GDF_Map* map, GDF_MKEY key);
 
 void GDF_FreeMap(GDF_Map* map);
