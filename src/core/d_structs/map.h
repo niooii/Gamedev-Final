@@ -33,20 +33,16 @@ typedef enum GDF_MAP_DTYPE {
     GDF_MAP_DTYPE_MAP,
 } GDF_MAP_DTYPE;
 
-// heap allocated horrific map implementation
-typedef struct GDF_Map {
-    GDF_MapEntry entries[1];
-} GDF_Map;
-
 typedef struct GDF_MapEntry {
     GDF_MKEY key;
     void* value;
     GDF_MAP_DTYPE dtype;
 } GDF_MapEntry;
-typedef struct GDF_Map {
-    GDF_MapEntry entries;
-} GDF_Map;
 
+// heap allocated horrific map implementation
+typedef struct GDF_Map {
+    GDF_MapEntry* entries[GDF_MKEY_NUM_KEYS];
+} GDF_Map;
 
 // allocates a map pointer
 GDF_Map* GDF_CreateMap();
