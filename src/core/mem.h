@@ -2,7 +2,7 @@
 
 #include "core.h"
 
-typedef enum memory_tag {
+typedef enum GDF_MemoryTag {
     // For temporary use. Should be assigned one of the below or have a new tag created.
     MEMORY_TAG_UNKNOWN,
     MEMORY_TAG_ARRAY,
@@ -23,4 +23,19 @@ typedef enum memory_tag {
     MEMORY_TAG_SCENE,
 
     MEMORY_TAG_MAX_TAGS
-} memory_tag;
+} GDF_MemoryTag;
+
+void initialize_memory();
+void shutdown_memory();
+
+void* GDF_Malloc(u64 size, GDF_MemoryTag tag);
+
+void GDF_Free(void* block, u64 size, GDF_MemoryTag tag);
+
+void* GDF_MZero(void* block, u64 size);
+
+void* GDF_Memcpy(void* dest, const void* source, u64 size);
+
+void* GDF_Memset(void* dest, i32 value, u64 size);
+
+char* GDF_GetMemUsageStr();

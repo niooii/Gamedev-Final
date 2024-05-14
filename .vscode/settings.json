@@ -93,6 +93,7 @@
         "item.h": "c",
         "assert.h": "c",
         "info.h": "c",
-        "sstream": "c"
+        "sstream": "c",
+        "serde.h": "c"
     }
 }
