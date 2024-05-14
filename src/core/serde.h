@@ -2,7 +2,10 @@
 
 #include "core.h"
 #include "core/d_structs/map.h"
+#include "core/os/io.h"
 #include <string.h>
+
+
 // what im thinking:
 /*
 save in .gdf file with format:
@@ -21,3 +24,6 @@ b is of type GDF_MapEntry
 bool GDF_SerializeMap(GDF_Map* map, char* out_buf);
 // deserializes from format .gdf
 bool GDF_DeserializeMap(char* data, GDF_Map* out_map);
+
+bool GDF_WriteMapToFile(GDF_Map* map, const char* rel_path);
+bool GDF_ReadMapFromFile(const char* rel_path, GDF_Map* out_map);

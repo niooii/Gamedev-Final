@@ -58,11 +58,8 @@ bool GDF_Run()
     bool val = true;
     GDF_AddMapEntry(map, GDF_MKEY_SETTINGS_DEV_CAN_FLY, &val, GDF_MAP_DTYPE_BOOL);
     GDF_AddMapEntry(map, GDF_MKEY_SETTINGS_DEV_NOCLIP, &val, GDF_MAP_DTYPE_BOOL);
-    char out_str[2000];
-    memset(out_str, 0, 2000);
-    GDF_SerializeMap(map, out_str);
-    printf("out_str: %s\n", out_str);
-    GDF_WriteFile("settings.gdf", out_str);
+    
+    GDF_WriteMapToFile(map, "settings.gdf");
     while(APP_STATE.is_running) 
     {
         GDF_PumpMessages();

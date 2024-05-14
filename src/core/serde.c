@@ -49,3 +49,15 @@ bool GDF_DeserializeMap(char* data, GDF_Map* out_map)
 {
 
 }
+
+bool GDF_WriteMapToFile(GDF_Map* map, const char* rel_path)
+{
+    char buf[40000];
+    GDF_SerializeMap(map, buf);
+    GDF_WriteFile(rel_path, buf);
+}
+
+bool GDF_ReadMapFromFile(const char* rel_path, GDF_Map* out_map)
+{
+
+}
