@@ -7,6 +7,13 @@
 int main()
 {
     GDF_InitSubsystems();
+    const char* testdata = "kugiu4444.2";
+    i32 f = 0;
+    int filled = sscanf(testdata, "%d", &f);
+    if (filled)
+    {
+        LOG_INFO("HEHEHEHAW %d", f);
+    }
     DisplayInfo display_info = GetDisplayInfo();
     GDF_AppConfig config = {
         .spawn_x = GDF_WIN_CENTERED,

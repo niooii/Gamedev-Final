@@ -58,6 +58,7 @@ bool GDF_Run()
     bool val = true;
     GDF_AddMapEntry(map, GDF_MKEY_SETTINGS_DEV_CAN_FLY, &val, GDF_MAP_DTYPE_BOOL);
     GDF_AddMapEntry(map, GDF_MKEY_SETTINGS_DEV_NOCLIP, &val, GDF_MAP_DTYPE_BOOL);
+    GDF_AddMapEntry(map, GDF_MKEY_SETTINGS_DEV_DRAW_WIREFRAME, "BRUHHAUHUR", GDF_MAP_DTYPE_STRING);
     
     GDF_WriteMapToFile(map, "settings.gdf");
     GDF_Map* read_map = GDF_CreateMap();

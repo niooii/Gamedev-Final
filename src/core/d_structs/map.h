@@ -26,14 +26,14 @@ typedef struct { char* str; GDF_MKEY key; } t_symstruct;
 // returns NULL on failure
 void GDF_MKEY_ToString(GDF_MKEY key, char* out_str);
 // returns GDF_MKEY_ERROR_KEY on failure
-void GDF_MKEY_FromString(const char* str, GDF_MKEY* out_key);
+GDF_MKEY GDF_MKEY_FromString(const char* str);
 
 typedef enum GDF_MAP_DTYPE {
     GDF_MAP_DTYPE_INT,
     GDF_MAP_DTYPE_BOOL,
-    GDF_MAP_DTYPE_FLOAT,
+    GDF_MAP_DTYPE_DOUBLE,
     GDF_MAP_DTYPE_STRING,
-    // HEHEHEAW
+    // HEHEHEAW  
     GDF_MAP_DTYPE_MAP,
 } GDF_MAP_DTYPE;
 

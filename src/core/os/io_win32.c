@@ -113,7 +113,14 @@ GDF_DirInfo* GDF_GetDirInfo(const char* rel_path)
     // work as documented, right? i am quite distressed about
     // the lack of error handling in the FindFirstFileW function
     // and will pray that this functionality will remain the same
-    // in future versions of windows. 
+    // in future versions of windows. Because honestly, 
+    // the windows api has to be the most documented api
+    // i've ever come across. and even so, why is it STILL
+    // so DIFFICULT to do ANYTHING in here? I just want simple error handling.
+    // I guess thats okay though. We'll just never know
+    // when something went wrong/. It's just unnecessary right?
+    // Who needs an api to work as documented? Why would anyone
+    // expect it to work the way it was WRITTEN to work?
     // if (FindData.cFileName == INVALID_HANDLE_VALUE)
     // {
     //     LOG_WARN("Could not search directory %s", search_path);

@@ -19,23 +19,25 @@ void GDF_MKEY_ToString(GDF_MKEY key, char* out_str)
     }
 }
 
-static t_symstruct lookup_table[GDF_MKEY_NUM_KEYS];
+static t_symstruct lookup_table[GDF_MKEY_NUM_KEYS] = {};
 void GDF_MKEY_InitLookupTable()
 {
     for (int i = 0; i < GDF_MKEY_NUM_KEYS; i++) {
-        GDF_MKEY_ToString(i, &lookup_table[i].str);
+        char* key_buf = malloc(150);
+        GDF_MKEY_ToString(i, key_buf);
         lookup_table[i].key = i;
+        lookup_table[i].str = key_buf;
     }
 }
 
-void GDF_MKEY_FromString(const char* str, GDF_MKEY* out_key)
+GDF_MKEY GDF_MKEY_FromString(const char* str)
 {
     for (int i = 0; i < GDF_MKEY_NUM_KEYS; i++) {
         t_symstruct sym = lookup_table[i];
         if (strcmp(sym.str, str) == 0)
-            *out_key = sym.key;
+            return sym.key;
     }
-    *out_key = GDF_MKEY_ERROR_KEY;
+    return GDF_MKEY_ERROR_KEY;
 }
 
 GDF_Map* GDF_CreateMap()
@@ -61,9 +63,9 @@ bool GDF_AddMapEntry(GDF_Map* map, GDF_MKEY key, void* value, GDF_MAP_DTYPE dtyp
     size_t value_size;
     switch (dtype)
     {
-        case GDF_MAP_DTYPE_FLOAT:
+        case GDF_MAP_DTYPE_DOUBLE:
         {
-            value_size = sizeof(f32);
+            value_size = sizeof(f64);
             break;
         }
         case GDF_MAP_DTYPE_INT:
