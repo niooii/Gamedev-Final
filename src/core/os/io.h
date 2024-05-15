@@ -1,5 +1,7 @@
 #pragma once
 #include "core.h"
+#define MB_BYTES 1048576
+#define KB_BYTES 1024
 
 #define MAX_PATH_LEN 4000
 
@@ -33,8 +35,7 @@ bool GDF_MakeFile(const char* rel_path);
 bool GDF_MakeDir(const char* rel_path);
 // WILL OVERWRITE CONTENTS OF FILE
 bool GDF_WriteFile(const char* rel_path, const char* data);
-// For some reason on the windows impl, an error 998 (invalid memory access) occurs but it still reads correctly.
-bool GDF_ReadFile(const char* rel_path, char* out_buf);
+bool GDF_ReadFile(const char* rel_path, char* out_buf, size_t bytes_to_read);
 char* GDF_StrcatNoOverwrite(const char* s1, const char* s2);
 
 // free resources

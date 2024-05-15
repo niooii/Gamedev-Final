@@ -58,17 +58,19 @@ bool GDF_DeserializeToMap(char* data, GDF_Map* out_map)
 
     return 0;
 }
-
+// max write capacity of 1mb
 bool GDF_WriteMapToFile(GDF_Map* map, const char* rel_path)
 {
-    char buf[40000];
+    char* buf = malloc(sizeof(char) * MB_BYTES);
     GDF_SerializeMap(map, buf);
     GDF_WriteFile(rel_path, buf);
+    free(buf);
 }
-
+// max read capacity of 1mb
 bool GDF_ReadMapFromFile(const char* rel_path, GDF_Map* out_map)
 {
-    char buf[40000];
-    GDF_ReadFile(rel_path, buf);
+    char* buf = malloc(sizeof(char) * MB_BYTES);
+    GDF_ReadFile(rel_path, buf, MB_BYTES);
     GDF_DeserializeToMap(buf, out_map);
+    free(buf);
 }

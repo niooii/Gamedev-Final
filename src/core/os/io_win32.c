@@ -225,7 +225,7 @@ bool GDF_WriteFile(const char* rel_path, const char* data) {
     return w_success;
 }
 
-bool GDF_ReadFile(const char* rel_path, char* out_buf) {
+bool GDF_ReadFile(const char* rel_path, char* out_buf, size_t bytes_to_read) {
     const char* path[MAX_PATH_LEN];
     GDF_GetAbsolutePath(rel_path, path);
     HANDLE h = CreateFile(path, GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0);
@@ -234,7 +234,7 @@ bool GDF_ReadFile(const char* rel_path, char* out_buf) {
     {   
         if (GetLastError() == ERROR_FILE_NOT_FOUND)
         {
-            LOG_ERR("Could not read from non-existent file: %s", path);
+            LOG_ERR("Could not read non-existent file: %s", path);
         }
         else
         {
@@ -242,7 +242,8 @@ bool GDF_ReadFile(const char* rel_path, char* out_buf) {
         }
         return false;
     }
-    bool w_success = ReadFile(h, (LPVOID)out_buf, i32_MAX, 0, 0);
+    DWORD bytes_read = 0;
+    bool w_success = ReadFile(h, (LPVOID)out_buf, bytes_to_read, &bytes_read, NULL);
     if (w_success)
     {
         LOG_INFO("Read file: %s", path);
