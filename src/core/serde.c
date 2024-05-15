@@ -45,9 +45,18 @@ bool GDF_SerializeMap(GDF_Map* map, char* out_buf)
     }
 }
 
-bool GDF_DeserializeMap(char* data, GDF_Map* out_map)
+bool GDF_DeserializeToMap(char* data, GDF_Map* out_map)
 {
+    char line_buf[512];
 
+    // iterate through lines
+    char * line = strtok(strdup(data), "\n");
+    while(line) {
+        LOG_DEBUG("%s", line);
+        line = strtok(NULL, "\n");
+    }
+
+    return 0;
 }
 
 bool GDF_WriteMapToFile(GDF_Map* map, const char* rel_path)
@@ -59,5 +68,7 @@ bool GDF_WriteMapToFile(GDF_Map* map, const char* rel_path)
 
 bool GDF_ReadMapFromFile(const char* rel_path, GDF_Map* out_map)
 {
-
+    char buf[40000];
+    GDF_ReadFile(rel_path, buf);
+    GDF_DeserializeToMap(buf, out_map);
 }

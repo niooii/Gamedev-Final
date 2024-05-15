@@ -53,13 +53,15 @@ bool GDF_Run()
         return false;
     }
     // test serialization
-    GDF_InitMkeyLookupTable();
+    GDF_MKEY_InitLookupTable();
     GDF_Map* map = GDF_CreateMap();
     bool val = true;
     GDF_AddMapEntry(map, GDF_MKEY_SETTINGS_DEV_CAN_FLY, &val, GDF_MAP_DTYPE_BOOL);
     GDF_AddMapEntry(map, GDF_MKEY_SETTINGS_DEV_NOCLIP, &val, GDF_MAP_DTYPE_BOOL);
     
     GDF_WriteMapToFile(map, "settings.gdf");
+    GDF_Map* read_map = GDF_CreateMap();
+    GDF_ReadMapFromFile("settings.gdf", read_map);
     while(APP_STATE.is_running) 
     {
         GDF_PumpMessages();

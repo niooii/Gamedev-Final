@@ -94,6 +94,8 @@
         "assert.h": "c",
         "info.h": "c",
         "sstream": "c",
-        "serde.h": "c"
+        "serde.h": "c",
+        "stdlib.h": "c",
+        "map.h": "c"
     }
 }

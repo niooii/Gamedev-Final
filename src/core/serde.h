@@ -4,7 +4,10 @@
 #include "core/d_structs/map.h"
 #include "core/os/io.h"
 #include <string.h>
-
+#ifdef OS_WINDOWS
+#include <windows.h>
+#define strdup(p) _strdup(p)
+#endif
 
 // what im thinking:
 /*
@@ -23,7 +26,7 @@ b is of type GDF_MapEntry
 // serializes into format .gdf
 bool GDF_SerializeMap(GDF_Map* map, char* out_buf);
 // deserializes from format .gdf
-bool GDF_DeserializeMap(char* data, GDF_Map* out_map);
+bool GDF_DeserializeToMap(char* data, GDF_Map* out_map);
 
 bool GDF_WriteMapToFile(GDF_Map* map, const char* rel_path);
 bool GDF_ReadMapFromFile(const char* rel_path, GDF_Map* out_map);

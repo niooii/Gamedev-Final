@@ -20,7 +20,7 @@ void GDF_MKEY_ToString(GDF_MKEY key, char* out_str)
 }
 
 static t_symstruct lookup_table[GDF_MKEY_NUM_KEYS];
-void GDF_InitMkeyLookupTable()
+void GDF_MKEY_InitLookupTable()
 {
     for (int i = 0; i < GDF_MKEY_NUM_KEYS; i++) {
         GDF_MKEY_ToString(i, &lookup_table[i].str);
@@ -41,7 +41,10 @@ void GDF_MKEY_FromString(const char* str, GDF_MKEY* out_key)
 GDF_Map* GDF_CreateMap()
 {
     GDF_Map* map = malloc(sizeof(GDF_Map));
-    memset(map->entries, 0, GDF_MKEY_NUM_KEYS);
+    for (int i = 0; i < GDF_MKEY_NUM_KEYS; i++)
+    {
+        map->entries[i] = NULL;
+    }
     return map;
 }
 

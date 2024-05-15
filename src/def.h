@@ -20,6 +20,7 @@ typedef int32_t i32;
 typedef int64_t i64;
 typedef float f32;
 typedef double f64;
+#define i32_MAX 2147483647
 
 #if defined(__clang__) || defined(__gcc__)
 #define STATIC_ASSERT _Static_assert
