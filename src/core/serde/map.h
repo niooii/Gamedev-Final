@@ -41,4 +41,10 @@ bool GDF_AddMapEntry(GDF_Map* map, GDF_MKEY key, void* value, GDF_MAP_DTYPE dtyp
 // should return null if none
 GDF_MapEntry* GDF_GetMapEntry(GDF_Map* map, GDF_MKEY key);
 
+bool* GDF_MAP_GetValueBool(GDF_Map* map, GDF_MKEY key);
+f64* GDF_MAP_GetValuef64(GDF_Map* map, GDF_MKEY key);
+i32* GDF_MAP_GetValuei32(GDF_Map* map, GDF_MKEY key);
+const char* GDF_MAP_GetValueString(GDF_Map* map, GDF_MKEY key);
+GDF_Map* GDF_MAP_GetValueMap(GDF_Map* map, GDF_MKEY key);
+
 void GDF_FreeMap(GDF_Map* map);

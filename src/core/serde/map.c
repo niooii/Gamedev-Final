@@ -69,9 +69,70 @@ bool GDF_AddMapEntry(GDF_Map* map, GDF_MKEY key, void* value, GDF_MAP_DTYPE dtyp
     return true;
 }
 
+GDF_MapEntry* GDF_GetMapEntry(GDF_Map* map, GDF_MKEY key)
+{
+    return map->entries[key];
+}
+
+// utility
+static void* get_value_checked(GDF_Map* map, GDF_MKEY key, GDF_MAP_DTYPE dtype)
+{
+    GDF_MapEntry* entry = map->entries[key];
+    if (entry == NULL)
+    {
+        char buf[100];
+        GDF_MKEY_ToString(key, buf);
+        LOG_WARN("Specified map key does not have an entry: %s", buf);
+        return NULL;
+    }
+    if (entry->dtype != dtype)
+    {
+        char buf[100];
+        GDF_MKEY_ToString(key, buf);
+        LOG_WARN("Specified map key's entry has the wrong dtype: %s", buf);
+        return NULL;
+    }
+    return entry->value;
+} 
+
+bool* GDF_MAP_GetValueBool(GDF_Map* map, GDF_MKEY key)
+{
+    void* val = get_value_checked(map, key, GDF_MAP_DTYPE_BOOL);
+    if (val != NULL)
+        return (bool*)val;
+    return NULL;
+}
+f64* GDF_MAP_GetValuef64(GDF_Map* map, GDF_MKEY key)
+{
+    void* val = get_value_checked(map, key, GDF_MAP_DTYPE_DOUBLE);
+    if (val != NULL)
+        return (f64*)val;
+    return NULL;
+}
+i32* GDF_MAP_GetValuei32(GDF_Map* map, GDF_MKEY key)
+{
+    void* val = get_value_checked(map, key, GDF_MAP_DTYPE_INT);
+    if (val != NULL)
+        return (i32*)val;
+    return NULL;
+}
+const char* GDF_MAP_GetValueString(GDF_Map* map, GDF_MKEY key)
+{
+    void* val = get_value_checked(map, key, GDF_MAP_DTYPE_STRING);
+    if (val != NULL)
+        return (char*)val;
+    return NULL;
+}
+GDF_Map* GDF_MAP_GetValueMap(GDF_Map* map, GDF_MKEY key)
+{
+    void* val = get_value_checked(map, key, GDF_MAP_DTYPE_MAP);
+    if (val != NULL)
+        return (GDF_Map*)val;
+    return NULL;
+}
+
 void GDF_FreeMap(GDF_Map* map)
 {
-    GDF_Map* map = malloc(sizeof(GDF_Map));
     for (int i = 0; i < GDF_MKEY_NUM_KEYS; i++)
     {
         if (map->entries[i] != NULL)

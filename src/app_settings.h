@@ -13,5 +13,6 @@ typedef struct GDF_AppSettings {
     bool verbose_output;
 } GDF_AppSettings;
 
-bool GDF_AppSettings_Load(GDF_AppSettings* settings);
-bool GDF_AppSettings_Save(GDF_AppSettings* settings);
+bool GDF_AppSettings_Load();
+bool GDF_AppSettings_Save();
+GDF_AppSettings* GDF_AppSettings_Get();

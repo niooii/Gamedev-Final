@@ -3,6 +3,7 @@
 #include "core.h"
 #include "map.h"
 #include "core/os/io.h"
+#include "app_settings.h"
 #include <string.h>
 #ifdef OS_WINDOWS
 #include <windows.h>

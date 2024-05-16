@@ -6,6 +6,7 @@
 #include "core/os/io.h"
 #include "core/subsystems.h"
 #include "core/serde/serde.h"
+#include "app_settings.h"
 
 typedef struct GDF_AppConfig {
     i16 spawn_x;
@@ -14,6 +15,7 @@ typedef struct GDF_AppConfig {
     i16 spawn_h;
     char* window_name;
     bool show_console;
+    GDF_AppSettings* app_settings;
 } GDF_AppConfig;
 
 bool GDF_InitApp(GDF_AppConfig* config);

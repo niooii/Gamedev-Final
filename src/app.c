@@ -25,24 +25,40 @@ bool GDF_InitApp(GDF_AppConfig* config)
 
     APP_STATE.is_running = true;
     APP_STATE.is_suspended = false;
+    if (!GDF_AppSettings_Load())
+    {
+        LOG_FATAL("Failed to load app_settings.gdf, exiting...");
+        return false;
+    }
 
     INITIALIZED = true;
 
-    MAIN_WINDOW = GDF_CreateWindow(config->spawn_x, config->spawn_y, config->spawn_w, config->spawn_h, config->window_name);
-    if (config->show_console)
+    if (GDF_AppSettings_Get()->app_type == GDF_APPTYPE_CLIENT)
+    {
+        MAIN_WINDOW = GDF_CreateWindow(config->spawn_x, config->spawn_y, config->spawn_w, config->spawn_h, config->window_name);
+        if (config->show_console)
+        {
+            GDF_ShowConsole();
+        }
+        else
+        {
+            GDF_HideConsole();
+        }
+    }
+    else 
     {
         GDF_ShowConsole();
     }
-    else
-    {
-        GDF_HideConsole();
-    }
+    
     return true;
 }
 
 bool GDF_InitFirstLaunch()
 {
-    GDF_MakeFile("settings.gdf");
+    if (GDF_MakeFile("app_settings.gdf"))
+    {
+        GDF_AppSettings_Save();
+    }
 }
 
 bool GDF_Run() 
@@ -52,17 +68,6 @@ bool GDF_Run()
         LOG_ERR("You didnt initialize the app yet. dipshit. you're a bad person, yk that?");
         return false;
     }
-    // test serialization
-    // GDF_Map* map = GDF_CreateMap();
-    // bool val = true;
-    // f64 val2 = 23.423;
-    // GDF_AddMapEntry(map, GDF_MKEY_SETTINGS_DEV_CAN_FLY, &val, GDF_MAP_DTYPE_BOOL);
-    // GDF_AddMapEntry(map, GDF_MKEY_SETTINGS_DEV_NOCLIP, &val2, GDF_MAP_DTYPE_DOUBLE);
-    // GDF_AddMapEntry(map, GDF_MKEY_SETTINGS_DEV_DRAW_WIREFRAME, "BRUHHAUHURtest", GDF_MAP_DTYPE_STRING);
-    
-    // GDF_WriteMapToFile(map, "settings.gdf");
-    GDF_Map* read_map = GDF_CreateMap();
-    GDF_ReadMapFromFile("settings.gdf", read_map);
     while(APP_STATE.is_running) 
     {
         GDF_PumpMessages();
