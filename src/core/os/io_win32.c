@@ -222,7 +222,7 @@ bool GDF_WriteFile(const char* rel_path, const char* data) {
     bool w_success = WriteFile(h, data, strlen(data), NULL, NULL);
     if (w_success)
     {
-        LOG_INFO("Wrote to file: %s", path);
+        // LOG_INFO("Wrote to file: %s", path);
     }
     else
     {
@@ -253,7 +253,7 @@ bool GDF_ReadFile(const char* rel_path, char* out_buf, size_t bytes_to_read) {
     bool w_success = ReadFile(h, (LPVOID)out_buf, bytes_to_read, &bytes_read, NULL);
     if (w_success)
     {
-        LOG_INFO("Read file: %s", path);
+        // LOG_INFO("Read file: %s", path);
     }
     else
     {
