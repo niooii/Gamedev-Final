@@ -30,7 +30,9 @@ bool GDF_SerializeMap(GDF_Map* map, char* out_buf)
             }
             case GDF_MAP_DTYPE_STRING:
             {
+                LOG_WARN("the value of string: %s", (char*)(map->entries[i]->value));
                 sprintf(val_buf, "\"%s\"", (char*)(map->entries[i]->value));
+                LOG_WARN("wrote string %s to file", val_buf);
                 break;
             }
             case GDF_MAP_DTYPE_MAP:
@@ -69,12 +71,13 @@ bool GDF_DeserializeToMap(char* data, GDF_Map* out_map)
         if (strncmp(val_buf, "\"", 1) == 0)
         {
             // string value
-            LOG_INFO("read a string from gdfdtm");
             size_t len = strlen(val_buf);
-            value = malloc(sizeof(char) * len);
-            // TODO! null terminated bullshit and
-            // separate inside string from quotes
-            strcpy(value, val_buf);
+            value = malloc(sizeof(char) * len - 1);
+            
+            strncpy(value, val_buf + 1, len - 2);
+            ((char*)value)[len - 2] = '\0';
+            
+            LOG_INFO("%s", (char*)value);
         }
         else if ((string_reads_true = strcmp(val_buf, "true") == 0) || strcmp(val_buf, "false"))
         {
@@ -85,6 +88,7 @@ bool GDF_DeserializeToMap(char* data, GDF_Map* out_map)
         }
         // TODO! double int and map 
         GDF_AddMapEntry(out_map, GDF_MKEY_FromString(key_buf), value, dtype);
+        free(value);
         line = strtok(NULL, "\n");
     }
     return 0;

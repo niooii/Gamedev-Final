@@ -56,9 +56,10 @@ bool GDF_Run()
     GDF_MKEY_InitLookupTable();
     GDF_Map* map = GDF_CreateMap();
     bool val = true;
+    f64 val2 = 23.423;
     GDF_AddMapEntry(map, GDF_MKEY_SETTINGS_DEV_CAN_FLY, &val, GDF_MAP_DTYPE_BOOL);
-    GDF_AddMapEntry(map, GDF_MKEY_SETTINGS_DEV_NOCLIP, &val, GDF_MAP_DTYPE_BOOL);
-    GDF_AddMapEntry(map, GDF_MKEY_SETTINGS_DEV_DRAW_WIREFRAME, "BRUHHAUHUR", GDF_MAP_DTYPE_STRING);
+    GDF_AddMapEntry(map, GDF_MKEY_SETTINGS_DEV_NOCLIP, &val2, GDF_MAP_DTYPE_DOUBLE);
+    GDF_AddMapEntry(map, GDF_MKEY_SETTINGS_DEV_DRAW_WIREFRAME, "BRUHHAUHURtest", GDF_MAP_DTYPE_STRING);
     
     GDF_WriteMapToFile(map, "settings.gdf");
     GDF_Map* read_map = GDF_CreateMap();

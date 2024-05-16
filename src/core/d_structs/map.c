@@ -80,7 +80,8 @@ bool GDF_AddMapEntry(GDF_Map* map, GDF_MKEY key, void* value, GDF_MAP_DTYPE dtyp
         }
         case GDF_MAP_DTYPE_STRING:
         {
-            value_size = strlen(value);
+            value_size = strlen((char*)value);
+            LOG_INFO("this string was sent to map entry: %s", (char*)value);
             break;
         }
         case GDF_MAP_DTYPE_MAP:
@@ -91,7 +92,18 @@ bool GDF_AddMapEntry(GDF_Map* map, GDF_MKEY key, void* value, GDF_MAP_DTYPE dtyp
         }
     } 
     void* value_clone = malloc(value_size);
-    memcpy(value_clone, value, value_size);
+    if (dtype == GDF_MAP_DTYPE_STRING)
+    {
+        strcpy(value_clone, (char*)value);
+    }
+    else
+    {
+        memcpy(value_clone, value, value_size);
+    }
     entry->value = value_clone;
-    map->entries[key] = entry;    
+    map->entries[key] = entry;   
+    if (dtype == GDF_MAP_DTYPE_STRING)
+    {
+        LOG_ERR("STILL GOT THIS THING: %s", (char*)(map->entries[key]->value))
+    } 
 }
