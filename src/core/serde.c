@@ -30,9 +30,7 @@ bool GDF_SerializeMap(GDF_Map* map, char* out_buf)
             }
             case GDF_MAP_DTYPE_STRING:
             {
-                LOG_WARN("the value of string: %s", (char*)(map->entries[i]->value));
                 sprintf(val_buf, "\"%s\"", (char*)(map->entries[i]->value));
-                LOG_WARN("wrote string %s to file", val_buf);
                 break;
             }
             case GDF_MAP_DTYPE_MAP:
