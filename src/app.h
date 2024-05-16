@@ -5,8 +5,7 @@
 #include "core/os/info.h"
 #include "core/os/io.h"
 #include "core/subsystems.h"
-#include "core/d_structs/map.h"
-#include "core/serde.h"
+#include "core/serde/serde.h"
 
 typedef struct GDF_AppConfig {
     i16 spawn_x;
@@ -18,5 +17,7 @@ typedef struct GDF_AppConfig {
 } GDF_AppConfig;
 
 bool GDF_InitApp(GDF_AppConfig* config);
-bool GDF_CreateRequiredFiles();
+// responsible for initializing directories and files with default values.
+// TODO!
+bool GDF_InitFirstLaunch();
 bool GDF_Run();

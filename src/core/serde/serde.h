@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core.h"
-#include "core/d_structs/map.h"
+#include "map.h"
 #include "core/os/io.h"
 #include <string.h>
 #ifdef OS_WINDOWS

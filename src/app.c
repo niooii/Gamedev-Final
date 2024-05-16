@@ -21,7 +21,7 @@ bool GDF_InitApp(GDF_AppConfig* config)
     }
 
     // create required files and directory
-    GDF_CreateRequiredFiles();
+    GDF_InitFirstLaunch();
 
     APP_STATE.is_running = true;
     APP_STATE.is_suspended = false;
@@ -40,7 +40,7 @@ bool GDF_InitApp(GDF_AppConfig* config)
     return true;
 }
 
-bool GDF_CreateRequiredFiles()
+bool GDF_InitFirstLaunch()
 {
     GDF_MakeFile("settings.gdf");
 }
@@ -53,15 +53,14 @@ bool GDF_Run()
         return false;
     }
     // test serialization
-    GDF_MKEY_InitLookupTable();
-    GDF_Map* map = GDF_CreateMap();
-    bool val = true;
-    f64 val2 = 23.423;
-    GDF_AddMapEntry(map, GDF_MKEY_SETTINGS_DEV_CAN_FLY, &val, GDF_MAP_DTYPE_BOOL);
-    GDF_AddMapEntry(map, GDF_MKEY_SETTINGS_DEV_NOCLIP, &val2, GDF_MAP_DTYPE_DOUBLE);
-    GDF_AddMapEntry(map, GDF_MKEY_SETTINGS_DEV_DRAW_WIREFRAME, "BRUHHAUHURtest", GDF_MAP_DTYPE_STRING);
+    // GDF_Map* map = GDF_CreateMap();
+    // bool val = true;
+    // f64 val2 = 23.423;
+    // GDF_AddMapEntry(map, GDF_MKEY_SETTINGS_DEV_CAN_FLY, &val, GDF_MAP_DTYPE_BOOL);
+    // GDF_AddMapEntry(map, GDF_MKEY_SETTINGS_DEV_NOCLIP, &val2, GDF_MAP_DTYPE_DOUBLE);
+    // GDF_AddMapEntry(map, GDF_MKEY_SETTINGS_DEV_DRAW_WIREFRAME, "BRUHHAUHURtest", GDF_MAP_DTYPE_STRING);
     
-    GDF_WriteMapToFile(map, "settings.gdf");
+    // GDF_WriteMapToFile(map, "settings.gdf");
     GDF_Map* read_map = GDF_CreateMap();
     GDF_ReadMapFromFile("settings.gdf", read_map);
     while(APP_STATE.is_running) 

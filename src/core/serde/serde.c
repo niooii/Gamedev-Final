@@ -53,7 +53,9 @@ bool GDF_DeserializeToMap(char* data, GDF_Map* out_map)
 
     // iterate through lines
     char* line = strtok(strdup(data), "\n");
+    u32 line_num = 0;
     while(line) {
+        line_num++;
         memset(line_buf, 0, 200);
         memset(key_buf, 0, 150);
         memset(val_buf, 0, 50);
@@ -64,32 +66,67 @@ bool GDF_DeserializeToMap(char* data, GDF_Map* out_map)
         // TODO! get dtype, convert to said dtype then to 
         // void* and memcpy soemthing something
         GDF_MAP_DTYPE dtype;
-        void* value;
+        void* value = NULL;
         bool string_reads_true;
-        if (strncmp(val_buf, "\"", 1) == 0)
+        if (value == NULL && strncmp(val_buf, "\"", 1) == 0 && strncmp(val_buf + strlen(val_buf) - 1, "\"", 1) == 0)
         {
+            LOG_INFO("found string")
             // string value
+            dtype = GDF_MAP_DTYPE_STRING;
             size_t len = strlen(val_buf);
             value = malloc(sizeof(char) * len - 1);
             
             strncpy(value, val_buf + 1, len - 2);
             ((char*)value)[len - 2] = '\0';
-            
-            LOG_INFO("%s", (char*)value);
         }
-        else if ((string_reads_true = strcmp(val_buf, "true") == 0) || strcmp(val_buf, "false"))
+        if (value == NULL && 
+        ((string_reads_true = strcmp(val_buf, "true") == 0) || strcmp(val_buf, "false") == 0))
         {
+            LOG_INFO("found bool")
             // then is bool value
             dtype = GDF_MAP_DTYPE_BOOL;
             value = malloc(sizeof(bool));
             *((bool*)value) = string_reads_true ? true : false;
         }
-        // TODO! double int and map 
+        if (value == NULL && strncmp(val_buf, "[", 1))
+        {
+            LOG_INFO("value is a map type, deserialization not implemented");
+        }
+        // TODO! double and int 
+        if (value == NULL && strchr(val_buf, '.') != NULL)
+        {
+            LOG_INFO("possible double");
+            // could be a double
+            f64 f;
+            if (sscanf(val_buf, "%lf", &f) != 0)
+            {
+                LOG_INFO("found double");
+                dtype = GDF_MAP_DTYPE_DOUBLE;
+                value = malloc(sizeof(f64));
+                *((f64*)value) = f;
+            }
+        }
+        if (value == NULL)
+        {
+            LOG_INFO("possible int")
+            // could be an int, if not its some unknown thing
+            i32 i;
+            if (sscanf(val_buf, "%d", &i) == 0)
+            {
+                LOG_ERR("found bullshit value at line %d, stopping map deserialization...", line_num);
+                return false;
+            }
+            LOG_INFO("found int")
+            dtype = GDF_MAP_DTYPE_INT;
+            value = malloc(sizeof(i32));
+            *((i32*)value) = i;
+        }
         GDF_AddMapEntry(out_map, GDF_MKEY_FromString(key_buf), value, dtype);
+        LOG_INFO("added map entry with dtype %d", dtype);
         free(value);
         line = strtok(NULL, "\n");
     }
-    return 0;
+    return true;
 }
 // max write capacity of 1mb
 bool GDF_WriteMapToFile(GDF_Map* map, const char* rel_path)

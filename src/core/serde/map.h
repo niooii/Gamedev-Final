@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core.h"
+#include "key.h"
 #include <string.h>
 #include <stdio.h>
 
@@ -11,22 +12,6 @@ rushed one-purpose map implementation
 solely for providing a common serialization interface.
 */
 // needed for serialization
-void GDF_MKEY_InitLookupTable();
-
-typedef enum GDF_MKEY {
-    GDF_MKEY_SETTINGS_DEV_CAN_FLY,
-    GDF_MKEY_SETTINGS_DEV_NOCLIP,
-    GDF_MKEY_SETTINGS_DEV_DRAW_WIREFRAME,
-
-    // not actual keys anymore
-    GDF_MKEY_NUM_KEYS, // is this needed?
-    GDF_MKEY_ERROR_KEY // this shouldnt be used at all to index anything
-} GDF_MKEY;
-typedef struct { char* str; GDF_MKEY key; } t_symstruct;
-// returns NULL on failure
-void GDF_MKEY_ToString(GDF_MKEY key, char* out_str);
-// returns GDF_MKEY_ERROR_KEY on failure
-GDF_MKEY GDF_MKEY_FromString(const char* str);
 
 typedef enum GDF_MAP_DTYPE {
     GDF_MAP_DTYPE_INT,

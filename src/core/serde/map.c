@@ -1,45 +1,5 @@
 #include "map.h"
 
-void GDF_MKEY_ToString(GDF_MKEY key, char* out_str)
-{
-    switch (key)
-    {
-        case GDF_MKEY_SETTINGS_DEV_CAN_FLY:
-            sprintf(out_str, "SETTINGS_DEV_CAN_FLY");
-            break;
-        case GDF_MKEY_SETTINGS_DEV_NOCLIP:
-            sprintf(out_str, "SETTINGS_DEV_NOCLIP");
-            break;
-        case GDF_MKEY_SETTINGS_DEV_DRAW_WIREFRAME:
-            sprintf(out_str, "SETTINGS_DEV_DRAW_WIREFRAME");
-            break;
-        default:
-            sprintf(out_str, "UNKNOWN");
-            break;
-    }
-}
-
-static t_symstruct lookup_table[GDF_MKEY_NUM_KEYS] = {};
-void GDF_MKEY_InitLookupTable()
-{
-    for (int i = 0; i < GDF_MKEY_NUM_KEYS; i++) {
-        char* key_buf = malloc(150);
-        GDF_MKEY_ToString(i, key_buf);
-        lookup_table[i].key = i;
-        lookup_table[i].str = key_buf;
-    }
-}
-
-GDF_MKEY GDF_MKEY_FromString(const char* str)
-{
-    for (int i = 0; i < GDF_MKEY_NUM_KEYS; i++) {
-        t_symstruct sym = lookup_table[i];
-        if (strcmp(sym.str, str) == 0)
-            return sym.key;
-    }
-    return GDF_MKEY_ERROR_KEY;
-}
-
 GDF_Map* GDF_CreateMap()
 {
     GDF_Map* map = malloc(sizeof(GDF_Map));
@@ -52,6 +12,11 @@ GDF_Map* GDF_CreateMap()
 
 bool GDF_AddMapEntry(GDF_Map* map, GDF_MKEY key, void* value, GDF_MAP_DTYPE dtype)
 {
+    if (key == GDF_MKEY_ERROR_KEY)
+    {
+        LOG_ERR("Tried to add ERROR_KEY to map, something went wrong...");
+        return false;
+    }
     if (map->entries[key] != NULL)
     {
         LOG_WARN("already key here retard");
@@ -101,4 +66,19 @@ bool GDF_AddMapEntry(GDF_Map* map, GDF_MKEY key, void* value, GDF_MAP_DTYPE dtyp
     }
     entry->value = value_clone;
     map->entries[key] = entry;   
+    return true;
+}
+
+void GDF_FreeMap(GDF_Map* map)
+{
+    GDF_Map* map = malloc(sizeof(GDF_Map));
+    for (int i = 0; i < GDF_MKEY_NUM_KEYS; i++)
+    {
+        if (map->entries[i] != NULL)
+        {
+            free(map->entries[i]->value);
+            free(map->entries[i]);
+        }
+    }
+    free(map);
 }
