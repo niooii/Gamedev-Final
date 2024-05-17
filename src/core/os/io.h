@@ -1,5 +1,6 @@
 #pragma once
 #include "core.h"
+#include "app_settings.h"
 #define MB_BYTES 1048576
 #define KB_BYTES 1024
 

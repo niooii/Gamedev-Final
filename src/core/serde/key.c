@@ -7,7 +7,6 @@ static const char* mkey_strings[] = {
 void GDF_MKEY_ToString(GDF_MKEY key, char* out_str)
 {
     strcpy(out_str, mkey_strings[key]);
-    LOG_DEBUG("key got value: %s", out_str);
     return;
 }
 

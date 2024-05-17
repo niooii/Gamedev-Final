@@ -162,7 +162,8 @@ bool GDF_MakeFile(const char* rel_path) {
     {
         if (GetLastError() == ERROR_FILE_EXISTS)
         {
-            LOG_WARN("File already exists: %s", path);
+            if (GDF_AppSettings_Get()->verbose_output)
+                LOG_WARN("File already exists: %s", path);
         }
         else
         {
@@ -186,7 +187,8 @@ bool GDF_MakeDir(const char* rel_path) {
     {
         if (GetLastError() == ERROR_ALREADY_EXISTS) 
         {
-            LOG_WARN("Directory already exists: %s", path);
+            if (GDF_AppSettings_Get()->verbose_output)
+                LOG_WARN("Directory already exists: %s", path);
         }
         else
         {

@@ -7,6 +7,7 @@ bool GDF_AppSettings_Load()
     GDF_Map* map = GDF_CreateMap();
     GDF_ReadMapFromFile("app_settings.gdf", map);
     settings.verbose_output = *GDF_MAP_GetValueBool(map, GDF_MKEY_APP_SETTINGS_VERBOSE_OUTPUT);
+    settings.client_show_console = *GDF_MAP_GetValueBool(map, GDF_MKEY_APP_SETTINGS_CLIENT_SHOW_CONSOLE);
     char* buf = GDF_MAP_GetValueString(map, GDF_MKEY_APP_SETTINGS_APP_TYPE);
     if (strcmp("client", buf) == 0)
     {
@@ -38,6 +39,12 @@ bool GDF_AppSettings_Save()
         map, 
         GDF_MKEY_APP_SETTINGS_VERBOSE_OUTPUT, 
         &settings.verbose_output, 
+        GDF_MAP_DTYPE_BOOL
+    );
+    GDF_AddMapEntry(
+        map, 
+        GDF_MKEY_APP_SETTINGS_CLIENT_SHOW_CONSOLE, 
+        &settings.client_show_console, 
         GDF_MAP_DTYPE_BOOL
     );
     GDF_WriteMapToFile(map, "app_settings.gdf");

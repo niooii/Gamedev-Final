@@ -11,6 +11,7 @@ typedef enum GDF_APPTYPE {
 typedef struct GDF_AppSettings {
     GDF_APPTYPE app_type;
     bool verbose_output;
+    bool client_show_console;
 } GDF_AppSettings;
 
 bool GDF_AppSettings_Load();

@@ -8,18 +8,9 @@
 #include "core/serde/serde.h"
 #include "app_settings.h"
 // TODO! this file and app.c are quite useless put these into main.c
-typedef struct GDF_AppConfig {
-    i16 spawn_x;
-    i16 spawn_y;
-    i16 spawn_w;
-    i16 spawn_h;
-    char* window_name;
-    bool show_console;
-    GDF_AppSettings* app_settings;
-} GDF_AppConfig;
 
-bool GDF_InitApp(GDF_AppConfig* config);
+bool GDF_InitApp();
 // responsible for initializing directories and files with default values.
 // TODO!
 bool GDF_InitFirstLaunch();
-bool GDF_Run();
+bool GDF_RunApp();

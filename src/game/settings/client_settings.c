@@ -1,4 +1,4 @@
-#include "settings.h"
+#include "client_settings.h"
 
 static const char* SETTINGS_PATH = "./settings.gdf";
 static GDF_Settings* LOADED_SETTINGS = NULL;

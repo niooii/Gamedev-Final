@@ -1,11 +1,9 @@
 #pragma once
 
 #include "core.h"
-#include "settings/settings.h"
 #include "world/world.h"
 
 typedef struct GDF_Game {
-    GDF_Settings* settings;
     GDF_World* world;
 } GDF_Game;
 

@@ -27,9 +27,9 @@ void GDF_Sleep(u64 ms)
     Sleep(ms);
 }
 
-DisplayInfo GetDisplayInfo()
+GDF_DisplayInfo GDF_GetDisplayInfo()
 {
-    DisplayInfo di = {
+    GDF_DisplayInfo di = {
         .screen_width = GetSystemMetrics(SM_CXSCREEN),
         .screen_height = GetSystemMetrics(SM_CYSCREEN)
     };
