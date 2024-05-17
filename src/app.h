@@ -7,7 +7,7 @@
 #include "core/subsystems.h"
 #include "core/serde/serde.h"
 #include "app_settings.h"
-
+// TODO! this file and app.c are quite useless put these into main.c
 typedef struct GDF_AppConfig {
     i16 spawn_x;
     i16 spawn_y;
