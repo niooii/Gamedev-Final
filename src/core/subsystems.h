@@ -10,11 +10,16 @@
 // womp womp
 inline bool GDF_InitSubsystems()
 {
-    GDF_InitMemory();
-    GDF_InitLogging();
+    if (!GDF_InitMemory())
+        return false;
+    if (!GDF_InitLogging())
+        return false;
     GDF_InitIO();
-    GDF_InitInfo();
-    GDF_InitWindowing();
+    if (!GDF_InitInfo())
+        return false;
+    if (!GDF_InitWindowing())
+        return false;
+    return true; 
 }
 
 inline bool GDF_ShutdownSubsystems()

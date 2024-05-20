@@ -1,8 +1,36 @@
 #pragma once
-#include "core.h"
+
+#include "def.h"
+#include "core/logging.h"
+#include "core/asserts.h"
 
 // perhaps later change to multiple heap model
 // save like 0.2 fps idk
+
+typedef enum GDF_MEMTAG {
+    // For temporary use. Should be assigned one of the below or have a new tag created.
+    GDF_MEMTAG_UNKNOWN,
+    GDF_MEMTAG_ARRAY,
+    GDF_MEMTAG_DARRAY,
+    GDF_MEMTAG_DICT,
+    GDF_MEMTAG_RING_QUEUE,
+    GDF_MEMTAG_BST,
+    GDF_MEMTAG_STRING,
+    GDF_MEMTAG_APPLICATION,
+    GDF_MEMTAG_JOB,
+    GDF_MEMTAG_TEXTURE,
+    GDF_MEMTAG_MATERIAL_INSTANCE,
+    GDF_MEMTAG_RENDERER,
+    GDF_MEMTAG_GAME,
+    GDF_MEMTAG_TRANSFORM,
+    GDF_MEMTAG_ENTITY,
+    GDF_MEMTAG_ENTITY_NODE,
+    GDF_MEMTAG_SCENE,
+    GDF_MEMTAG_TEMP_RESOURCE,
+    GDF_MEMTAG_FREE,
+
+    GDF_MEMTAG_MAX_TAGS
+} GDF_MEMTAG;
 
 // bytes
 const u32 __HEAP_GROW_RATE = MB_TO_B(16);
@@ -19,5 +47,5 @@ bool __heap_expand();
 GDF_MEMTAG __heap_free(void* block, u32* size_freed, bool aligned);
 void __heap_zero(void* block);
 // returns false if the dest block size is less than src block size
-void __heap_copy(void* dest, void* src);
+bool __heap_copy(void* dest, void* src);
 void __heap_set(void* dest, i32 val);

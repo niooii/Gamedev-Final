@@ -26,7 +26,7 @@ struct heap_chunk {
 
 static struct heap heap;
 
-void __init_heap() 
+bool __init_heap() 
 {
     // Allocate memory for the heap
     heap.start = (struct heap_chunk*)VirtualAlloc(NULL, __HEAP_GROW_RATE, MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);

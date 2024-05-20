@@ -31,8 +31,8 @@ bool GDF_InitLogging()
 
 void GDF_ShutdownLogging() 
 {
-    GDF_Free(OUT_MSG, MAX_MSG_LEN, GDF_MEMTAG_STRING);
-    GDF_Free(PREPENDED_OUT_MSG, MAX_MSG_LEN, GDF_MEMTAG_STRING);
+    GDF_Free(OUT_MSG);
+    GDF_Free(PREPENDED_OUT_MSG);
 
     // TODO: cleanup logging/write queued entries.
 }
