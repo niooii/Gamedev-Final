@@ -2,7 +2,7 @@
 
 #ifdef OS_WINDOWS
 #include "core/logging.h"
-#include "pmem.h"
+#include "core/mem.h"
 #include <Windows.h>
 
 const char win_class_name[] = "gdf_window";
@@ -123,8 +123,8 @@ GDF_Window* GDF_CreateWindow(i16 x_, i16 y_, i16 w, i16 h, const char* title)
     i16 y = y_ == GDF_WIN_CENTERED ?  300 /*calc later*/ : y_;
     // create window and stuff
 
-    GDF_Window* window = malloc(sizeof(GDF_Window));
-    window->internals = malloc(sizeof(InternalWindowState));
+    GDF_Window* window = GDF_Malloc(sizeof(GDF_Window), GDF_MEMTAG_APPLICATION);
+    window->internals = GDF_Malloc(sizeof(InternalWindowState), GDF_MEMTAG_APPLICATION);
     window->id = current_window_id++;
 
     InternalWindowState* internals = (InternalWindowState*) window->internals;

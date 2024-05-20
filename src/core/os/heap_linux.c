@@ -1,4 +1,4 @@
-#include "pmem.h"
+#include "heap.h"
 
 #ifdef OS_LINUX
 

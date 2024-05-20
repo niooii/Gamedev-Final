@@ -79,7 +79,7 @@ bool GDF_DeserializeToMap(char* data, GDF_Map* out_map)
             // string value
             dtype = GDF_MAP_DTYPE_STRING;
             size_t len = strlen(val_buf);
-            value = malloc(sizeof(char) * len - 1);
+            value = GDF_Malloc(sizeof(char) * len - 1, GDF_MEMTAG_TEMP_RESOURCE);
             
             strncpy(value, val_buf + 1, len - 2);
             ((char*)value)[len - 2] = '\0';
@@ -91,7 +91,7 @@ bool GDF_DeserializeToMap(char* data, GDF_Map* out_map)
                 LOG_DEBUG("dtype: bool")
             // then is bool value
             dtype = GDF_MAP_DTYPE_BOOL;
-            value = malloc(sizeof(bool));
+            value = GDF_Malloc(sizeof(bool), GDF_MEMTAG_TEMP_RESOURCE);
             *((bool*)value) = string_reads_true ? true : false;
         }
         if (value == NULL && strncmp(val_buf, "[", 1))
@@ -108,7 +108,7 @@ bool GDF_DeserializeToMap(char* data, GDF_Map* out_map)
                 if (GDF_AppSettings_Get()->verbose_output)
                     LOG_DEBUG("dtype: double");
                 dtype = GDF_MAP_DTYPE_DOUBLE;
-                value = malloc(sizeof(f64));
+                value = GDF_Malloc(sizeof(f64), GDF_MEMTAG_TEMP_RESOURCE);
                 *((f64*)value) = f;
             }
         }
@@ -124,7 +124,7 @@ bool GDF_DeserializeToMap(char* data, GDF_Map* out_map)
             if (GDF_AppSettings_Get()->verbose_output)
                 LOG_DEBUG("dtype: int");
             dtype = GDF_MAP_DTYPE_INT;
-            value = malloc(sizeof(i32));
+            value = GDF_Malloc(sizeof(i32), GDF_MEMTAG_TEMP_RESOURCE);
             *((i32*)value) = i;
         }
         GDF_AddMapEntry(out_map, GDF_MKEY_FromString(key_buf), value, dtype);
@@ -136,16 +136,22 @@ bool GDF_DeserializeToMap(char* data, GDF_Map* out_map)
 // max write capacity of 1mb
 bool GDF_WriteMapToFile(GDF_Map* map, const char* rel_path)
 {
-    char* buf = malloc(sizeof(char) * MB_BYTES);
-    GDF_SerializeMap(map, buf);
-    GDF_WriteFile(rel_path, buf);
+    char* buf = GDF_Malloc(sizeof(char) * MB_BYTES, GDF_MEMTAG_TEMP_RESOURCE);
+    if (!GDF_SerializeMap(map, buf))
+        return false;
+    if (!GDF_WriteFile(rel_path, buf))
+        return false;
     free(buf);
+    return true;
 }
 // max read capacity of 1mb
 bool GDF_ReadMapFromFile(const char* rel_path, GDF_Map* out_map)
 {
-    char* buf = malloc(sizeof(char) * MB_BYTES);
-    GDF_ReadFile(rel_path, buf, MB_BYTES);
-    GDF_DeserializeToMap(buf, out_map);
+    char* buf = GDF_Malloc(sizeof(char) * MB_BYTES, GDF_MEMTAG_TEMP_RESOURCE);
+    if (!GDF_ReadFile(rel_path, buf, MB_BYTES))
+        return false;
+    if (!GDF_DeserializeToMap(buf, out_map))
+        return false;
     free(buf);
+    return true;
 }

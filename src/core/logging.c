@@ -22,8 +22,8 @@ const char* level_strings[6] =
 
 bool GDF_InitLogging() 
 {
-    OUT_MSG = malloc(MAX_MSG_LEN);
-    PREPENDED_OUT_MSG = malloc(MAX_MSG_LEN);
+    OUT_MSG = GDF_Malloc(MAX_MSG_LEN, GDF_MEMTAG_STRING);
+    PREPENDED_OUT_MSG = GDF_Malloc(MAX_MSG_LEN, GDF_MEMTAG_STRING);
     
     // TODO: create log file.
     return true;
@@ -31,8 +31,8 @@ bool GDF_InitLogging()
 
 void GDF_ShutdownLogging() 
 {
-    free(OUT_MSG);
-    free(PREPENDED_OUT_MSG);
+    GDF_Free(OUT_MSG, MAX_MSG_LEN, GDF_MEMTAG_STRING);
+    GDF_Free(PREPENDED_OUT_MSG, MAX_MSG_LEN, GDF_MEMTAG_STRING);
 
     // TODO: cleanup logging/write queued entries.
 }

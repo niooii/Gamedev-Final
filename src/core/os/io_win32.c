@@ -11,7 +11,7 @@ static const char* EXECUTABLE_PATH;
 
 void GDF_InitIO() 
 {
-    EXECUTABLE_PATH = malloc(MAX_PATH_LEN);
+    EXECUTABLE_PATH = GDF_Malloc(MAX_PATH_LEN, GDF_MEMTAG_STRING);
     GetModuleFileName(NULL, EXECUTABLE_PATH, MAX_PATH_LEN);
 
     // Find the last occurrence of '\'
@@ -268,7 +268,7 @@ bool GDF_ReadFile(const char* rel_path, char* out_buf, size_t bytes_to_read) {
 // MUST CALL FREE AFTER USE
 char* GDF_StrcatNoOverwrite(const char* s1,const char* s2)
 {
-  char* p = malloc(strlen(s1) + strlen(s2) + 1);
+  char* p = GDF_Malloc(strlen(s1) + strlen(s2) + 1, GDF_MEMTAG_STRING);
 
   char* start = p;
   if (p != NULL)

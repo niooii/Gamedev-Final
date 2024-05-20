@@ -2,7 +2,7 @@
 
 GDF_Map* GDF_CreateMap()
 {
-    GDF_Map* map = malloc(sizeof(GDF_Map));
+    GDF_Map* map = GDF_Malloc(sizeof(GDF_Map), GDF_MEMTAG_TEMP_RESOURCE);
     for (int i = 0; i < GDF_MKEY_NUM_KEYS; i++)
     {
         map->entries[i] = NULL;
@@ -19,10 +19,10 @@ bool GDF_AddMapEntry(GDF_Map* map, GDF_MKEY key, void* value, GDF_MAP_DTYPE dtyp
     }
     if (map->entries[key] != NULL)
     {
-        LOG_WARN("already key here retard");
+        LOG_WARN("already key here");
         return false;
     }
-    GDF_MapEntry* entry = malloc(sizeof(GDF_MapEntry));
+    GDF_MapEntry* entry = GDF_Malloc(sizeof(GDF_MapEntry), GDF_MEMTAG_TEMP_RESOURCE);
     entry->dtype = dtype;
     // get value size for memcpy
     size_t value_size;
@@ -55,7 +55,7 @@ bool GDF_AddMapEntry(GDF_Map* map, GDF_MKEY key, void* value, GDF_MAP_DTYPE dtyp
             break;
         }
     } 
-    void* value_clone = malloc(value_size);
+    void* value_clone = GDF_Malloc(value_size, GDF_MEMTAG_TEMP_RESOURCE);
     if (dtype == GDF_MAP_DTYPE_STRING)
     {
         strcpy(value_clone, (char*)value);

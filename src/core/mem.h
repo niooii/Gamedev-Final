@@ -1,36 +1,42 @@
 #pragma once
 
 #include "core.h"
+#include "core/os/heap.h"
+#ifdef OS_WINDOWS
+#include <windows.h>
+#define strdup(p) _strdup(p)
+#endif
 
-typedef enum GDF_MemoryTag {
+typedef enum GDF_MemTag {
     // For temporary use. Should be assigned one of the below or have a new tag created.
-    MEMORY_TAG_UNKNOWN,
-    MEMORY_TAG_ARRAY,
-    MEMORY_TAG_DARRAY,
-    MEMORY_TAG_DICT,
-    MEMORY_TAG_RING_QUEUE,
-    MEMORY_TAG_BST,
-    MEMORY_TAG_STRING,
-    MEMORY_TAG_APPLICATION,
-    MEMORY_TAG_JOB,
-    MEMORY_TAG_TEXTURE,
-    MEMORY_TAG_MATERIAL_INSTANCE,
-    MEMORY_TAG_RENDERER,
-    MEMORY_TAG_GAME,
-    MEMORY_TAG_TRANSFORM,
-    MEMORY_TAG_ENTITY,
-    MEMORY_TAG_ENTITY_NODE,
-    MEMORY_TAG_SCENE,
+    GDF_MEMTAG_UNKNOWN,
+    GDF_MEMTAG_ARRAY,
+    GDF_MEMTAG_DARRAY,
+    GDF_MEMTAG_DICT,
+    GDF_MEMTAG_RING_QUEUE,
+    GDF_MEMTAG_BST,
+    GDF_MEMTAG_STRING,
+    GDF_MEMTAG_APPLICATION,
+    GDF_MEMTAG_JOB,
+    GDF_MEMTAG_TEXTURE,
+    GDF_MEMTAG_MATERIAL_INSTANCE,
+    GDF_MEMTAG_RENDERER,
+    GDF_MEMTAG_GAME,
+    GDF_MEMTAG_TRANSFORM,
+    GDF_MEMTAG_ENTITY,
+    GDF_MEMTAG_ENTITY_NODE,
+    GDF_MEMTAG_SCENE,
+    GDF_MEMTAG_TEMP_RESOURCE,
 
-    MEMORY_TAG_MAX_TAGS
-} GDF_MemoryTag;
+    GDF_MEMTAG_MAX_TAGS
+} GDF_MemTag;
 
-void initialize_memory();
-void shutdown_memory();
+void GDF_InitMemory();
+void GDF_ShutdownMemory();
 
-void* GDF_Malloc(u64 size, GDF_MemoryTag tag);
+void* GDF_Malloc(u64 size, GDF_MemTag tag);
 
-void GDF_Free(void* block, u64 size, GDF_MemoryTag tag);
+void GDF_Free(void* block, u64 size, GDF_MemTag tag);
 
 void* GDF_MZero(void* block, u64 size);
 

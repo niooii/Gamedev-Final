@@ -96,6 +96,12 @@
         "sstream": "c",
         "serde.h": "c",
         "stdlib.h": "c",
-        "map.h": "c"
+        "map.h": "c",
+        "app_settings.h": "c",
+        "core.h": "c",
+        "asserts.h": "c",
+        "heap.h": "c",
+        "mem.h": "c",
+        "def.h": "c"
     }
 }
