@@ -5,15 +5,19 @@
 // save like 0.2 fps idk
 
 // bytes
-const u32 __HEAP_GROW_RATE = MB_TO_B(128);
+const u32 __HEAP_GROW_RATE = MB_TO_B(16);
 
-void __init_heap();
+bool __init_heap();
+// TODO! this may cause a memory leak idk how virtualfree works yet
 void __destroy_heap();
 
-void* __heap_alloc(u64 size, bool alligned);
-void __heap_free(void* block, bool alligned);
-// TODO! no size parameter this will set all bytes to 0
-void* __heap_zero(void* block);
-void* __heap_copy(void* dest, void* src, u64 size);
-// this will keep size in case we want specific operations
-void* __heap_set(void* dest, i32 val, u64 size);
+// returns NULL on failure, heap is probably full
+void* __heap_alloc(u64 size, GDF_MEMTAG tag, bool aligned);
+// returns false on failure, wtf are you doing
+bool __heap_expand();
+// returns the memory tag of the block freed
+GDF_MEMTAG __heap_free(void* block, u32* size_freed, bool aligned);
+void __heap_zero(void* block);
+// returns false if the dest block size is less than src block size
+void __heap_copy(void* dest, void* src);
+void __heap_set(void* dest, i32 val);
