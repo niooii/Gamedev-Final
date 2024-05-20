@@ -7,7 +7,7 @@ FOR /R %%f in (*.c) do (
     SET cFilenames=!cFilenames! %%f
 )
 
-IF NOT EXIST .\bin\NUL MKDIR .\bin
+IF NOT EXIST .\build\NUL MKDIR .\build
 
 REM echo "Files:" %cFilenames%
 
@@ -19,4 +19,4 @@ SET linkerFlags=-luser32 -lvulkan-1 -L%VULKAN_SDK%/Lib
 SET defines=-D_DEBUG -DGDFIMPORT -D_CRT_SECURE_NO_WARNINGS
 
 ECHO "Building %assembly%%..."
-clang %cFilenames% %compilerFlags% -o ./bin/%assembly%.exe %defines% %includeFlags% %linkerFlags%
+clang %cFilenames% %compilerFlags% -o ./build/%assembly%.exe %defines% %includeFlags% %linkerFlags%

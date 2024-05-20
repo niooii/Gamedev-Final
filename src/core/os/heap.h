@@ -4,6 +4,8 @@
 #include "core/logging.h"
 #include "core/asserts.h"
 
+#define __HEAP_GROW_RATE MB_TO_B(16)
+
 // perhaps later change to multiple heap model
 // save like 0.2 fps idk
 
@@ -31,9 +33,6 @@ typedef enum GDF_MEMTAG {
 
     GDF_MEMTAG_MAX_TAGS
 } GDF_MEMTAG;
-
-// bytes
-const u32 __HEAP_GROW_RATE = MB_TO_B(16);
 
 bool __init_heap();
 // TODO! this may cause a memory leak idk how virtualfree works yet

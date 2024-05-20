@@ -91,11 +91,18 @@ bool GDF_InitWindowing()
     WNDCLASSA win_class;
     memset(&win_class, 0, sizeof(win_class));
     win_class.style = CS_DBLCLKS;
+    char ico_path[500];
+    GDF_GetAbsolutePath("resources/icon.ico", ico_path);
+    HICON icon = (HICON)LoadImage(NULL, ico_path, IMAGE_ICON, 64, 64, LR_LOADFROMFILE);
+    if (icon == NULL)
+    {
+        LOG_ERR("failed to create icon");
+    }
     win_class.lpfnWndProc = process_msg;
     win_class.cbClsExtra = 0;
     win_class.cbWndExtra = 0;
     win_class.hInstance = class_h_instance;
-    win_class.hIcon = NULL;
+    win_class.hIcon = icon;
     win_class.hCursor = LoadCursor(NULL, IDC_ARROW);
     win_class.hbrBackground = NULL;
     win_class.lpszClassName = win_class_name;

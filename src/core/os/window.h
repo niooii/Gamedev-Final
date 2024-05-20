@@ -1,5 +1,6 @@
 #pragma once
 #include "core.h"
+#include "core/os/io.h"
 
 #define GDF_WIN_CENTERED 32767
 
