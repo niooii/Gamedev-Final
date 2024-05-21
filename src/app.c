@@ -37,6 +37,8 @@ bool GDF_InitApp()
     {
         GDF_DisplayInfo display_info = GDF_GetDisplayInfo();
         MAIN_WINDOW = GDF_CreateWindow(GDF_WIN_CENTERED, GDF_WIN_CENTERED, display_info.screen_width * 0.45, display_info.screen_height * 0.5, "A GDF");
+        if (MAIN_WINDOW != NULL)
+            LOG_INFO("Created window.");
         if (GDF_AppSettings_Get()->client_show_console)
         {
             GDF_ShowConsole();
