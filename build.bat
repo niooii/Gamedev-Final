@@ -40,7 +40,9 @@ FOR %%f IN (%cFilenames%) DO (
         )
         ECHO checking !absSrcFile!
         FOR /F "tokens=2 delims==" %%c IN ('wmic datafile where "name='!absSrcFile!'" get LastModified /VALUE ^| FIND "="') DO SET srcLastModified=%%c
-        REM TODO! write the bottom line to a file every time its compiled so i dont need to query it every fucking time
+        REM TODO! get md5 checksum (certutil -hashfile filename MD5)
+        REM then compare it with a saved checksum of the file previously
+        REM in text files, if it changed then recompile. yippe
         FOR /F "tokens=2 delims==" %%o IN ('wmic datafile where "name='!absObjFile!'" get LastModified /VALUE ^| FIND "="') DO SET objLastModified=%%o
         
         IF !srcLastModified! GTR !objLastModified! (
