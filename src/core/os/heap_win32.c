@@ -72,15 +72,21 @@ static void insert_free_block(struct heap_chunk* chunk)
 static struct heap_chunk* find_best_fit(u32 size)
 {
     int index = get_free_list_index(size);
-    for (int i = index; i < 10; i++) {
+    for (int i = index; i < 10; i++) 
+    {
         struct heap_chunk* current = heap.free_lists[i];
         struct heap_chunk* previous = NULL;
 
-        while (current) {
-            if (current->size >= size) {
-                if (previous) {
+        while (current) 
+        {
+            if (current->size >= size) 
+            {
+                if (previous) 
+                {
                     previous->next = current->next;
-                } else {
+                } 
+                else 
+                {
                     heap.free_lists[i] = current->next;
                 }
                 return current;
@@ -94,7 +100,8 @@ static struct heap_chunk* find_best_fit(u32 size)
 
 void* __heap_alloc(u32 size, u32* total_allocated, GDF_MEMTAG tag, bool aligned)
 {
-    if (aligned) {
+    if (aligned) 
+    {
         size = (size + ALIGNMENT - 1) & ~(ALIGNMENT - 1);
     }
     size = (size < MIN_BLOCK_SIZE) ? MIN_BLOCK_SIZE : size;
@@ -103,17 +110,21 @@ void* __heap_alloc(u32 size, u32* total_allocated, GDF_MEMTAG tag, bool aligned)
 
     struct heap_chunk* chunk = find_best_fit(size);
 
-    if (!chunk) {
-        if (!__heap_expand()) {
+    if (!chunk) 
+    {
+        if (!__heap_expand()) 
+        {
             return NULL;
         }
         chunk = find_best_fit(size);
-        if (!chunk) {
+        if (!chunk) 
+        {
             return NULL;
         }
     }
 
-    if (chunk->size >= size + sizeof(struct heap_chunk) + MIN_BLOCK_SIZE) {
+    if (chunk->size >= size + sizeof(struct heap_chunk) + MIN_BLOCK_SIZE) 
+    {
         struct heap_chunk* new_chunk = (struct heap_chunk*)((char*)chunk + size);
         new_chunk->size = chunk->size - size;
         new_chunk->tag = GDF_MEMTAG_FREE;
