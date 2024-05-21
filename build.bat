@@ -40,6 +40,7 @@ FOR %%f IN (%cFilenames%) DO (
         )
         ECHO checking !absSrcFile!
         FOR /F "tokens=2 delims==" %%c IN ('wmic datafile where "name='!absSrcFile!'" get LastModified /VALUE ^| FIND "="') DO SET srcLastModified=%%c
+        REM TODO! write the bottom line to a file every time its compiled so i dont need to query it every fucking time
         FOR /F "tokens=2 delims==" %%o IN ('wmic datafile where "name='!absObjFile!'" get LastModified /VALUE ^| FIND "="') DO SET objLastModified=%%o
         
         IF !srcLastModified! GTR !objLastModified! (
