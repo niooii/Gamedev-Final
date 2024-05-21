@@ -59,7 +59,6 @@ void* GDF_Malloc(u64 size, GDF_MEMTAG tag)
     }
 
     u32 total_allocated = 0;
-    // TODO: Memory alignment
     void* block = __heap_alloc(size, &total_allocated, tag, true);
     if (block == NULL)
     {
@@ -73,7 +72,6 @@ void* GDF_Malloc(u64 size, GDF_MEMTAG tag)
 
 void GDF_Free(void* block) 
 {
-    // TODO: Memory alignment
     u32 size_freed = 0;
     GDF_MEMTAG tag = __heap_free(block, &size_freed, true);
     if (tag == GDF_MEMTAG_UNKNOWN) {
