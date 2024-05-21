@@ -72,7 +72,7 @@ bool GDF_RunApp()
     {
         LOG_ERR("You didnt initialize the app yet. dipshit. you're a bad person, yk that?");
         return false;
-    // }
+    }
     // LOG_INFO("allocating 10m values on the custom heap...");
     // for (int i = 0; i < 10000000; i++)
     // {
