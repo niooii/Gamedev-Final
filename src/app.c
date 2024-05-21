@@ -89,7 +89,6 @@ bool GDF_RunApp()
         free(block);
     }
     LOG_INFO("done");
-    LOG_INFO("done");
     // char* buf = GDF_Malloc(8000 * sizeof(char), GDF_MEMTAG_STRING);
     // GDF_GetMemUsageStr(buf);
     // LOG_INFO("%s", buf);
