@@ -3,6 +3,7 @@ SetLocal EnableDelayedExpansion
 
 IF NOT EXIST .\build\NUL MKDIR .\build
 IF NOT EXIST .\build\build_cache\NUL MKDIR .\build\build_cache
+IF NOT EXIST .\build\build_cache\checksums\NUL MKDIR .\build\build_cache\checksums
 
 REM Get a list of all the .c files and corresponding object files
 SET cFilenames=
@@ -25,29 +26,40 @@ ECHO "Building %assembly%..."
 REM Compile each .c file if the corresponding .obj file is missing or outdated
 FOR %%f IN (%cFilenames%) DO (
     SET oFilename=.\build\build_cache\%%~nf.obj
+    SET checksumFile=.\build\build_cache\checksums\%%~nf.md5
     IF NOT EXIST !oFilename! (
         ECHO Compiling %%f ...
         clang -c %%f %compilerFlags% %defines% %includeFlags% -o !oFilename!
+        REM Store the checksum of the .c file
+        certutil -hashfile %%f MD5 > !checksumFile!
     ) ELSE (
         REM Get the absolute paths
-        FOR %%c IN (%%f) DO (
-            SET absSrcFile=%%~fc
-            SET absSrcFile=!absSrcFile:\=\\!
-        )
-        FOR %%o IN (!oFilename!) DO (
-            SET absObjFile=%%~fo
-            SET absObjFile=!absObjFile:\=\\!
-        )
+        SET absSrcFile=%%~ff
+        SET absSrcFile=!absSrcFile:\=\\!
+        SET absObjFile=%%~fo
+        SET absObjFile=!absObjFile:\=\\!
+
         ECHO checking !absSrcFile!
-        FOR /F "tokens=2 delims==" %%c IN ('wmic datafile where "name='!absSrcFile!'" get LastModified /VALUE ^| FIND "="') DO SET srcLastModified=%%c
-        REM TODO! get md5 checksum (certutil -hashfile filename MD5)
-        REM then compare it with a saved checksum of the file previously
-        REM in text files, if it changed then recompile. yippe
-        FOR /F "tokens=2 delims==" %%o IN ('wmic datafile where "name='!absObjFile!'" get LastModified /VALUE ^| FIND "="') DO SET objLastModified=%%o
-        
+        REM Get the current checksum of the .c file
+        FOR /F "tokens=1,2" %%a IN ('certutil -hashfile %%f MD5 ^| FIND "MD5"') DO SET currentChecksum=%%b
+        ECHO "CHECKSUM: !currentChecksum!"
+        REM Read the stored checksum
+        SET /P storedChecksum=<!checksumFile!
+
+        REM Compare the timestamps and checksums to determine whether recompilation is needed
         IF !srcLastModified! GTR !objLastModified! (
+            SET recompile=1
+        ) ELSE IF NOT "!currentChecksum!" == "!storedChecksum!" (
+            SET recompile=1
+        ) ELSE (
+            SET recompile=0
+        )
+
+        IF !recompile! == 1 (
             ECHO Compiling %%f ...
             clang -c %%f %compilerFlags% %defines% %includeFlags% -o !oFilename!
+            REM Update the checksum of the .c file
+            certutil -hashfile %%f MD5 > !checksumFile!
         )
     )
 )
