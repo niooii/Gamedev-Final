@@ -59,7 +59,10 @@ bool GDF_InitFirstLaunch()
     // if it succeeds, we didnt have an app_settings before and creates one and then saves the default instance of appsettings
     if (GDF_MakeFile("app_settings.gdf"))
     {
-        GDF_AppSettings_Save();
+        if (!GDF_AppSettings_Save())
+        {
+            LOG_ERR("Something went wrong saving app settings...");
+        }
     }
 }
 
@@ -69,7 +72,24 @@ bool GDF_RunApp()
     {
         LOG_ERR("You didnt initialize the app yet. dipshit. you're a bad person, yk that?");
         return false;
-    }
+    // }
+    // LOG_INFO("allocating 10m values on the custom heap...");
+    // for (int i = 0; i < 10000000; i++)
+    // {
+    //     void* block = GDF_Malloc(sizeof(int), GDF_MEMTAG_APPLICATION);
+    //     GDF_Free(block);
+    // }
+    // LOG_INFO("done");
+    // LOG_INFO("allocating 10m values with malloc...");
+    // for (int i = 0; i < 10000000; i++)
+    // {
+    //     void* block = malloc(sizeof(int));
+    //     free(block);
+    // }
+    // LOG_INFO("done");
+    // char* buf = GDF_Malloc(8000 * sizeof(char), GDF_MEMTAG_STRING);
+    // GDF_GetMemUsageStr(buf);
+    // LOG_INFO("%s", buf);
     while(APP_STATE.is_running) 
     {
         GDF_PumpMessages();

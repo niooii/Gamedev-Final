@@ -58,26 +58,16 @@ void* GDF_Malloc(u64 size, GDF_MEMTAG tag)
         LOG_WARN("GDF_Malloc called using GDF_MEMTAG_UNKNOWN. Re-class this allocation.");
     }
 
+    u32 total_allocated = 0;
     // TODO: Memory alignment
-    void* block = __heap_alloc(size, tag, false);
+    void* block = __heap_alloc(size, &total_allocated, tag, true);
     if (block == NULL)
     {
-        LOG_ERR("Could not allocate block (%d bytes), expanding heap...", size);
-        if (!__heap_expand())
-        {
-            LOG_FATAL("Could not expand heap, wtf are you doing man.");
-            return NULL;
-        }
-        block = __heap_alloc(size, tag, false);
-        if (block == NULL)
-        {
-            LOG_FATAL("Just expanded heap but heap_alloc returned NULL, might wanna get that checked out.");
-            return NULL;
-        }
+        LOG_FATAL("It appears you have ran out of memory. womp womp");
     }
     __heap_zero(block);
-    stats.total_allocated += size;
-    stats.tagged_allocations[tag] += size;
+    stats.total_allocated += total_allocated;
+    stats.tagged_allocations[tag] += total_allocated;
     return block;
 }
 
@@ -85,12 +75,10 @@ void GDF_Free(void* block)
 {
     // TODO: Memory alignment
     u32 size_freed = 0;
-    GDF_MEMTAG tag = __heap_free(block, &size_freed, false);
-
+    GDF_MEMTAG tag = __heap_free(block, &size_freed, true);
     if (tag == GDF_MEMTAG_UNKNOWN) {
         LOG_WARN("GDF_Free called using GDF_MEMTAG_UNKNOWN. Re-class this allocation.");
     }
-
     stats.total_allocated -= size_freed;
     stats.tagged_allocations[tag] -= size_freed;
 }
@@ -154,5 +142,5 @@ void GDF_GetMemUsageStr(char* out_str)
         i32 length = snprintf(buffer + offset, 8000, "  %s: %.2f%s\n", GDF_MEMTAG_strings[i], amount, unit);
         offset += length;
     }
-    out_str = strdup(buffer);
+    strcpy(out_str, buffer);
 }

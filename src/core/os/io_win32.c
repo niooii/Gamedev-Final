@@ -224,7 +224,7 @@ bool GDF_WriteFile(const char* rel_path, const char* data) {
     bool w_success = WriteFile(h, data, strlen(data), NULL, NULL);
     if (w_success)
     {
-        // LOG_INFO("Wrote to file: %s", path);
+        LOG_DEBUG("Wrote to file: %s", path);
     }
     else
     {
@@ -288,12 +288,11 @@ void GDF_FreeDirInfo(GDF_DirInfo* dir_info)
     for (int i = 0; i < dir_info->num_nodes; i++)
     {
         GDF_DirInfoNode node = dir_info->nodes[i];
-        free(node.full_path);
-        free(node.name);
+        GDF_Free(node.full_path);
+        GDF_Free(node.name);
     }
 
-    // TODO! replace with allocator
-    free(dir_info);
+    GDF_Free(dir_info);
 }
 
 #endif

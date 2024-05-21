@@ -9,6 +9,7 @@
 static u16 MAX_MSG_LEN = 32768;
 static char* OUT_MSG;
 static char* PREPENDED_OUT_MSG;
+static bool INITIALIZED = false;
 
 const char* level_strings[6] = 
 {
@@ -22,8 +23,11 @@ const char* level_strings[6] =
 
 bool GDF_InitLogging() 
 {
+    INITIALIZED = true;
     OUT_MSG = GDF_Malloc(MAX_MSG_LEN, GDF_MEMTAG_STRING);
     PREPENDED_OUT_MSG = GDF_Malloc(MAX_MSG_LEN, GDF_MEMTAG_STRING);
+
+    LOG_INFO("Logging system initialized!");
     
     // TODO: create log file.
     return true;
@@ -31,14 +35,18 @@ bool GDF_InitLogging()
 
 void GDF_ShutdownLogging() 
 {
+    INITIALIZED = false;
     GDF_Free(OUT_MSG);
     GDF_Free(PREPENDED_OUT_MSG);
-
     // TODO: cleanup logging/write queued entries.
 }
 
 void log_output(log_level level, const char* message, ...) 
 {
+    if (!INITIALIZED)
+    {
+        return;
+    }
     memset(OUT_MSG, 0, MAX_MSG_LEN);
 
     __builtin_va_list arg_ptr;

@@ -5,6 +5,8 @@
 #include "core/asserts.h"
 
 #define __HEAP_GROW_RATE MB_TO_B(16)
+#define ALIGNMENT 32 
+#define MIN_BLOCK_SIZE 32 
 
 // perhaps later change to multiple heap model
 // save like 0.2 fps idk
@@ -39,7 +41,7 @@ bool __init_heap();
 void __destroy_heap();
 
 // returns NULL on failure, heap is probably full
-void* __heap_alloc(u64 size, GDF_MEMTAG tag, bool aligned);
+void* __heap_alloc(u32 size, u32* total_allocated, GDF_MEMTAG tag, bool aligned);
 // returns false on failure, wtf are you doing
 bool __heap_expand();
 // returns the memory tag of the block freed

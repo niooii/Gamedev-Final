@@ -93,7 +93,7 @@ bool GDF_InitWindowing()
     win_class.style = CS_DBLCLKS;
     char ico_path[500];
     GDF_GetAbsolutePath("resources/icon.ico", ico_path);
-    HICON icon = (HICON)LoadImage(NULL, ico_path, IMAGE_ICON, 64, 64, LR_LOADFROMFILE);
+    HICON icon = (HICON)LoadImage(class_h_instance, ico_path, IMAGE_ICON, 64, 64, LR_LOADFROMFILE);
     if (icon == NULL)
     {
         LOG_ERR("failed to create icon");

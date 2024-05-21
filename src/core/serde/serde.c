@@ -43,6 +43,9 @@ bool GDF_SerializeMap(GDF_Map* map, char* out_buf)
         snprintf(line_buf, 200, "%s=%s\n", key_buf, val_buf);
         strcat(out_buf, line_buf);
     }
+
+    LOG_DEBUG("Serialized map: \n%s", out_buf);
+    return true;
 }
 
 bool GDF_DeserializeToMap(char* data, GDF_Map* out_map)
@@ -128,7 +131,7 @@ bool GDF_DeserializeToMap(char* data, GDF_Map* out_map)
             *((i32*)value) = i;
         }
         GDF_AddMapEntry(out_map, GDF_MKEY_FromString(key_buf), value, dtype);
-        free(value);
+        GDF_Free(value);
         line = strtok(NULL, "\n");
     }
     return true;
@@ -138,10 +141,16 @@ bool GDF_WriteMapToFile(GDF_Map* map, const char* rel_path)
 {
     char* buf = GDF_Malloc(sizeof(char) * MB_BYTES, GDF_MEMTAG_TEMP_RESOURCE);
     if (!GDF_SerializeMap(map, buf))
+    {
+        LOG_ERR("Failed to serialize map.");
         return false;
+    }
     if (!GDF_WriteFile(rel_path, buf))
+    {
+        LOG_ERR("Failed to write map to file.");
         return false;
-    free(buf);
+    }
+    GDF_Free(buf);
     return true;
 }
 // max read capacity of 1mb
@@ -152,6 +161,6 @@ bool GDF_ReadMapFromFile(const char* rel_path, GDF_Map* out_map)
         return false;
     if (!GDF_DeserializeToMap(buf, out_map))
         return false;
-    free(buf);
+    GDF_Free(buf);
     return true;
 }

@@ -2,4 +2,4 @@
 SetLocal EnableDelayedExpansion
 
 REM runs after building
-.\build.bat && .\bin\gdf.exe
+.\build.bat && .\build\gdf.exe

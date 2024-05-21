@@ -137,9 +137,9 @@ void GDF_FreeMap(GDF_Map* map)
     {
         if (map->entries[i] != NULL)
         {
-            free(map->entries[i]->value);
-            free(map->entries[i]);
+            GDF_Free(map->entries[i]->value);
+            GDF_Free(map->entries[i]);
         }
     }
-    free(map);
+    GDF_Free(map);
 }

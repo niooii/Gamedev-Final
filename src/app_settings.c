@@ -49,6 +49,8 @@ bool GDF_AppSettings_Save()
     );
     GDF_WriteMapToFile(map, "app_settings.gdf");
     GDF_FreeMap(map);
+
+    return true;  
 }
 
 // returns a static instance of appsettings because it will be used everywhere.
