@@ -23,6 +23,7 @@ void GDF_HideConsole();
 void GDF_WriteConsole(const char* msg, u8 color);
 // must be freed
 void GDF_GetAbsolutePath(const char* rel_path, char* out_buf);
+// MUST BE DESTROYED with GDF_FreeDirInfo
 // Example:
 // GDF_GetDirInfo("worlds") // gets ./worlds folder form executable folder
 // Also valid:

@@ -77,7 +77,6 @@ void GDF_GetAbsolutePath(const char* rel_path, char* out_buf)
     ReplaceFrontSlashWithBack(out_buf);
 }
 
-// TODO! return once dynamic growbale array yes
 GDF_DirInfo* GDF_GetDirInfo(const char* rel_path) 
 {
     HANDLE hFind;

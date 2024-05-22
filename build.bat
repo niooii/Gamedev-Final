@@ -30,7 +30,6 @@ FOR %%f IN (%cFilenames%) DO (
     IF NOT EXIST !oFilename! (
         ECHO Compiling %%f ...
         clang -c %%f %compilerFlags% %defines% %includeFlags% -o !oFilename!
-        ECHO errorlevel !errorlevel!
         if !errorlevel! neq 0 (
             exit /b !errorlevel!
         )
@@ -62,7 +61,6 @@ FOR %%f IN (%cFilenames%) DO (
         IF !recompile! == 1 (
             ECHO Compiling %%f ...
             clang -c %%f %compilerFlags% %defines% %includeFlags% -o !oFilename!
-            ECHO ERRORLEVEL !errorlevel! ...
             if !errorlevel! neq 0 (
                 exit /b !errorlevel!
             )
@@ -76,3 +74,4 @@ REM Link all the object files
 clang %oFilenames% -o ./build/%assembly%.exe %linkerFlags%
 
 ECHO Build complete.
+ECHO got to en defines
