@@ -30,6 +30,10 @@ FOR %%f IN (%cFilenames%) DO (
     IF NOT EXIST !oFilename! (
         ECHO Compiling %%f ...
         clang -c %%f %compilerFlags% %defines% %includeFlags% -o !oFilename!
+        ECHO errorlevel !errorlevel!
+        if !errorlevel! neq 0 (
+            exit /b !errorlevel!
+        )
         REM Store the checksum of the .c file
         FOR /F "skip=1 tokens=*" %%a IN ('certutil -hashfile %%f MD5 ^| findstr /r /v "CertUtil: -hashfile"') DO ECHO %%a > !checksumFile!
     ) ELSE (
@@ -55,10 +59,13 @@ FOR %%f IN (%cFilenames%) DO (
             SET recompile=0
             @REM ECHO Skipping file with no changes...
         )
-
         IF !recompile! == 1 (
             ECHO Compiling %%f ...
             clang -c %%f %compilerFlags% %defines% %includeFlags% -o !oFilename!
+            ECHO ERRORLEVEL !errorlevel! ...
+            if !errorlevel! neq 0 (
+                exit /b !errorlevel!
+            )
             REM Update the checksum of the .c file
             ECHO !currentChecksum! > !checksumFile!
         )
