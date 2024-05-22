@@ -132,7 +132,6 @@ void GDF_GetMemUsageStr(char* out_str)
             unit[0] = 'K';
             amount = stats.tagged_allocations[i] / (float)kib;
         } else {
-            // byebye
             unit[0] = 'B';
             unit[1] = 0;
             amount = (float)stats.tagged_allocations[i];
