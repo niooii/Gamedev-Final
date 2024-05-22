@@ -94,7 +94,6 @@ bool GDF_RunApp()
     // LOG_INFO("%s", buf);
     while(APP_STATE.is_running) 
     {
-        AWLKJFLFKW
         GDF_PumpMessages();
     }
 
