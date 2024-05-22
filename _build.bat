@@ -14,12 +14,12 @@ FOR /R %%f IN (*.c) DO (
     SET oFilenames=!oFilenames! !oFilename!
 )
 
-SET assembly=gdf
+SET assembly=build
 SET compilerFlags=-g -Wvarargs -Wall
-REM -Wall -Werror
+REM -Wall -Werrorrr
 SET includeFlags=-Isrc
 SET linkerFlags=-luser32 -lvulkan-1 -L%VULKAN_SDK%/Lib
-SET defines=-D_DEBUG -DGDFIMPORT -D_CRT_SECURE_NO_WARNINGS
+SET defines=-D_DEBUG -DGDFIMPORT -D_CRT_SECURE_NO_WARNINGS -DCOMPILE_BUILDER
 
 ECHO "Building %assembly%..."
 
@@ -74,4 +74,3 @@ REM Link all the object files
 clang %oFilenames% -o ./build/%assembly%.exe %linkerFlags%
 
 ECHO Build complete.
-ECHO got to en defines

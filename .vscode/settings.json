@@ -102,6 +102,8 @@
         "asserts.h": "c",
         "heap.h": "c",
         "mem.h": "c",
-        "def.h": "c"
+        "def.h": "c",
+        "subsystems.h": "c",
+        "time.h": "c"
     }
 }

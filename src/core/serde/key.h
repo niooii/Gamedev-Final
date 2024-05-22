@@ -4,7 +4,14 @@
 #include <string.h>
 #include <stdio.h>
 
-#define FOREACH_KEY(F) \
+// define map keys here
+#define FOREACH_KEY(F)\
+/* custom build tool */\
+    F(GDF_MKEY_BUILD_DEFINES)\
+    F(GDF_MKEY_BUILD_COMPILEFLAGS)\
+    F(GDF_MKEY_BUILD_LINKERFLAGS)\
+    F(GDF_MKEY_BUILD_INCLUDEFLAGS)\
+/* actual stuff */\
     F(GDF_MKEY_APP_SETTINGS_APP_TYPE)\
     F(GDF_MKEY_APP_SETTINGS_VERBOSE_OUTPUT)\
     F(GDF_MKEY_APP_SETTINGS_CLIENT_SHOW_CONSOLE)\

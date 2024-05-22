@@ -1,3 +1,5 @@
+#ifndef COMPILE_BUILDER
+
 #include "game/game.h"
 #include "core/os/info.h"
 #include "app.h"
@@ -12,3 +14,5 @@ int main()
 
     return 0;
 }
+
+#endif
