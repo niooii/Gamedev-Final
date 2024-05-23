@@ -53,7 +53,9 @@ void GDF_ShutdownLogging();
 #endif
 
 #ifdef GDF_DEBUG
+    #ifdef DEBUG
     #define LOG_DEBUG(message, ...) log_output(LOG_LEVEL_DEBUG, message, ##__VA_ARGS__);
+    #endif
 #else
     #define LOG_DEBUG(message, ...)
 #endif

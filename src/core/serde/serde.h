@@ -19,7 +19,6 @@ b is of type GDF_MapEntry
 */
 
 /* TODO! this is the hard part :sob: */
-
 // serializes into format .gdf
 bool GDF_SerializeMap(GDF_Map* map, char* out_buf);
 // deserializes from format .gdf

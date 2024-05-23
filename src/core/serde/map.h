@@ -20,6 +20,8 @@ typedef enum GDF_MAP_DTYPE {
     GDF_MAP_DTYPE_STRING,
     // HEHEHEAW  
     GDF_MAP_DTYPE_MAP,
+    // TODO!
+    GDF_MAP_DTYPE_ARRAY, 
 } GDF_MAP_DTYPE;
 
 typedef struct GDF_MapEntry {

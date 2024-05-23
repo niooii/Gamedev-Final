@@ -4,6 +4,7 @@ static const char* mkey_strings[] = {
     FOREACH_KEY(GEN_STRING)
 };
 
+// TODO! sometimes this is one off?? fix pls
 void GDF_MKEY_ToString(GDF_MKEY key, char* out_str)
 {
     strcpy(out_str, mkey_strings[key]);

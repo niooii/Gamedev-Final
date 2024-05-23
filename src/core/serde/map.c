@@ -121,6 +121,7 @@ const char* GDF_MAP_GetValueString(GDF_Map* map, GDF_MKEY key)
     void* val = get_value_checked(map, key, GDF_MAP_DTYPE_STRING);
     if (val != NULL)
         return (char*)val;
+    
     return NULL;
 }
 GDF_Map* GDF_MAP_GetValueMap(GDF_Map* map, GDF_MKEY key)

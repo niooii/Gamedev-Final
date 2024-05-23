@@ -4,7 +4,7 @@
 #define MB_BYTES 1048576
 #define KB_BYTES 1024
 
-#define MAX_PATH_LEN 4000
+#define MAX_PATH_LEN 512
 
 typedef struct GDF_DirInfoNode {
     const char* name;
@@ -21,8 +21,10 @@ void GDF_InitIO();
 void GDF_ShowConsole();
 void GDF_HideConsole();
 void GDF_WriteConsole(const char* msg, u8 color);
-// must be freed
 void GDF_GetAbsolutePath(const char* rel_path, char* out_buf);
+// if the path is outside the directory of the executable
+// out_buf will be set to NULL. 
+void GDF_GetRelativePath(const char* abs_path, char* out_buf);
 // MUST BE DESTROYED with GDF_FreeDirInfo
 // Example:
 // GDF_GetDirInfo("worlds") // gets ./worlds folder form executable folder
@@ -38,6 +40,9 @@ bool GDF_MakeDir(const char* rel_path);
 // WILL OVERWRITE CONTENTS OF FILE
 bool GDF_WriteFile(const char* rel_path, const char* data);
 bool GDF_ReadFile(const char* rel_path, char* out_buf, size_t bytes_to_read);
+// must be freed with GDF_Free
+// returns NULL on error
+char* GDF_ReadFileExactLen(const char* rel_path);
 char* GDF_StrcatNoOverwrite(const char* s1, const char* s2);
 
 // free resources

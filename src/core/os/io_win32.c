@@ -77,6 +77,18 @@ void GDF_GetAbsolutePath(const char* rel_path, char* out_buf)
     ReplaceFrontSlashWithBack(out_buf);
 }
 
+void GDF_GetRelativePath(const char* abs_path, char* out_buf)
+{
+    size_t exec_path_len = strlen(EXECUTABLE_PATH);
+    if (strlen(abs_path) <= exec_path_len)
+    {
+        out_buf = NULL;
+        return;
+    }
+    
+    strcpy(out_buf, &abs_path[exec_path_len]);
+}
+
 GDF_DirInfo* GDF_GetDirInfo(const char* rel_path) 
 {
     HANDLE hFind;
@@ -148,7 +160,8 @@ GDF_DirInfo* GDF_GetDirInfo(const char* rel_path)
         GDF_DirInfoNode* node = dir_info->nodes[dir_info->num_nodes];
         node = GDF_Malloc(sizeof(GDF_DirInfoNode), GDF_MEMTAG_TEMP_RESOURCE);
         dir_info->num_nodes++;
-        node->name = strdup(FindData.cFileName);
+        node->name = GDF_Malloc(strlen(FindData.cFileName) + 1, GDF_MEMTAG_STRING);
+        strcpy(node->name, FindData.cFileName);
         LOG_DEBUG("found file %s", FindData.cFileName);
         node->full_path = GDF_StrcatNoOverwrite(dir, FindData.cFileName);
         node->is_directory = FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
@@ -278,6 +291,41 @@ bool GDF_ReadFile(const char* rel_path, char* out_buf, size_t bytes_to_read) {
     }
     CloseHandle(h);
     return w_success;
+}
+
+char* GDF_ReadFileExactLen(const char* rel_path)
+{
+    const char* path[MAX_PATH_LEN];
+    GDF_GetAbsolutePath(rel_path, path);
+    HANDLE h = CreateFile(path, GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0);
+    bool success = h != INVALID_HANDLE_VALUE;
+    if (!success)
+    {   
+        if (GetLastError() == ERROR_FILE_NOT_FOUND)
+        {
+            LOG_ERR("Could not read non-existent file: %s", path);
+        }
+        else
+        {
+            LOG_WARN("Unknown error opening read handle to file: %s", path);
+        }
+        return NULL;
+    }
+    DWORD bytes_read = 0;
+    size_t size;
+    GetFileSizeEx(h, &size);
+    char* out_buf = GDF_Malloc(size, GDF_MEMTAG_STRING);
+    bool w_success = ReadFile(h, (LPVOID)out_buf, size, &bytes_read, NULL);
+    if (w_success)
+    {
+        // LOG_INFO("Read file: %s", path);
+    }
+    else
+    {
+        LOG_ERR("Unknown error (%d) reading file: %s", GetLastError(), path);
+    }
+    CloseHandle(h);
+    return out_buf;
 }
 
 // MUST CALL FREE AFTER USE
