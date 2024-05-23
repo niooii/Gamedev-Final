@@ -13,7 +13,7 @@ typedef struct GDF_DirInfoNode {
 } GDF_DirInfoNode;
 
 typedef struct GDF_DirInfo {
-    GDF_DirInfoNode* nodes;
+    GDF_DirInfoNode** nodes;
     size_t num_nodes;
 } GDF_DirInfo;
 

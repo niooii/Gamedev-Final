@@ -82,7 +82,14 @@ GDF_DirInfo* GDF_GetDirInfo(const char* rel_path)
     HANDLE hFind;
     WIN32_FIND_DATA FindData;
     char* tmp_dir[MAX_PATH_LEN];
-    GDF_GetAbsolutePath(rel_path, tmp_dir);
+    if (strcmp(rel_path, ".") == 0)
+    {
+        strcpy(tmp_dir, EXECUTABLE_PATH);
+    }
+    else
+    {
+        GDF_GetAbsolutePath(rel_path, tmp_dir);
+    }
     TCHAR dir[MAX_PATH_LEN];
     StringCchCopy(dir, MAX_PATH_LEN, tmp_dir);
     // Find the last occurrence of '\'
@@ -104,6 +111,8 @@ GDF_DirInfo* GDF_GetDirInfo(const char* rel_path)
     StringCchCat(search_path, MAX_PATH_LEN, TEXT("*"));
 
     hFind = FindFirstFile(search_path, &FindData);
+    GDF_DirInfo* dir_info = GDF_Malloc(sizeof(*dir_info), GDF_MEMTAG_TEMP_RESOURCE);
+    dir_info->nodes = GDF_Malloc(sizeof(*dir_info->nodes), GDF_MEMTAG_TEMP_RESOURCE);
     // for some reason this never triggers. it always works.
     // even when given a random ass path it somehow manages
     // to return a valid handle and quite frankly, i am
@@ -129,14 +138,21 @@ GDF_DirInfo* GDF_GetDirInfo(const char* rel_path)
     while(FindNextFile(hFind, &FindData))
     {       
         // y no work
-        // if (strcmp(FindData.cFileName, ".") || strcmp(FindData.cFileName, "..")) 
-        //     continue;
-        LOG_INFO("%s", FindData.cFileName);
-        const char* full_path = GDF_StrcatNoOverwrite(dir, FindData.cFileName);
-        // LOG_INFO("found @ %s", full_path);
-        bool is_dir = FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
-        // LOG_INFO("IS DIR: %d", is_dir);
-        found_files++;
+        if (strcmp(FindData.cFileName, ".") == 0 || strcmp(FindData.cFileName, "..") == 0) 
+        {
+            found_files++;
+            continue;
+        }
+        // add node
+        dir_info->nodes[dir_info->num_nodes] = GDF_Malloc(sizeof(GDF_DirInfoNode*), GDF_MEMTAG_TEMP_RESOURCE);
+        GDF_DirInfoNode* node = dir_info->nodes[dir_info->num_nodes];
+        node = GDF_Malloc(sizeof(GDF_DirInfoNode), GDF_MEMTAG_TEMP_RESOURCE);
+        dir_info->num_nodes++;
+        node->name = strdup(FindData.cFileName);
+        LOG_DEBUG("found file %s", FindData.cFileName);
+        node->full_path = GDF_StrcatNoOverwrite(dir, FindData.cFileName);
+        node->is_directory = FindData.dwFileAttributes & FILE_ATTRIBUTE_DIRECTORY;
+        LOG_DEBUG("at path %s", node->full_path);
     }
     FindClose(hFind);
 
@@ -149,7 +165,7 @@ GDF_DirInfo* GDF_GetDirInfo(const char* rel_path)
         return NULL;
     }
 
-    return NULL;
+    return dir_info;
 }
 
 bool GDF_MakeFile(const char* rel_path) {
@@ -286,10 +302,12 @@ void GDF_FreeDirInfo(GDF_DirInfo* dir_info)
 {
     for (int i = 0; i < dir_info->num_nodes; i++)
     {
-        GDF_DirInfoNode node = dir_info->nodes[i];
-        GDF_Free(node.full_path);
-        GDF_Free(node.name);
+        GDF_DirInfoNode* node = dir_info->nodes[i];
+        GDF_Free(node->full_path);
+        GDF_Free(node->name);
+        GDF_Free(node);
     }
+    GDF_Free(dir_info->nodes);
 
     GDF_Free(dir_info);
 }

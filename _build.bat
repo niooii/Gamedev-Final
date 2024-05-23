@@ -71,6 +71,6 @@ FOR %%f IN (%cFilenames%) DO (
 )
 
 REM Link all the object files
-clang %oFilenames% -o ./build/%assembly%.exe %linkerFlags%
+clang %oFilenames% -o ./%assembly%.exe %linkerFlags%
 
 ECHO Build complete.
