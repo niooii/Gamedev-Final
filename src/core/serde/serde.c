@@ -53,15 +53,19 @@ static void replace_env_vars(const char* input, char* out_buf) {
 // in proper form: key=%env_name% when serialized
 bool GDF_SerializeMap(GDF_Map* map, char* out_buf)
 {
+    char line_buf[650];
+    char key_buf[150];
+    char val_buf[500];
     for (int i = 0; i < GDF_MKEY_NUM_KEYS; i++)
     {
         if (map->entries[i] == NULL)
             continue;
-        char line_buf[200];
-        char key_buf[150];
-        char val_buf[50];
+        memset(line_buf, 0, 650);
+        memset(key_buf, 0, 150);
+        memset(val_buf, 0, 500);
         
         GDF_MKEY_ToString(i, key_buf);
+        // LOG_DEBUG("first check: key buf contains %s", key_buf);
         switch (map->entries[i]->dtype)
         {
             case GDF_MAP_DTYPE_DOUBLE:
@@ -82,6 +86,7 @@ bool GDF_SerializeMap(GDF_Map* map, char* out_buf)
             case GDF_MAP_DTYPE_STRING:
             {
                 sprintf(val_buf, "\"%s\"", (char*)(map->entries[i]->value));
+                LOG_DEBUG("in serializemap: got value %s", (char*)(map->entries[i]->value));
                 break;
             }
             case GDF_MAP_DTYPE_MAP:
@@ -90,8 +95,9 @@ bool GDF_SerializeMap(GDF_Map* map, char* out_buf)
                 break;
             }
         } 
-
+        // LOG_DEBUG("second check: key buf contains %s", key_buf);
         snprintf(line_buf, 200, "%s=%s\n", key_buf, val_buf);
+        // LOG_WARN("line buf contains: %s", line_buf);
         strcat(out_buf, line_buf);
     }
 
@@ -124,10 +130,10 @@ bool GDF_DeserializeToMap(char* data, GDF_Map* out_map)
         }
         
         // previously if GDF_AppSettings_Get()->verbose_output
-        if (true)
+        if (GDF_AppSettings_Get()->verbose_output)
         {
-            LOG_DEBUG("key: %s", key_buf);
-            LOG_DEBUG("value: %s", val_buf);
+            // LOG_DEBUG("key: %s", key_buf);
+            // LOG_DEBUG("value: %s", val_buf);
         }
 
         // TODO! get dtype, convert to said dtype then to 

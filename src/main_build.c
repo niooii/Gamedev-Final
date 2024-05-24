@@ -1,4 +1,3 @@
-#define COMPILE_BUILDER
 #ifdef COMPILE_BUILDER
 
 #include <stdio.h>
@@ -13,8 +12,15 @@
 #include "core/serde/serde.h"
 
 #define NUM_CFILES 500
-#define BUILD_PATH "builder_test\\"
+#define CFILES_STR_LEN NUM_CFILES * MAX_PATH_LEN
+#define BUILD_PATH "build\\"
 #define BUILD_CACHE_PATH BUILD_PATH "build_cache\\"
+
+#define LAST_BUILD_STATUS_PATH BUILD_CACHE_PATH "last_build_status.txt"
+#define BUILD_STATUS_SUCCESS "success"
+#define BUILD_STATUS_LINK_FAIL "link_fail"
+#define BUILD_STATUS_COMPILE_FAIL "compile_fail"
+
 #define CHECKSUM_FILE BUILD_CACHE_PATH "_checksums.txt"
 #define BUILD_OPTIONS_FILE "build_options.gdf"
 #define BUILT_WITH_OPTIONS_FILE BUILD_CACHE_PATH "used_options.gdf"
@@ -24,13 +30,13 @@
 #include <stdlib.h>
 
 // All these flags will be in clang format.
-// change when we gotta deal with linux too
 typedef struct BuildOptions {
     const char* src_dir;
     const char* defines;
     const char* compile_flags;
     const char* linker_flags;
     const char* include_flags;
+    const char* executable_name;
     const char* profile;
 } BuildOptions;
 bool load_build_options(const char* rel_path, BuildOptions* out_opts);
@@ -47,30 +53,39 @@ char* get_checksum(const char* checksums_str, const char* cfile_rel_path);
 bool update_checksum(char* checksums_str, const char* cfile_rel_path, const char* new_checksum);
 bool add_checksum(char* checksums_str, const char* cfile_rel_path, const char* checksum);
 
+void end_program(GDF_Stopwatch* stopwatch, bool success);
+
+static u32 files_compiled = 0;
+
 int main() {
     GDF_InitSubsystems(false);
-
     // paths of all c files separated by token '|'
-    char* c_files = GDF_Malloc(MAX_PATH_LEN * NUM_CFILES, GDF_MEMTAG_STRING);
+    char* c_files = GDF_Malloc(CFILES_STR_LEN, GDF_MEMTAG_STRING);
     // paths of all c files separated by token ' '
     // to be used by linker command
-    char* o_files = GDF_Malloc(MAX_PATH_LEN * NUM_CFILES, GDF_MEMTAG_STRING);
+    char* o_files = GDF_Malloc(CFILES_STR_LEN, GDF_MEMTAG_STRING);
     // paths of new directories that have been made to avoid repeated directory
     // creation attempts. delimiter: '|'
-    char* created_dirs = GDF_Malloc(MAX_PATH_LEN * NUM_CFILES, GDF_MEMTAG_STRING);
+    char* created_dirs = GDF_Malloc(CFILES_STR_LEN, GDF_MEMTAG_STRING);
     char* build_cache_abs_path = GDF_Malloc(MAX_PATH_LEN, GDF_MEMTAG_STRING);
     GDF_GetAbsolutePath(BUILD_CACHE_PATH, build_cache_abs_path);
     // + 33 (32 bytes for md5, 1 byte for ':')
     const size_t c_file_checksums_len = (MAX_PATH_LEN + 33) * NUM_CFILES;
     char* c_file_checksums = GDF_Malloc(c_file_checksums_len, GDF_MEMTAG_STRING);
     GDF_ReadFile(CHECKSUM_FILE, c_file_checksums, c_file_checksums_len);
-    u32 files_compiled = 0;    
 
     GDF_Stopwatch* stopwatch = GDF_CreateStopwatch();
-    bool needs_recompile = false;
+
+    // create a bunch of files and load build options
     GDF_MakeDir(BUILD_PATH);
     GDF_MakeDir(BUILD_CACHE_PATH);
     GDF_MakeFile(CHECKSUM_FILE);
+    GDF_MakeFile(LAST_BUILD_STATUS_PATH);
+    const char* last_build_status = GDF_ReadFileExactLen(LAST_BUILD_STATUS_PATH);
+    bool should_relink = strcmp(last_build_status, BUILD_STATUS_LINK_FAIL) == 0;
+    bool should_recompile_all = false;
+    // should be success if nothing happens anyways
+    GDF_WriteFile(LAST_BUILD_STATUS_PATH, BUILD_STATUS_SUCCESS);
     BuildOptions* build_options = GDF_Malloc(sizeof(*build_options), GDF_MEMTAG_TEMP_RESOURCE);
     BuildOptions* prev_built_with = GDF_Malloc(sizeof(*build_options), GDF_MEMTAG_TEMP_RESOURCE);
     if (GDF_MakeFile(BUILD_OPTIONS_FILE) || !load_build_options(BUILD_OPTIONS_FILE, build_options))
@@ -78,15 +93,35 @@ int main() {
         save_default_build_options();
         load_build_options(BUILD_OPTIONS_FILE, build_options);
     }
-    if (GDF_MakeFile(BUILT_WITH_OPTIONS_FILE) || !load_build_options(BUILT_WITH_OPTIONS_FILE, build_options))
+    if (GDF_MakeFile(BUILT_WITH_OPTIONS_FILE) || !load_build_options(BUILT_WITH_OPTIONS_FILE, prev_built_with))
     {
         save_build_options(BUILT_WITH_OPTIONS_FILE, build_options);
         prev_built_with = build_options;
     }
+    // if the build options and previously built with options
+    // were loaded separately (on first creation they both share)
+    // the same memory
+    LOG_WARN("memememaw");
     if (prev_built_with != build_options)
     {
+        LOG_WARN("HEHEHEHAW");
         // we need to check for differences in the build options
-        // TODO!
+        if (
+            strcmp(build_options->compile_flags, prev_built_with->compile_flags) != 0
+            || strcmp(build_options->defines, prev_built_with->defines) != 0
+        )
+        {
+            should_recompile_all = true;
+            LOG_INFO("Build options changed, recompiling all files...");
+        }
+        if (
+            strcmp(build_options->linker_flags, prev_built_with->linker_flags) != 0
+            || strcmp(build_options->executable_name, prev_built_with->executable_name) != 0
+        )
+        {
+            should_relink = true;
+            LOG_INFO("Build options changed, files will be linked again...");
+        }
     }
     char path[400];
     GDF_GetAbsolutePath(build_options->src_dir, path);
@@ -119,34 +154,46 @@ int main() {
         if ((stored_cs_p = get_checksum(c_file_checksums, rel_path)) == NULL)
         {
             LOG_DEBUG("checksum not found, compiling and storing checksum.");
+            LOG_DEBUG("current md5 hash: %s", new_checksum);
             add_checksum(c_file_checksums, rel_path, new_checksum);
             needs_compile = true;
         }
         else
         {
             char stored_checksum[33];
-            LOG_DEBUG("md5 hash: %s", new_checksum);
+            LOG_DEBUG("current md5 hash: %s", new_checksum);
             snprintf(stored_checksum, 33, stored_cs_p);
             LOG_DEBUG("stored hash: %s", stored_checksum);
             if (strcmp(stored_checksum, new_checksum) == 0)
             {
                 // same checksum, dont do shit 
                 LOG_DEBUG("Checksums match, skipping recompilation");
-                
-                continue;
             }
-            needs_compile = true;
+            else
+            {
+                needs_compile = true;
+            }
         }
 
+        // o_file is added HERE in case
+        // we deleted a c file.
+        // if object files were grabbed
+        // from the directory itself
+        // it could still be linking
+        // with object files from 
+        // deleted c files.
+        char o_file[MAX_PATH_LEN];
+        strcpy(o_file, build_cache_abs_path);
+        strcat(o_file, rel_path);
+        o_file[strlen(o_file) - 1] = 'o';
+        
+        strcat(o_files, o_file);
+        strcat(o_files, " ");
+
         // handle compilation if needed
-        if (needs_compile)
+        if (needs_compile || should_recompile_all)
         {
-            char* compile_command = GDF_Malloc(2000, GDF_MEMTAG_STRING);
-            // get absolute path of soon-to-be object file
-            char o_file[1024];
-            strcpy(o_file, build_cache_abs_path);
-            strcat(o_file, rel_path);
-            o_file[strlen(o_file) - 1] = 'o';
+            char* compile_command = GDF_Malloc(2048, GDF_MEMTAG_STRING);
 
             // create directories if they dont exist
             // example o_file = 
@@ -178,7 +225,7 @@ int main() {
                 if (strstr(created_dirs, target_dir) == NULL)
                 {
                     GDF_MakeDirAbs(target_dir);
-                    LOG_INFO("Created directory %s", target_dir);
+                    LOG_DEBUG("Created directory %s", target_dir);
                     strcat(created_dirs, target_dir);
                     strcat(created_dirs, "|");
                 }
@@ -203,15 +250,12 @@ int main() {
             LOG_INFO("Compiling \"%s\"", rel_path);
             if (system(compile_command) != 0)
             {
-                LOG_FATAL("Clang exited with non-zero exit code. Stopping...");
-                f64 sec_elapsed = GDF_StopwatchTimeElapsed(stopwatch);
+                LOG_ERR("Failed to compile \"%s\". Stopping...", rel_path);
                 GDF_WriteFile(CHECKSUM_FILE, c_file_checksums);
-                LOG_FATAL("Build failed in %lf seconds.", sec_elapsed);
-                exit(1);
+                GDF_WriteFile(LAST_BUILD_STATUS_PATH, BUILD_STATUS_COMPILE_FAIL);
+                end_program(stopwatch, false);
             }
             update_checksum(c_file_checksums, rel_path, new_checksum);
-            strcat(o_files, o_file);
-            strcat(o_files, " ");
             files_compiled++;
             GDF_Free(compile_command);
         }
@@ -220,24 +264,46 @@ int main() {
 
     if (files_compiled == 0)
     {
-        LOG_INFO("No changes detected. Stopping...");
-        f64 sec_elapsed = GDF_StopwatchTimeElapsed(stopwatch);
-        LOG_INFO("Build finished in %lf seconds.", sec_elapsed);
-        return 0;
+        LOG_INFO("No changes detected.");
+    }
+    else
+    {
+        LOG_INFO("Updating checksums...");
+        GDF_WriteFile(CHECKSUM_FILE, c_file_checksums);
+        // LOG_DEBUG("o files: %s", o_files);
+    }
+
+    if (files_compiled != 0 || should_relink)
+    {
+        LOG_INFO("Linking files...");
+        char* link_command = GDF_Malloc(CFILES_STR_LEN, GDF_MEMTAG_STRING);
+        char executable_path[MAX_PATH_LEN];
+        strcpy(executable_path, BUILD_PATH);
+        strcat(executable_path, build_options->executable_name);
+        strcat(executable_path, ".exe");
+        sprintf(
+            link_command,
+            "clang %s -o %s %s",
+            o_files,
+            executable_path,
+            build_options->linker_flags
+        );
+
+        if (system(link_command) != 0)
+        {
+            LOG_ERR("Linking failed, stopping...");
+            GDF_WriteFile(LAST_BUILD_STATUS_PATH, BUILD_STATUS_LINK_FAIL);
+            end_program(stopwatch, false);
+        }
+        GDF_Free(link_command);
     }
     
-    LOG_INFO("Updating checksums...");
-    GDF_WriteFile(CHECKSUM_FILE, c_file_checksums);
-    LOG_DEBUG("o files: %s", o_files);
-
     GDF_Free(c_files);
     GDF_Free(c_file_checksums);
     GDF_Free(o_files);
     GDF_Free(build_cache_abs_path);
-
-    f64 sec_elapsed = GDF_StopwatchTimeElapsed(stopwatch);
-    LOG_INFO("Compiled %d files in %lf seconds.", files_compiled, sec_elapsed);
-    LOG_INFO("Build finished");
+    save_build_options(BUILT_WITH_OPTIONS_FILE, build_options);
+    end_program(stopwatch, true);
 
     return 0;
 }
@@ -255,6 +321,7 @@ bool load_build_options(const char* rel_path, BuildOptions* out_opts)
     out_opts->include_flags = GDF_StrDup(GDF_MAP_GetValueString(map, GDF_MKEY_BUILD_INCLUDEFLAGS));
     out_opts->linker_flags = GDF_StrDup(GDF_MAP_GetValueString(map, GDF_MKEY_BUILD_LINKERFLAGS));
     out_opts->defines = GDF_StrDup(GDF_MAP_GetValueString(map, GDF_MKEY_BUILD_DEFINES));
+    out_opts->executable_name = GDF_StrDup(GDF_MAP_GetValueString(map, GDF_MKEY_BUILD_EXECUTABLE_NAME));
     GDF_FreeMap(map);
     return true;
 }
@@ -292,6 +359,12 @@ bool save_build_options(const char* rel_path, BuildOptions* options)
         options->src_dir,
         GDF_MAP_DTYPE_STRING
     );
+    GDF_AddMapEntry(
+        map, 
+        GDF_MKEY_BUILD_EXECUTABLE_NAME,
+        options->executable_name,
+        GDF_MAP_DTYPE_STRING
+    );
     bool success = GDF_WriteMapToFile(map, rel_path);
     GDF_FreeMap(map);
     return success;
@@ -306,7 +379,8 @@ bool save_default_build_options()
         .include_flags = "-Isrc",
         .linker_flags = "-luser32 -lvulkan-1 -L%VULKAN_SDK%/Lib",
         .defines = "-D_DEBUG -D_CRT_SECURE_NO_WARNINGS",
-        .src_dir = "src"
+        .src_dir = "src",
+        .executable_name = "gdf"
     };
 
     return save_build_options(BUILD_OPTIONS_FILE, &out_opts);
@@ -398,6 +472,24 @@ bool add_checksum(char* checksums_str, const char* cfile_rel_path, const char* c
     strcat(checksums_str, line_buf);
     // LOG_DEBUG("new checksum string: %s", checksums_str);
     return true;
+}
+
+void end_program(GDF_Stopwatch* stopwatch, bool success)
+{
+    if (success)
+    {
+        f64 sec_elapsed = GDF_StopwatchTimeElapsed(stopwatch);
+        if (files_compiled > 0)
+        {
+            LOG_INFO("Compiled %d files in %lf seconds.", files_compiled, sec_elapsed);
+        }
+        LOG_INFO("Build finished");
+        exit(0);
+    }
+
+    f64 sec_elapsed = GDF_StopwatchTimeElapsed(stopwatch);
+    LOG_ERR("Build failed in %lf seconds.", sec_elapsed);
+    exit(1);
 }
 
 #endif

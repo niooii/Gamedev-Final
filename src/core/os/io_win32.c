@@ -358,6 +358,7 @@ char* GDF_StrcatNoOverwrite(const char* s1,const char* s2)
 
 char* GDF_StrDup(const char* str)
 {
+    // CHECK HERE
     char* dup = GDF_Malloc(strlen(str) + 1, GDF_MEMTAG_STRING);
     strcpy(dup, str);
     return dup;
