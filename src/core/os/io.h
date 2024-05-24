@@ -44,6 +44,8 @@ bool GDF_ReadFile(const char* rel_path, char* out_buf, size_t bytes_to_read);
 // returns NULL on error
 char* GDF_ReadFileExactLen(const char* rel_path);
 char* GDF_StrcatNoOverwrite(const char* s1, const char* s2);
+// must be freed with GDF_Free
+char* GDF_StrDup(const char* str);
 
 // free resources
 void GDF_FreeDirInfo(GDF_DirInfo* dir_info);

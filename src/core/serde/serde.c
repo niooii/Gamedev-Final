@@ -151,7 +151,7 @@ bool GDF_DeserializeToMap(char* data, GDF_Map* out_map)
         ((string_reads_true = strcmp(val_buf, "true") == 0) || strcmp(val_buf, "false") == 0))
         {
             if (GDF_AppSettings_Get()->verbose_output)
-                LOG_DEBUG("dtype: bool")
+                LOG_DEBUG("dtype: bool");
             // then is bool value
             dtype = GDF_MAP_DTYPE_BOOL;
             value = GDF_Malloc(sizeof(bool), GDF_MEMTAG_TEMP_RESOURCE);

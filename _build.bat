@@ -19,7 +19,7 @@ SET compilerFlags=-g -Wvarargs -Wall
 REM -Wall -Werrorrr
 SET includeFlags=-Isrc
 SET linkerFlags=-luser32 -lvulkan-1 -L%VULKAN_SDK%/Lib
-SET defines=-D_DEBUG -D_CRT_SECURE_NO_WARNINGS -DCOMPILE_BUILDER
+SET defines=-DGDF_DEBUG -D_CRT_SECURE_NO_WARNINGS -DCOMPILE_BUILDER
 
 ECHO "Building %assembly%..."
 

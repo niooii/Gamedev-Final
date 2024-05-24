@@ -9,7 +9,6 @@ extern const char* level_strings[6];
 // LOGGING
 #define GDF_WARN
 #define GDF_INFO
-#define GDF_DEBUG
 #define GDF_TRACE
 
 #ifdef GDF_RELEASE
@@ -52,10 +51,8 @@ void GDF_ShutdownLogging();
     #define LOG_INFO(message, ...)
 #endif
 
-#ifdef GDF_DEBUG
-    #ifdef DEBUG
+#if defined(GDF_DEBUG)
     #define LOG_DEBUG(message, ...) log_output(LOG_LEVEL_DEBUG, message, ##__VA_ARGS__);
-    #endif
 #else
     #define LOG_DEBUG(message, ...)
 #endif

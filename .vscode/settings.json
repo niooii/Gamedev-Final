@@ -104,6 +104,7 @@
         "mem.h": "c",
         "def.h": "c",
         "subsystems.h": "c",
-        "time.h": "c"
+        "time.h": "c",
+        "windows.h": "c"
     }
 }
