@@ -37,6 +37,7 @@ void GDF_GetRelativePath(const char* abs_path, char* out_buf);
 GDF_DirInfo* GDF_GetDirInfo(const char* rel_path);
 bool GDF_MakeFile(const char* rel_path);
 bool GDF_MakeDir(const char* rel_path);
+bool GDF_MakeDirAbs(const char* abs_path);
 // WILL OVERWRITE CONTENTS OF FILE
 bool GDF_WriteFile(const char* rel_path, const char* data);
 bool GDF_ReadFile(const char* rel_path, char* out_buf, size_t bytes_to_read);

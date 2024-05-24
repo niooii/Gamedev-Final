@@ -8,7 +8,7 @@
 
 int main()
 {
-    GDF_InitSubsystems();
+    GDF_InitSubsystems(true);
     GDF_InitApp();
     GDF_RunApp();
 

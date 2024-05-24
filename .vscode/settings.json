@@ -105,6 +105,8 @@
         "def.h": "c",
         "subsystems.h": "c",
         "time.h": "c",
-        "windows.h": "c"
+        "windows.h": "c",
+        "tchar.h": "c",
+        "stat.h": "c"
     }
 }

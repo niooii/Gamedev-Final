@@ -44,19 +44,24 @@ bool get_cfile_names(const char *sDir, char* cfile_names);
 // DOES NOT ALLOCATE MEMORY
 // returns NULL on failure.
 char* get_checksum(const char* checksums_str, const char* cfile_rel_path);
+bool update_checksum(char* checksums_str, const char* cfile_rel_path, const char* new_checksum);
+bool add_checksum(char* checksums_str, const char* cfile_rel_path, const char* checksum);
 
 int main() {
-    GDF_InitSubsystems();
+    GDF_InitSubsystems(false);
 
     // paths of all c files separated by token '|'
     char* c_files = GDF_Malloc(MAX_PATH_LEN * NUM_CFILES, GDF_MEMTAG_STRING);
+    // paths of all c files separated by token ' '
+    // to be used by linker command
+    char* o_files = GDF_Malloc(MAX_PATH_LEN * NUM_CFILES, GDF_MEMTAG_STRING);
     // paths of new directories that have been made to avoid repeated directory
     // creation attempts. delimiter: '|'
     char* created_dirs = GDF_Malloc(MAX_PATH_LEN * NUM_CFILES, GDF_MEMTAG_STRING);
     char* build_cache_abs_path = GDF_Malloc(MAX_PATH_LEN, GDF_MEMTAG_STRING);
     GDF_GetAbsolutePath(BUILD_CACHE_PATH, build_cache_abs_path);
     // + 33 (32 bytes for md5, 1 byte for ':')
-    const c_file_checksums_len = (MAX_PATH_LEN + 33) * NUM_CFILES;
+    const size_t c_file_checksums_len = (MAX_PATH_LEN + 33) * NUM_CFILES;
     char* c_file_checksums = GDF_Malloc(c_file_checksums_len, GDF_MEMTAG_STRING);
     GDF_ReadFile(CHECKSUM_FILE, c_file_checksums, c_file_checksums_len);
     u32 files_compiled = 0;    
@@ -84,7 +89,7 @@ int main() {
         // TODO!
     }
     char path[400];
-    GDF_GetAbsolutePath("src", path);
+    GDF_GetAbsolutePath(build_options->src_dir, path);
     get_cfile_names(path, c_files);
 
     // compare files with the stored hashes
@@ -114,6 +119,7 @@ int main() {
         if ((stored_cs_p = get_checksum(c_file_checksums, rel_path)) == NULL)
         {
             LOG_DEBUG("checksum not found, compiling and storing checksum.");
+            add_checksum(c_file_checksums, rel_path, new_checksum);
             needs_compile = true;
         }
         else
@@ -126,6 +132,7 @@ int main() {
             {
                 // same checksum, dont do shit 
                 LOG_DEBUG("Checksums match, skipping recompilation");
+                
                 continue;
             }
             needs_compile = true;
@@ -154,7 +161,35 @@ int main() {
             // example dirs_rel:
             // "src\game\world\"
             // TODO!
-
+            // holds the character previously replaced
+            // by the null terminator
+            // so we can replace it back later
+            char previous;
+            char* backslash_pos;
+            while ((backslash_pos = strchr(dirs_rel, '\\')) != NULL)
+            {
+                // store character after the backslash
+                previous = *(backslash_pos + 1);
+                // set that character to null terminator 
+                *(backslash_pos + 1) = '\0';
+                // target_dir will now be the directory
+                // we gotta make. check if it is already
+                // made or else create it.
+                if (strstr(created_dirs, target_dir) == NULL)
+                {
+                    GDF_MakeDirAbs(target_dir);
+                    LOG_INFO("Created directory %s", target_dir);
+                    strcat(created_dirs, target_dir);
+                    strcat(created_dirs, "|");
+                }
+                // LOG_INFO("yes %s", target_dir);
+                // put old character back into the string
+                *(backslash_pos + 1) = previous;
+                // update dirs_rel such that the next
+                // call to strchr will return the
+                // next backslash pointer, not the same one
+                dirs_rel = backslash_pos + 1;
+            }
             // assemble and run the compile command
             sprintf(
                 compile_command, 
@@ -166,7 +201,17 @@ int main() {
                 o_file
             );
             LOG_INFO("Compiling \"%s\"", rel_path);
-            system(compile_command);
+            if (system(compile_command) != 0)
+            {
+                LOG_FATAL("Clang exited with non-zero exit code. Stopping...");
+                f64 sec_elapsed = GDF_StopwatchTimeElapsed(stopwatch);
+                GDF_WriteFile(CHECKSUM_FILE, c_file_checksums);
+                LOG_FATAL("Build failed in %lf seconds.", sec_elapsed);
+                exit(1);
+            }
+            update_checksum(c_file_checksums, rel_path, new_checksum);
+            strcat(o_files, o_file);
+            strcat(o_files, " ");
             files_compiled++;
             GDF_Free(compile_command);
         }
@@ -181,12 +226,18 @@ int main() {
         return 0;
     }
     
-    f64 sec_elapsed = GDF_StopwatchTimeElapsed(stopwatch);
-    LOG_INFO("Build finished in %lf seconds.", sec_elapsed);
+    LOG_INFO("Updating checksums...");
+    GDF_WriteFile(CHECKSUM_FILE, c_file_checksums);
+    LOG_DEBUG("o files: %s", o_files);
+
     GDF_Free(c_files);
     GDF_Free(c_file_checksums);
+    GDF_Free(o_files);
+    GDF_Free(build_cache_abs_path);
 
-    printf("Build complete.\n");
+    f64 sec_elapsed = GDF_StopwatchTimeElapsed(stopwatch);
+    LOG_INFO("Compiled %d files in %lf seconds.", files_compiled, sec_elapsed);
+    LOG_INFO("Build finished");
 
     return 0;
 }
@@ -320,6 +371,33 @@ char* get_checksum(const char* checksums_str, const char* cfile_rel_path)
     // only getting the checksum
     checksum += (strlen(cfile_rel_path) + 1);
     return checksum;
+}
+
+bool update_checksum(char* checksums_str, const char* cfile_rel_path, const char* new_checksum)
+{
+    char* checksum_p;
+    if ((checksum_p = get_checksum(checksums_str, cfile_rel_path)) 
+    == NULL)
+    {
+        if (!add_checksum(checksums_str, cfile_rel_path, new_checksum))
+        {
+            LOG_ERR("Failed to add checksum.");
+            return false;
+        }
+    }
+
+    strncpy(checksum_p, new_checksum, 32);
+    char stored_checksum[33];
+    snprintf(stored_checksum, 33, "%s", checksum_p);
+}
+
+bool add_checksum(char* checksums_str, const char* cfile_rel_path, const char* checksum)
+{
+    char line_buf[MAX_PATH_LEN + 33];
+    sprintf(line_buf, "%s:%s\n", cfile_rel_path, checksum);
+    strcat(checksums_str, line_buf);
+    // LOG_DEBUG("new checksum string: %s", checksums_str);
+    return true;
 }
 
 #endif

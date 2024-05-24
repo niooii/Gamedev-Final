@@ -1,9 +1,11 @@
 #include "io.h"
 
 #ifdef OS_WINDOWS
-#include <Windows.h>
-#include <tchar.h> 
+#include <windows.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <tchar.h> 
+#include <direct.h>
 #include <strsafe.h>
 
 static HWND console_window = NULL;
@@ -64,7 +66,9 @@ void GDF_WriteConsole(const char* msg, u8 color)
     OutputDebugStringA(msg);
     
     u64 len = strlen(msg);
-    WriteConsoleA(stdout_, msg, (DWORD)len, 0, 0);    
+    WriteConsoleA(stdout_, msg, (DWORD)len, 0, 0);  
+
+    SetConsoleTextAttribute(stdout_, FOREGROUND_RED|FOREGROUND_GREEN|FOREGROUND_BLUE);  
 }
 
 void GDF_GetAbsolutePath(const char* rel_path, char* out_buf)
@@ -231,6 +235,12 @@ bool GDF_MakeDir(const char* rel_path) {
     // back to only 0 and 1s not some random value from win32 api
     return success != 0;
 }
+
+bool GDF_MakeDirAbs(const char* abs_path)
+{
+    return _mkdir(abs_path) == 0;
+}
+
 
 bool GDF_WriteFile(const char* rel_path, const char* data) {
     const char* path[MAX_PATH_LEN];

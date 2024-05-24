@@ -8,7 +8,9 @@
 #include "os/socket.h"
 
 // womp womp
-inline bool GDF_InitSubsystems()
+// edit to use bit flags to init subsystems instead of
+// bool init_windowing :skull:
+inline bool GDF_InitSubsystems(bool init_windowing)
 {
     if (!GDF_InitMemory())
         return false;
@@ -17,8 +19,11 @@ inline bool GDF_InitSubsystems()
     GDF_InitIO();
     if (!GDF_InitInfo())
         return false;
-    if (!GDF_InitWindowing())
-        return false;
+    if (init_windowing)
+    {
+        if (!GDF_InitWindowing())
+            return false;
+    }
     return true; 
 }
 
