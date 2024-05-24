@@ -101,10 +101,8 @@ int main() {
     // if the build options and previously built with options
     // were loaded separately (on first creation they both share)
     // the same memory
-    LOG_WARN("memememaw");
     if (prev_built_with != build_options)
     {
-        LOG_WARN("HEHEHEHAW");
         // we need to check for differences in the build options
         if (
             strcmp(build_options->compile_flags, prev_built_with->compile_flags) != 0
@@ -146,7 +144,10 @@ int main() {
         {
             sprintf(&new_checksum[i*2], "%02x", md5[i]);
         }
-
+        if (should_recompile_all)
+        {
+            goto compile_stage;
+        }
         bool needs_compile = false;
 
         // compare stored checksum in file vs the just calculated one
@@ -182,6 +183,7 @@ int main() {
         // it could still be linking
         // with object files from 
         // deleted c files.
+        compile_stage:
         char o_file[MAX_PATH_LEN];
         strcpy(o_file, build_cache_abs_path);
         strcat(o_file, rel_path);
@@ -483,7 +485,7 @@ void end_program(GDF_Stopwatch* stopwatch, bool success)
         {
             LOG_INFO("Compiled %d files in %lf seconds.", files_compiled, sec_elapsed);
         }
-        LOG_INFO("Build finished");
+        LOG_INFO("Build finished.");
         exit(0);
     }
 
