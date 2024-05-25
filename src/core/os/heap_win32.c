@@ -10,14 +10,14 @@
 // Each heapchunk metadata struct is stored exactly sizeof(heap_chunk) bytes 
 // before the address returned by GDF_Malloc().
 struct heap_chunk {
-    u32 size;
+    u64 size;
     GDF_MEMTAG tag;
     struct heap_chunk* next;
 };
 
 struct heap {
     struct heap_chunk* free_lists[10]; // Segregated free lists for different size ranges
-    u32 available_mem;
+    u64 available_mem;
 };
 
 static struct heap heap;
@@ -50,7 +50,7 @@ void __destroy_heap()
     VirtualFree(heap.free_lists[9], 0, MEM_RELEASE);
 }
 
-static int get_free_list_index(u32 size)
+static int get_free_list_index(u64 size)
 {
     // Determine the index for the free list based on block size
     int index = 0;
@@ -69,7 +69,7 @@ static void insert_free_block(struct heap_chunk* chunk)
     heap.free_lists[index] = chunk;
 }
 
-static struct heap_chunk* find_best_fit(u32 size)
+static struct heap_chunk* find_best_fit(u64 size)
 {
     int index = get_free_list_index(size);
     for (int i = index; i < 10; i++) 
@@ -98,7 +98,7 @@ static struct heap_chunk* find_best_fit(u32 size)
     return NULL;
 }
 
-void* __heap_alloc(u32 size, u32* total_allocated, GDF_MEMTAG tag, bool aligned)
+void* __heap_alloc(u64 size, u64* total_allocated, GDF_MEMTAG tag, bool aligned)
 {
     if (aligned) 
     {
@@ -156,7 +156,7 @@ bool __heap_expand()
     return true;
 }
 
-GDF_MEMTAG __heap_free(void* block, u32* size_freed, bool aligned)
+GDF_MEMTAG __heap_free(void* block, u64* size_freed, bool aligned)
 {
     struct heap_chunk* chunk = (struct heap_chunk*)((char*)block - sizeof(struct heap_chunk));
     GDF_MEMTAG old_tag = chunk->tag;
@@ -178,15 +178,27 @@ void __heap_zero(void* block)
 
 bool __heap_copy(void* dest, void* src)
 {
+    struct heap_chunk* src_chunk = (struct heap_chunk*)((char*)src - sizeof(struct heap_chunk));
+    return __heap_copy_sized(dest, src, src_chunk->size - sizeof(struct heap_chunk));
+}
+
+bool __heap_copy_sized(void* dest, void* src, u64 size)
+{
     struct heap_chunk* dest_chunk = (struct heap_chunk*)((char*)dest - sizeof(struct heap_chunk));
     struct heap_chunk* src_chunk = (struct heap_chunk*)((char*)src - sizeof(struct heap_chunk));
 
-    if (dest_chunk->size < src_chunk->size) {
+    if (dest_chunk->size - sizeof(struct heap_chunk) < size) {
+        LOG_WARN("Requested size of data to copy is larger than the size of the dest block (%lu > %lu). Abandoning operation.", size, src_chunk->size - sizeof(struct heap_chunk));
         return false;
     }
 
-    memcpy(dest, src, src_chunk->size - sizeof(struct heap_chunk));
+    if (src_chunk->size - sizeof(struct heap_chunk) < size)
+    {
+        LOG_WARN("Requested size of data to copy is larger than the size of the src block (%lu > %lu). Abandoning operation.", size, src_chunk->size - sizeof(struct heap_chunk));
+        return false;
+    }
 
+    memcpy(dest, src, size);
     return true;
 }
 

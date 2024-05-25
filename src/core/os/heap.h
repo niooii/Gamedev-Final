@@ -11,11 +11,12 @@
 // perhaps later change to multiple heap model
 // save like 0.2 fps idk
 
+// when changing any update the corresponding string in mem.c
 typedef enum GDF_MEMTAG {
     // For temporary use. Should be assigned one of the below or have a new tag created.
     GDF_MEMTAG_UNKNOWN,
     GDF_MEMTAG_ARRAY,
-    GDF_MEMTAG_DARRAY,
+    GDF_MEMTAG_LIST,
     GDF_MEMTAG_DICT,
     GDF_MEMTAG_RING_QUEUE,
     GDF_MEMTAG_BST,
@@ -41,12 +42,13 @@ bool __init_heap();
 void __destroy_heap();
 
 // returns NULL on failure, heap is probably full
-void* __heap_alloc(u32 size, u32* total_allocated, GDF_MEMTAG tag, bool aligned);
+void* __heap_alloc(u64 size, u64* total_allocated, GDF_MEMTAG tag, bool aligned);
 // returns false on failure, wtf are you doing
 bool __heap_expand();
 // returns the memory tag of the block freed
-GDF_MEMTAG __heap_free(void* block, u32* size_freed, bool aligned);
+GDF_MEMTAG __heap_free(void* block, u64* size_freed, bool aligned);
 void __heap_zero(void* block);
 // returns false if the dest block size is less than src block size
 bool __heap_copy(void* dest, void* src);
+bool __heap_copy_sized(void* dest, void* src, u64 size);
 void __heap_set(void* dest, i32 val);

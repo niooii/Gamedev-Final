@@ -14,7 +14,7 @@ struct memory_stats {
 static const char* GDF_MEMTAG_strings[GDF_MEMTAG_MAX_TAGS] = {
     "UNKNOWN      ",
     "ARRAY        ",
-    "DARRAY       ",
+    "LIST         ",
     "DICT         ",
     "RING_QUEUE   ",
     "BST          ",
@@ -89,6 +89,11 @@ void GDF_HeapZero(void* block)
 void GDF_HeapCopy(void* dest, const void* source) 
 {
     __heap_copy(dest, source);
+}
+
+void GDF_HeapCopyS(void* dest, const void* source, u64 size)
+{
+    __heap_copy_sized(dest, source, size);
 }
 
 void GDF_HeapSet(void* dest, i32 value) 

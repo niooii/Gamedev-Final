@@ -107,6 +107,10 @@
         "time.h": "c",
         "windows.h": "c",
         "tchar.h": "c",
-        "stat.h": "c"
+        "stat.h": "c",
+        "functional": "cpp",
+        "expected": "cpp",
+        "optional": "cpp",
+        "xtr1common": "cpp"
     }
 }
