@@ -1,10 +1,11 @@
 #include "serde.h"
 
 // Function to replace %ENV_VAR% with the value of the environment variable
+// MAY CAUSE MEMORY LEAK
 static void replace_env_vars(const char* input, char* out_buf) {
     // Allocate an initial buffer for the resulting string
     size_t buffer_size = strlen(input) + 1;
-    char* result = malloc(buffer_size);
+    char* result = GDF_Malloc(buffer_size, GDF_MEMTAG_STRING);
     if (!result) {
         out_buf = NULL;
         return;  // Failed to allocate memory
@@ -29,9 +30,9 @@ static void replace_env_vars(const char* input, char* out_buf) {
         size_t result_len = strlen(result);
         size_t var_value_len = strlen(var_value);
         size_t new_size = result_len - var_len - 2 + var_value_len + 1;
-        char* new_result = malloc(new_size);
+        char* new_result = GDF_Malloc(new_size, GDF_MEMTAG_STRING);
         if (!new_result) {
-            free(result);
+            GDF_Free(result);
             out_buf = NULL;
             return;  // Failed to allocate memory
         }
@@ -41,10 +42,11 @@ static void replace_env_vars(const char* input, char* out_buf) {
         strcpy(new_result + (start - result), var_value);
         strcpy(new_result + (start - result) + var_value_len, end + 1);
 
-        free(result);
         strcpy(out_buf, new_result);
         result = new_result;
+        GDF_Free(new_result);
     }
+    GDF_Free(result);
 }
 
 // TODO!: the serialization of a map entry that

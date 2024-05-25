@@ -111,6 +111,7 @@
         "functional": "cpp",
         "expected": "cpp",
         "optional": "cpp",
-        "xtr1common": "cpp"
+        "xtr1common": "cpp",
+        "list.h": "c"
     }
 }

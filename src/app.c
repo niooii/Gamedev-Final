@@ -1,5 +1,5 @@
 #include "app.h"
-
+#include "core/containers/list.h"
 typedef struct AppState {
     bool is_running;
     bool is_suspended;
@@ -75,13 +75,22 @@ bool GDF_RunApp()
         LOG_ERR("You didnt initialize the app yet. dipshit. you're a bad person, yk that?");
         return false;
     }
-    // LOG_INFO("allocating 10m values on the custom heap...");
-    // for (int i = 0; i < 10000000; i++)
-    // {
-    //     void* block = GDF_Malloc(sizeof(int), GDF_MEMTAG_APPLICATION);
-    //     GDF_Free(block);
-    // }
-    // LOG_INFO("done");
+    LOG_INFO("allocating 10m values on the custom heap...");
+    for (int i = 0; i < 10000000; i++)
+    {
+        void* block = GDF_Malloc(sizeof(int), GDF_MEMTAG_APPLICATION);
+    }
+    LOG_INFO("done");
+    int* list = GDF_LIST_Create(int);
+    for (int i = 0; i < 1000; i++)
+    {
+        GDF_LIST_Push(list, i * 2);
+    }
+    for (int i = 0; i < GDF_LIST_GetLength(list); i++)
+    {
+        LOG_INFO("%d", list[i]);
+    }
+
     // LOG_INFO("allocating 10m values with malloc...");
     // for (int i = 0; i < 10000000; i++)
     // {

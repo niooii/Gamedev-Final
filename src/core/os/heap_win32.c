@@ -7,19 +7,6 @@
 #include <stdint.h>
 #include <Windows.h>
 
-// Each heapchunk metadata struct is stored exactly sizeof(heap_chunk) bytes 
-// before the address returned by GDF_Malloc().
-struct heap_chunk {
-    u64 size;
-    GDF_MEMTAG tag;
-    struct heap_chunk* next;
-};
-
-struct heap {
-    struct heap_chunk* free_lists[10]; // Segregated free lists for different size ranges
-    u64 available_mem;
-};
-
 static struct heap heap;
 
 bool __init_heap() 
@@ -160,6 +147,10 @@ GDF_MEMTAG __heap_free(void* block, u64* size_freed, bool aligned)
 {
     struct heap_chunk* chunk = (struct heap_chunk*)((char*)block - sizeof(struct heap_chunk));
     GDF_MEMTAG old_tag = chunk->tag;
+    if (old_tag == GDF_MEMTAG_FREE)
+    {
+        return GDF_MEMTAG_FREE;
+    }
     chunk->tag = GDF_MEMTAG_FREE;
     *size_freed = chunk->size - sizeof(struct heap_chunk);
 
@@ -184,19 +175,19 @@ bool __heap_copy(void* dest, void* src)
 
 bool __heap_copy_sized(void* dest, void* src, u64 size)
 {
-    struct heap_chunk* dest_chunk = (struct heap_chunk*)((char*)dest - sizeof(struct heap_chunk));
-    struct heap_chunk* src_chunk = (struct heap_chunk*)((char*)src - sizeof(struct heap_chunk));
+    // struct heap_chunk* dest_chunk = (struct heap_chunk*)((char*)dest - sizeof(struct heap_chunk));
+    // struct heap_chunk* src_chunk = (struct heap_chunk*)((char*)src - sizeof(struct heap_chunk));
 
-    if (dest_chunk->size - sizeof(struct heap_chunk) < size) {
-        LOG_WARN("Requested size of data to copy is larger than the size of the dest block (%lu > %lu). Abandoning operation.", size, src_chunk->size - sizeof(struct heap_chunk));
-        return false;
-    }
+    // if (dest_chunk->size - sizeof(struct heap_chunk) < size) {
+    //     LOG_WARN("Requested size of data to copy is larger than the size of the dest block (%lu > %lu). Abandoning operation.", size, dest_chunk->size - sizeof(struct heap_chunk));
+    //     return false;
+    // }
 
-    if (src_chunk->size - sizeof(struct heap_chunk) < size)
-    {
-        LOG_WARN("Requested size of data to copy is larger than the size of the src block (%lu > %lu). Abandoning operation.", size, src_chunk->size - sizeof(struct heap_chunk));
-        return false;
-    }
+    // if (src_chunk->size - sizeof(struct heap_chunk) < size)
+    // {
+    //     LOG_WARN("Requested size of data to copy is larger than the size of the src block (%lu > %lu). Abandoning operation.", size, src_chunk->size - sizeof(struct heap_chunk));
+    //     return false;
+    // }
 
     memcpy(dest, src, size);
     return true;

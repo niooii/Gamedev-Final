@@ -37,6 +37,19 @@ typedef enum GDF_MEMTAG {
     GDF_MEMTAG_MAX_TAGS
 } GDF_MEMTAG;
 
+// Each heapchunk metadata struct is stored exactly sizeof(heap_chunk) bytes 
+// before the address returned by GDF_Malloc().
+struct heap_chunk {
+    u64 size;
+    GDF_MEMTAG tag;
+    struct heap_chunk* next;
+};
+
+struct heap {
+    struct heap_chunk* free_lists[10]; // Segregated free lists for different size ranges
+    u64 available_mem;
+};
+
 bool __init_heap();
 // TODO! this may cause a memory leak idk how virtualfree works yet
 void __destroy_heap();
@@ -45,6 +58,7 @@ void __destroy_heap();
 void* __heap_alloc(u64 size, u64* total_allocated, GDF_MEMTAG tag, bool aligned);
 // returns false on failure, wtf are you doing
 bool __heap_expand();
+bool __heap_shrink();
 // returns the memory tag of the block freed
 GDF_MEMTAG __heap_free(void* block, u64* size_freed, bool aligned);
 void __heap_zero(void* block);

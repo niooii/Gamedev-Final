@@ -74,6 +74,11 @@ void GDF_Free(void* block)
 {
     u32 size_freed = 0;
     GDF_MEMTAG tag = __heap_free(block, &size_freed, true);
+    if (tag == GDF_MEMTAG_FREE)
+    {
+        LOG_WARN("Calling GDF_Free on already free memory.");
+        return;
+    }
     if (tag == GDF_MEMTAG_UNKNOWN) {
         LOG_WARN("GDF_Free called using GDF_MEMTAG_UNKNOWN. Re-class this allocation.");
     }
@@ -99,21 +104,6 @@ void GDF_HeapCopyS(void* dest, const void* source, u64 size)
 void GDF_HeapSet(void* dest, i32 value) 
 {
     __heap_set(dest, value);
-}
-
-void GDF_MemZero(void* block, u64 size)
-{
-
-}
-
-void GDF_MemCopy(void* block, u64 size)
-{
-    
-}
-
-void GDF_MemSet(void* block, u64 size)
-{
-
 }
 
 void GDF_GetMemUsageStr(char* out_str) 
