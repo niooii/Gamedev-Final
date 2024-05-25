@@ -11,7 +11,6 @@ int main()
     GDF_InitSubsystems(true);
     GDF_InitApp();
     GDF_RunApp();
-
     return 0;
 }
 

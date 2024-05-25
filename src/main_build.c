@@ -149,7 +149,7 @@ int main() {
             goto compile_stage;
         }
         bool needs_compile = false;
-
+        
         // compare stored checksum in file vs the just calculated one
         char* stored_cs_p;
         if ((stored_cs_p = get_checksum(c_file_checksums, rel_path)) == NULL)
