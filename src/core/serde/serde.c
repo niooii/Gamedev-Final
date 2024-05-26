@@ -2,51 +2,60 @@
 
 // Function to replace %ENV_VAR% with the value of the environment variable
 // MAY CAUSE MEMORY LEAK
+// if none found out_buf = NULL and returns.
 static void replace_env_vars(const char* input, char* out_buf) {
-    // Allocate an initial buffer for the resulting string
-    size_t buffer_size = strlen(input) + 1;
-    char* result = GDF_Malloc(buffer_size, GDF_MEMTAG_STRING);
-    if (!result) {
+    // the pointer to the current percent sign being evaluated
+    char* prev_percent = strchr(input, '%');
+    char* current_percent = prev_percent;
+    // the pointer of where we are in the input string in terms of
+    // copying over parts of the string to the out_buf
+    char* cpy_ptr = input;
+    if (prev_percent == NULL)
+    {
         out_buf = NULL;
-        return;  // Failed to allocate memory
+        return;
     }
-    strcpy(result, input);
-
-    char* start;
-    while ((start = strchr(result, '%')) != NULL) {
-        char* end = strchr(start + 1, '%');
-        if (!end) break;  // No closing % found, stop processing
-
-        size_t var_len = end - start - 1;
-        char var_name[var_len + 1];
-        strncpy(var_name, start + 1, var_len);
-        var_name[var_len] = '\0';
-
-        // Get the environment variable value
-        const char* var_value = getenv(var_name);
-        if (!var_value) var_value = "";  // If variable not found, use empty string
-
-        // Calculate the new buffer size and allocate new buffer
-        size_t result_len = strlen(result);
-        size_t var_value_len = strlen(var_value);
-        size_t new_size = result_len - var_len - 2 + var_value_len + 1;
-        char* new_result = GDF_Malloc(new_size, GDF_MEMTAG_STRING);
-        if (!new_result) {
-            GDF_Free(result);
-            out_buf = NULL;
-            return;  // Failed to allocate memory
+    i32 percents_found = 1;
+    while ((current_percent = strchr(current_percent + 1, '%')) != NULL)
+    {
+        if (++percents_found % 2 != 0)
+        {
+            prev_percent = current_percent;
+            continue;
         }
 
-        // Create the new result string
-        strncpy(new_result, result, start - result);
-        strcpy(new_result + (start - result), var_value);
-        strcpy(new_result + (start - result) + var_value_len, end + 1);
+        // a pair of percent signs was found
+        u32 var_name_len = current_percent - prev_percent - 1;
+        const char* var_name = GDF_Malloc(var_name_len, GDF_MEMTAG_STRING);
+        strncpy(var_name, prev_percent + 1, var_name_len);
+        // LOG_INFO("ENV VAR NAME: %s", var_name);
 
-        strcpy(out_buf, new_result);
-        result = new_result;
-        GDF_Free(new_result);
+        // points to static data so should not call free.
+        const char* var_value = getenv(var_name);
+        if (var_value == NULL)
+            var_value = "";
+        // LOG_INFO("ENV VAR VALUE: %s", var_value);
+        
+        // copy the stuff from the cpy pointer to the first percent
+        u32 prev_percent_offset = prev_percent - cpy_ptr;
+        strncat(out_buf, cpy_ptr, prev_percent_offset);
+        // skip the stuff inside first and second % signs
+        cpy_ptr = current_percent + 1;
+        // copy the value to where the %env_name% stuff was supposed to be
+        strcat(out_buf, var_value);
+        // on next iteration, everything from the current percent to the next prev percent
+        // will be copied.
+
+        prev_percent = current_percent;
     }
-    GDF_Free(result);
+    // if no more iterations can happen, copy the rest over.
+    if (percents_found <= 1)
+    {
+        out_buf = NULL;
+        return;
+    }
+    strcat(out_buf, cpy_ptr);
+    // LOG_INFO("new string: %s", out_buf);
 }
 
 // TODO!: the serialization of a map entry that
@@ -128,7 +137,9 @@ bool GDF_DeserializeToMap(char* data, GDF_Map* out_map)
         // but TODO! implement that later
         if (loc_of_percent != NULL)
         {
-            replace_env_vars(val_buf, val_buf);
+            char tmp_val_buf[500];
+            replace_env_vars(val_buf, tmp_val_buf);
+            memcpy(val_buf, tmp_val_buf, 500);
         }
         
         // previously if GDF_AppSettings_Get()->verbose_output

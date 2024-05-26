@@ -81,14 +81,17 @@ bool GDF_RunApp()
         void* block = GDF_Malloc(sizeof(int), GDF_MEMTAG_APPLICATION);
     }
     LOG_INFO("done");
-    int* list = GDF_LIST_Create(int);
-    for (int i = 0; i < 1000; i++)
+    i32* list = GDF_LIST_Create(int);
+    for (i32 i = 0; i < 1000; i++)
     {
         GDF_LIST_Push(list, i * 2);
     }
-    for (int i = 0; i < GDF_LIST_GetLength(list); i++)
+    u32 len = GDF_LIST_GetLength(list);
+    for (u32 i = 0; i < len; i++)
     {
-        LOG_INFO("%d", list[i]);
+        i32 val;
+        GDF_LIST_Pop(list, &val);
+        LOG_INFO("%uth iter: %d", i, val);
     }
 
     // LOG_INFO("allocating 10m values with malloc...");

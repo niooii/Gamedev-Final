@@ -14,7 +14,7 @@ static inline void reset_stopwatch(GDF_Stopwatch* stopwatch)
 
 GDF_Stopwatch* GDF_CreateStopwatch()
 {
-    GDF_Stopwatch* stopwatch = GDF_Malloc(sizeof(*stopwatch), GDF_MEMTAG_UNKNOWN);
+    GDF_Stopwatch* stopwatch = GDF_Malloc(sizeof(*stopwatch), GDF_MEMTAG_APPLICATION);
     reset_stopwatch(stopwatch);
     return stopwatch;
 }

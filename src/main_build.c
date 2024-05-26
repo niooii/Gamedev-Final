@@ -53,11 +53,9 @@ char* get_checksum(const char* checksums_str, const char* cfile_rel_path);
 bool update_checksum(char* checksums_str, const char* cfile_rel_path, const char* new_checksum);
 bool add_checksum(char* checksums_str, const char* cfile_rel_path, const char* checksum);
 
-void end_program(GDF_Stopwatch* stopwatch, bool success);
-
 static u32 files_compiled = 0;
 
-int main() {
+int main(int argc, char *argv[]) {
     GDF_InitSubsystems(false);
     // paths of all c files separated by token '|'
     char* c_files = GDF_Malloc(CFILES_STR_LEN, GDF_MEMTAG_STRING);
@@ -74,6 +72,8 @@ int main() {
     char* c_file_checksums = GDF_Malloc(c_file_checksums_len, GDF_MEMTAG_STRING);
     GDF_ReadFile(CHECKSUM_FILE, c_file_checksums, c_file_checksums_len);
 
+    bool success = false;
+
     GDF_Stopwatch* stopwatch = GDF_CreateStopwatch();
 
     // create a bunch of files and load build options
@@ -86,6 +86,7 @@ int main() {
     bool should_recompile_all = false;
     // should be success if nothing happens anyways
     GDF_WriteFile(LAST_BUILD_STATUS_PATH, BUILD_STATUS_SUCCESS);
+    // ----
     BuildOptions* build_options = GDF_Malloc(sizeof(*build_options), GDF_MEMTAG_TEMP_RESOURCE);
     BuildOptions* prev_built_with = GDF_Malloc(sizeof(*build_options), GDF_MEMTAG_TEMP_RESOURCE);
     if (GDF_MakeFile(BUILD_OPTIONS_FILE) || !load_build_options(BUILD_OPTIONS_FILE, build_options))
@@ -93,36 +94,46 @@ int main() {
         save_default_build_options();
         load_build_options(BUILD_OPTIONS_FILE, build_options);
     }
-    if (GDF_MakeFile(BUILT_WITH_OPTIONS_FILE) || !load_build_options(BUILT_WITH_OPTIONS_FILE, prev_built_with))
+    if (argc == 2 && strcmp(argv[1], "-rebuild") == 0)
     {
-        save_build_options(BUILT_WITH_OPTIONS_FILE, build_options);
-        prev_built_with = build_options;
+        should_recompile_all = true;
     }
-    // if the build options and previously built with options
-    // were loaded separately (on first creation they both share)
-    // the same memory
-    if (prev_built_with != build_options)
+    // if recompile_all is true the changes wouldnt matter anyways
+    if (!should_recompile_all)
     {
-        // we need to check for differences in the build options
-        if (
-            strcmp(build_options->compile_flags, prev_built_with->compile_flags) != 0
-            || strcmp(build_options->defines, prev_built_with->defines) != 0
-        )
+        if (GDF_MakeFile(BUILT_WITH_OPTIONS_FILE) || !load_build_options(BUILT_WITH_OPTIONS_FILE, prev_built_with))
         {
-            should_recompile_all = true;
-            LOG_INFO("Build options changed, recompiling all files...");
+            save_build_options(BUILT_WITH_OPTIONS_FILE, build_options);
+            prev_built_with = build_options;
         }
-        if (
-            strcmp(build_options->linker_flags, prev_built_with->linker_flags) != 0
-            || strcmp(build_options->executable_name, prev_built_with->executable_name) != 0
-        )
+        // if the build options and previously built with options
+        // were loaded separately (on first creation they both share)
+        // the same memory
+        if (prev_built_with != build_options)
         {
-            should_relink = true;
-            LOG_INFO("Build options changed, files will be linked again...");
+            // we need to check for differences in the build options
+            if (
+                strcmp(build_options->compile_flags, prev_built_with->compile_flags) != 0
+                || strcmp(build_options->defines, prev_built_with->defines) != 0
+            )
+            {
+                should_recompile_all = true;
+                LOG_INFO("Build options changed, recompiling all files...");
+            }
+            if (
+                strcmp(build_options->linker_flags, prev_built_with->linker_flags) != 0
+                || strcmp(build_options->executable_name, prev_built_with->executable_name) != 0
+            )
+            {
+                should_relink = true;
+                LOG_INFO("Build options changed, files will be linked again...");
+            }
         }
     }
+    
     char path[400];
     GDF_GetAbsolutePath(build_options->src_dir, path);
+    // ----
     get_cfile_names(path, c_files);
 
     // compare files with the stored hashes
@@ -149,7 +160,7 @@ int main() {
             goto compile_stage;
         }
         bool needs_compile = false;
-        
+
         // compare stored checksum in file vs the just calculated one
         char* stored_cs_p;
         if ((stored_cs_p = get_checksum(c_file_checksums, rel_path)) == NULL)
@@ -209,7 +220,6 @@ int main() {
             char* dirs_rel = target_dir + strlen(build_cache_abs_path);
             // example dirs_rel:
             // "src\game\world\"
-            // TODO!
             // holds the character previously replaced
             // by the null terminator
             // so we can replace it back later
@@ -254,8 +264,10 @@ int main() {
             {
                 LOG_ERR("Failed to compile \"%s\". Stopping...", rel_path);
                 GDF_WriteFile(CHECKSUM_FILE, c_file_checksums);
+                save_build_options(BUILT_WITH_OPTIONS_FILE, build_options);
                 GDF_WriteFile(LAST_BUILD_STATUS_PATH, BUILD_STATUS_COMPILE_FAIL);
-                end_program(stopwatch, false);
+                GDF_Free(compile_command);
+                goto program_end;
             }
             update_checksum(c_file_checksums, rel_path, new_checksum);
             files_compiled++;
@@ -294,20 +306,37 @@ int main() {
         if (system(link_command) != 0)
         {
             LOG_ERR("Linking failed, stopping...");
+            save_build_options(BUILT_WITH_OPTIONS_FILE, build_options);
             GDF_WriteFile(LAST_BUILD_STATUS_PATH, BUILD_STATUS_LINK_FAIL);
-            end_program(stopwatch, false);
+            GDF_Free(link_command);
+            goto program_end;
         }
         GDF_Free(link_command);
     }
+
+    success = true;
     
+    program_end:
     GDF_Free(c_files);
     GDF_Free(c_file_checksums);
     GDF_Free(o_files);
     GDF_Free(build_cache_abs_path);
     save_build_options(BUILT_WITH_OPTIONS_FILE, build_options);
-    end_program(stopwatch, true);
+    
+    if (success)
+    {
+        f64 sec_elapsed = GDF_StopwatchTimeElapsed(stopwatch);
+        if (files_compiled > 0)
+        {
+            LOG_INFO("Compiled %d files in %lf seconds.", files_compiled, sec_elapsed);
+        }
+        LOG_INFO("Build finished.");
+        return 0;
+    }
 
-    return 0;
+    f64 sec_elapsed = GDF_StopwatchTimeElapsed(stopwatch);
+    LOG_ERR("Build failed in %lf seconds.", sec_elapsed);
+    return 1;
 }
 
 bool load_build_options(const char* rel_path, BuildOptions* out_opts)
@@ -474,24 +503,6 @@ bool add_checksum(char* checksums_str, const char* cfile_rel_path, const char* c
     strcat(checksums_str, line_buf);
     // LOG_DEBUG("new checksum string: %s", checksums_str);
     return true;
-}
-
-void end_program(GDF_Stopwatch* stopwatch, bool success)
-{
-    if (success)
-    {
-        f64 sec_elapsed = GDF_StopwatchTimeElapsed(stopwatch);
-        if (files_compiled > 0)
-        {
-            LOG_INFO("Compiled %d files in %lf seconds.", files_compiled, sec_elapsed);
-        }
-        LOG_INFO("Build finished.");
-        exit(0);
-    }
-
-    f64 sec_elapsed = GDF_StopwatchTimeElapsed(stopwatch);
-    LOG_ERR("Build failed in %lf seconds.", sec_elapsed);
-    exit(1);
 }
 
 #endif

@@ -48,8 +48,9 @@ void* __list_insert_at(void* list, u64 index, void* value_ptr);
         list = __list_push(list, &temp);     \
     }
 
-#define GDF_LIST_Pop(list, value_ptr) \
-    __list_pop(list, value_ptr)
+// Sets the out_val ptr equal to the last element in the array, then decrements length.
+#define GDF_LIST_Pop(list, out_val_p) \
+    __list_pop(list, out_val_p)
 
 #define GDF_LIST_Insert(list, index, value)             \
     {                                                   \
@@ -57,8 +58,8 @@ void* __list_insert_at(void* list, u64 index, void* value_ptr);
         list = __list_insert_at(list, index, &temp);     \
     }
 
-#define GDF_LIST_Remove(list, index, value_ptr) \
-    __list_remove_at(list, index, value_ptr)
+#define GDF_LIST_Remove(list, index, out_val_p) \
+    __list_remove_at(list, index, out_val_p)
 
 #define GDF_LIST_Clear(list) \
     __list_field_set(list, LIST_LENGTH, 0)

@@ -82,7 +82,7 @@ void* __list_remove_at(void* list, u64 index, void* dest) {
             stride * (length - index));
     }
 
-    __list_field_set(list, LIST_LENGTH, length - 1);
+    GDF_LIST_SetLength(list, length - 1);
     return list;
 }
 

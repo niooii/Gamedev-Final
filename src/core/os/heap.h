@@ -4,7 +4,7 @@
 #include "core/logging.h"
 #include "core/asserts.h"
 
-#define __HEAP_GROW_RATE MB_TO_B(16)
+#define __HEAP_GROW_RATE MB_TO_B(4)
 #define ALIGNMENT 32 
 #define MIN_BLOCK_SIZE 32 
 
