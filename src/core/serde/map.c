@@ -3,7 +3,7 @@
 GDF_Map* GDF_CreateMap()
 {
     GDF_Map* map = GDF_Malloc(sizeof(GDF_Map), GDF_MEMTAG_TEMP_RESOURCE);
-    for (int i = 0; i < GDF_MKEY_NUM_KEYS; i++)
+    for (u32 i = 0; i < GDF_MKEY_NUM_KEYS; i++)
     {
         map->entries[i] = NULL;
     }
@@ -134,7 +134,7 @@ GDF_Map* GDF_MAP_GetValueMap(GDF_Map* map, GDF_MKEY key)
 
 void GDF_FreeMap(GDF_Map* map)
 {
-    for (int i = 0; i < GDF_MKEY_NUM_KEYS; i++)
+    for (u32 i = 0; i < GDF_MKEY_NUM_KEYS; i++)
     {
         if (map->entries[i] != NULL)
         {

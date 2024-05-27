@@ -6,12 +6,19 @@
 #include "os/heap.h"
 #include "os/window.h"
 #include "os/socket.h"
+#include "core/event.h"
+
+enum {
+    GDF_SUBSYSTEM_WINDOWING = 0b00000001,
+    GDF_SUBSYSTEM_EVENTS =    0b00000010,
+};
+
+static u32 _flags;
 
 // womp womp
-// edit to use bit flags to init subsystems instead of
-// bool init_windowing :skull:
-inline bool GDF_InitSubsystems(bool init_windowing)
+inline bool GDF_InitSubsystems(u32 flags)
 {
+    _flags = flags;
     if (!GDF_InitMemory())
         return false;
     if (!GDF_InitLogging())
@@ -19,9 +26,14 @@ inline bool GDF_InitSubsystems(bool init_windowing)
     GDF_InitIO();
     if (!GDF_InitInfo())
         return false;
-    if (init_windowing)
+    if (flags & GDF_SUBSYSTEM_WINDOWING)
     {
         if (!GDF_InitWindowing())
+            return false;
+    }
+    if (flags & GDF_SUBSYSTEM_EVENTS)
+    {
+        if (!GDF_InitEvents())
             return false;
     }
     return true; 
@@ -29,7 +41,16 @@ inline bool GDF_InitSubsystems(bool init_windowing)
 
 inline bool GDF_ShutdownSubsystems()
 {
+    if (_flags & GDF_SUBSYSTEM_EVENTS)
+    {
+        GDF_ShutdownEvents();
+    }
+    if (_flags & GDF_SUBSYSTEM_WINDOWING)
+    {
+        GDF_ShutdownWindowing();
+    }
     GDF_ShutdownLogging();
+
     // should come last or something
     GDF_ShutdownMemory();
 }

@@ -56,7 +56,7 @@ bool add_checksum(char* checksums_str, const char* cfile_rel_path, const char* c
 static u32 files_compiled = 0;
 
 int main(int argc, char *argv[]) {
-    GDF_InitSubsystems(false);
+    GDF_InitSubsystems(0);
     // paths of all c files separated by token '|'
     char* c_files = GDF_Malloc(CFILES_STR_LEN, GDF_MEMTAG_STRING);
     // paths of all c files separated by token ' '

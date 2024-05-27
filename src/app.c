@@ -72,38 +72,17 @@ bool GDF_RunApp()
 {
     if (!INITIALIZED)
     {
-        LOG_ERR("You didnt initialize the app yet. dipshit. you're a bad person, yk that?");
+        LOG_ERR("app not initialized properly");
         return false;
     }
     LOG_INFO("allocating 10m values on the custom heap...");
-    for (int i = 0; i < 10000000; i++)
+    for (u32 i = 0; i < 10000000; i++)
     {
         void* block = GDF_Malloc(sizeof(int), GDF_MEMTAG_APPLICATION);
+        GDF_Free(block);
     }
     LOG_INFO("done");
-    i32* list = GDF_LIST_Create(int);
-    for (i32 i = 0; i < 1000; i++)
-    {
-        GDF_LIST_Push(list, i * 2);
-    }
-    u32 len = GDF_LIST_GetLength(list);
-    for (u32 i = 0; i < len; i++)
-    {
-        i32 val;
-        GDF_LIST_Pop(list, &val);
-        LOG_INFO("%uth iter: %d", i, val);
-    }
 
-    // LOG_INFO("allocating 10m values with malloc...");
-    // for (int i = 0; i < 10000000; i++)
-    // {
-    //     void* block = malloc(sizeof(int));
-    //     free(block);
-    // }
-    // LOG_INFO("done");
-    // char* buf = GDF_Malloc(8000 * sizeof(char), GDF_MEMTAG_STRING);
-    // GDF_GetMemUsageStr(buf);
-    // LOG_INFO("%s", buf);
     while(APP_STATE.is_running) 
     {
         GDF_PumpMessages();
