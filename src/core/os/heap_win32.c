@@ -59,7 +59,7 @@ static void insert_free_block(struct heap_chunk* chunk)
 static struct heap_chunk* find_best_fit(u64 size)
 {
     int index = get_free_list_index(size);
-    for (int i = index; i < 10; i++) 
+    for (u32 i = index; i < 10; i++) 
     {
         struct heap_chunk* current = heap.free_lists[i];
         struct heap_chunk* previous = NULL;

@@ -13,7 +13,7 @@ void GDF_MKEY_ToString(GDF_MKEY key, char* out_str)
 
 GDF_MKEY GDF_MKEY_FromString(const char* str)
 {
-    for (int i = 0; i < GDF_MKEY_NUM_KEYS; i++) {
+    for (u32 i = 0; i < GDF_MKEY_NUM_KEYS; i++) {
         if (strcmp(mkey_strings[i], str) == 0)
             return i;
     }

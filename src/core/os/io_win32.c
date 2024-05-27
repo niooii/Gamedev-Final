@@ -366,7 +366,7 @@ char* GDF_StrDup(const char* str)
 
 void GDF_FreeDirInfo(GDF_DirInfo* dir_info)
 {
-    for (int i = 0; i < dir_info->num_nodes; i++)
+    for (u32 i = 0; i < dir_info->num_nodes; i++)
     {
         GDF_DirInfoNode* node = dir_info->nodes[i];
         GDF_Free(node->full_path);

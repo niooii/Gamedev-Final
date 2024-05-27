@@ -67,7 +67,7 @@ bool GDF_SerializeMap(GDF_Map* map, char* out_buf)
     char line_buf[650];
     char key_buf[150];
     char val_buf[500];
-    for (int i = 0; i < GDF_MKEY_NUM_KEYS; i++)
+    for (u32 i = 0; i < GDF_MKEY_NUM_KEYS; i++)
     {
         if (map->entries[i] == NULL)
             continue;

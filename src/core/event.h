@@ -19,3 +19,58 @@ typedef struct GDF_EventCtx {
         char c[16];
     } data;
 } GDF_EventCtx;
+
+typedef void (*GDF_EventHandlerFP)(u16 event_code, void* sender, void* listener_instance, GDF_EventCtx data);
+
+bool GDF_InitEvents();
+void GDF_ShutdownEvents();
+
+bool GDF_EVENT_Register(u16 event_code, void* listener, GDF_EventHandlerFP callback);
+bool GDF_EVENT_Unregister(u16 event_code, void* listener, GDF_EventHandlerFP callback);
+bool GDF_EVENT_Fire(u16 event_code, void* sender, GDF_EventCtx ctx);
+
+typedef enum GDF_EVENT_INTERNAL {
+    
+    GDF_EVENT_INTERNAL_APP_QUIT = 0x01,
+    /*
+    Usage:
+    u16 keycode = ctx.data.u16[0]
+    */
+    GDF_EVENT_INTERNAL_KEY_PRESSED = 0x02,
+    /*
+    Usage:
+    u16 keycode = ctx.data.u16[0]
+    */
+    GDF_EVENT_INTERNAL_KEY_RELEASED = 0x03,
+    /*
+    Usage:
+    u16 button = ctx.data.u16[0]
+    */
+    GDF_EVENT_INTERNAL_MBUTTON_PRESSED = 0x04,
+    /*
+    Usage:
+    u16 button = ctx.data.u16[0]
+    */
+    GDF_EVENT_INTERNAL_MBUTTON_RELEASED = 0x05,
+    /*
+    Usage:
+    u16 x = ctx.data.u16[0]
+    u16 y = ctx.data.u16[1]
+    */
+    GDF_EVENT_INTERNAL_MOUSE_MOVED = 0x06,
+    /*
+    Usage:
+    u16 dy = ctx.data.u8[0]
+    */
+    GDF_EVENT_INTERNAL_MOUSE_WHEEL = 0x07,
+    /*
+    Usage:
+    u16 w = ctx.data.u16[0]
+    u16 h = ctx.data.u16[1]
+    */
+    GDF_EVENT_INTERNAL_WINDOW_RESIZE = 0x08,
+
+    // Not actaully an event.
+    GDF_EVENT_INTERNAL_MAX = 0xFF
+
+} internal_event_codes; 
