@@ -41,7 +41,7 @@ typedef struct BuildOptions {
 } BuildOptions;
 bool load_build_options(const char* rel_path, BuildOptions* out_opts);
 bool save_build_options(const char* rel_path, BuildOptions* options);
-bool save_default_build_options();
+bool save_default_build_options(const char* rel_path);
 
 // FUCK PLATFORM INDEPENDENCY ILL
 // DEAL WITH THAT LATER
@@ -112,7 +112,7 @@ int main(int argc, char *argv[]) {
     
     if (GDF_MakeFile(build_options_path) || !load_build_options(build_options_path, build_options))
     {
-        save_default_build_options();
+        save_default_build_options(build_options_path);
         load_build_options(build_options_path, build_options);
     }
 
@@ -365,6 +365,7 @@ int main(int argc, char *argv[]) {
 
 bool load_build_options(const char* rel_path, BuildOptions* out_opts)
 {
+    LOG_INFO("loading options from path %s", rel_path);
     GDF_Map* map = GDF_CreateMap();
     bool read_success = GDF_ReadMapFromFile(rel_path, map);
     if (!read_success)
@@ -438,7 +439,7 @@ bool save_build_options(const char* rel_path, BuildOptions* options)
     return success;
 }
 
-bool save_default_build_options()
+bool save_default_build_options(const char* rel_path)
 {
     const char* linker_flags = "-luser32 -lvulkan-1 -L%s/Lib";
 
@@ -451,7 +452,7 @@ bool save_default_build_options()
         .executable_name = "gdf"
     };
 
-    return save_build_options(BUILD_OPTIONS_FILE, &out_opts);
+    return save_build_options(rel_path, &out_opts);
 }
 
 bool get_cfile_names(const char *sDir, char* cfile_names)
