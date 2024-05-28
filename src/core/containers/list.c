@@ -31,7 +31,7 @@ void* __list_resize(void* list) {
     void* new = __list_create(
         (LIST_RESIZE_FACTOR * GDF_LIST_GetCapacity(list)),
         stride);
-    GDF_HeapCopyS(new, list, length * stride);
+    GDF_MemCopy(new, list, length * stride);
 
     GDF_LIST_SetLength(new, length);
     __list_destroy(list);
@@ -47,7 +47,7 @@ void* __list_push(void* list, const void* value_ptr) {
 
     u64 addr = (u64)list;
     addr += (length * stride);
-    GDF_HeapCopyS((void*)addr, value_ptr, stride);
+    GDF_MemCopy((void*)addr, value_ptr, stride);
     GDF_LIST_SetLength(list, length + 1);
     return list;
 }
@@ -59,7 +59,7 @@ void __list_pop(void* list, void* dest) {
     // quite diabolical
     u64 addr = (u64)list;
     addr += ((length - 1) * stride);
-    GDF_HeapCopyS(dest, (void*)addr, stride);
+    GDF_MemCopy(dest, (void*)addr, stride);
     GDF_LIST_SetLength(list, length - 1);
 }
 
@@ -72,11 +72,11 @@ void* __list_remove_at(void* list, u64 index, void* dest) {
     }
 
     u64 addr = (u64)list;
-    GDF_HeapCopyS(dest, (void*)(addr + (index * stride)), stride);
+    GDF_MemCopy(dest, (void*)(addr + (index * stride)), stride);
 
     // If not on the last element, snip out the entry and copy the rest inward.
     if (index != length - 1) {
-        GDF_HeapCopyS(
+        GDF_MemCopy(
             (void*)(addr + (index * stride)),
             (void*)(addr + ((index + 1) * stride)),
             stride * (length - index));
@@ -101,14 +101,14 @@ void* __list_insert_at(void* list, u64 index, void* value_ptr) {
 
     // If not on the last element, copy the rest outward.
     if (index != length - 1) {
-        GDF_HeapCopyS(
+        GDF_MemCopy(
             (void*)(addr + ((index + 1) * stride)),
             (void*)(addr + (index * stride)),
             stride * (length - index));
     }
 
     // Set the value at the index
-    GDF_HeapCopyS((void*)(addr + (index * stride)), value_ptr, stride);
+    GDF_MemCopy((void*)(addr + (index * stride)), value_ptr, stride);
 
     GDF_LIST_SetLength(list, length + 1);
     return list;

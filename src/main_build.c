@@ -89,6 +89,7 @@ int main(int argc, char *argv[]) {
     // ----
     BuildOptions* build_options = GDF_Malloc(sizeof(*build_options), GDF_MEMTAG_TEMP_RESOURCE);
     BuildOptions* prev_built_with = GDF_Malloc(sizeof(*build_options), GDF_MEMTAG_TEMP_RESOURCE);
+    
     if (GDF_MakeFile(BUILD_OPTIONS_FILE) || !load_build_options(BUILD_OPTIONS_FILE, build_options))
     {
         save_default_build_options();
@@ -286,7 +287,7 @@ int main(int argc, char *argv[]) {
         GDF_WriteFile(CHECKSUM_FILE, c_file_checksums);
         // LOG_DEBUG("o files: %s", o_files);
     }
-
+    should_relink = true;
     if (files_compiled != 0 || should_relink)
     {
         LOG_INFO("Linking files...");
@@ -302,6 +303,8 @@ int main(int argc, char *argv[]) {
             executable_path,
             build_options->linker_flags
         );
+
+        LOG_DEBUG("Link command: %s", link_command);
 
         if (system(link_command) != 0)
         {
@@ -330,12 +333,17 @@ int main(int argc, char *argv[]) {
         {
             LOG_INFO("Compiled %d files in %lf seconds.", files_compiled, sec_elapsed);
         }
-        LOG_INFO("Build finished.");
+        LOG_INFO("Finished building \"%s.exe\" successfully.", build_options->executable_name);
+        GDF_Free(build_options);
+        GDF_Free(prev_built_with);
         return 0;
     }
 
     f64 sec_elapsed = GDF_StopwatchTimeElapsed(stopwatch);
     LOG_ERR("Build failed in %lf seconds.", sec_elapsed);
+    LOG_ERR("Failed to build \"%s.exe\"", build_options->executable_name);
+    GDF_Free(build_options);
+    GDF_Free(prev_built_with);
     return 1;
 }
 
@@ -347,12 +355,25 @@ bool load_build_options(const char* rel_path, BuildOptions* out_opts)
     {
         return false;
     }
-    out_opts->src_dir = GDF_StrDup(GDF_MAP_GetValueString(map, GDF_MKEY_BUILD_SRC_DIR));
-    out_opts->compile_flags = GDF_StrDup(GDF_MAP_GetValueString(map, GDF_MKEY_BUILD_COMPILEFLAGS));
-    out_opts->include_flags = GDF_StrDup(GDF_MAP_GetValueString(map, GDF_MKEY_BUILD_INCLUDEFLAGS));
-    out_opts->linker_flags = GDF_StrDup(GDF_MAP_GetValueString(map, GDF_MKEY_BUILD_LINKERFLAGS));
-    out_opts->defines = GDF_StrDup(GDF_MAP_GetValueString(map, GDF_MKEY_BUILD_DEFINES));
-    out_opts->executable_name = GDF_StrDup(GDF_MAP_GetValueString(map, GDF_MKEY_BUILD_EXECUTABLE_NAME));
+    char* val;
+    if ((val = GDF_MAP_GetValueString(map, GDF_MKEY_BUILD_SRC_DIR)) == NULL)
+        return false;
+    out_opts->src_dir = GDF_StrDup(val);
+    if ((val = GDF_MAP_GetValueString(map, GDF_MKEY_BUILD_COMPILEFLAGS)) == NULL)
+        return false;
+    out_opts->compile_flags = GDF_StrDup(val);
+    if ((val = GDF_MAP_GetValueString(map, GDF_MKEY_BUILD_INCLUDEFLAGS)) == NULL)
+        return false;
+    out_opts->include_flags = GDF_StrDup(val);
+    if ((val = GDF_MAP_GetValueString(map, GDF_MKEY_BUILD_LINKERFLAGS)) == NULL)
+        return false;
+    out_opts->linker_flags = GDF_StrDup(val);
+    if ((val = GDF_MAP_GetValueString(map, GDF_MKEY_BUILD_DEFINES)) == NULL)
+        return false;
+    out_opts->defines = GDF_StrDup(val);
+    if ((val = GDF_MAP_GetValueString(map, GDF_MKEY_BUILD_EXECUTABLE_NAME)) == NULL)
+        return false;
+    out_opts->executable_name = GDF_StrDup(val);
     GDF_FreeMap(map);
     return true;
 }

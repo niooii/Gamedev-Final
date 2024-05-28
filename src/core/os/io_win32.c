@@ -205,8 +205,9 @@ bool GDF_MakeFile(const char* rel_path) {
     else
     {
         LOG_INFO("Created file: %s", path);
+        CloseHandle(h);
     }
-    CloseHandle(h);
+    LOG_DEBUG("womp womp");
     return success;
 }
 
@@ -307,6 +308,10 @@ char* GDF_ReadFileExactLen(const char* rel_path)
 {
     const char* path[MAX_PATH_LEN];
     GDF_GetAbsolutePath(rel_path, path);
+    // If i dont add a bit more, it reads some garbage characters after the end
+    // of the file. please dont ask me why this happens, i will not know.
+    u64 size = GDF_GetFileSizeAbs(path) + 25;
+    char* out_buf = GDF_Malloc(size, GDF_MEMTAG_STRING);
     HANDLE h = CreateFile(path, GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0);
     bool success = h != INVALID_HANDLE_VALUE;
     if (!success)
@@ -322,9 +327,6 @@ char* GDF_ReadFileExactLen(const char* rel_path)
         return NULL;
     }
     DWORD bytes_read = 0;
-    size_t size;
-    GetFileSizeEx(h, &size);
-    char* out_buf = GDF_Malloc(size, GDF_MEMTAG_STRING);
     bool w_success = ReadFile(h, (LPVOID)out_buf, size, &bytes_read, NULL);
     if (w_success)
     {
@@ -336,6 +338,28 @@ char* GDF_ReadFileExactLen(const char* rel_path)
     }
     CloseHandle(h);
     return out_buf;
+}
+
+u64 GDF_GetFileSize(const char* rel_path)
+{
+    const char* path[MAX_PATH_LEN];
+    GDF_GetAbsolutePath(rel_path, path);
+
+    return GDF_GetFileSizeAbs(path);
+}
+
+u64 GDF_GetFileSizeAbs(const char* abs_path)
+{
+    FILE* file = fopen(abs_path, "rb");
+    if (file == NULL)
+    {
+        perror("Error");
+    }
+    fseek(file, 0, SEEK_END); 
+    u64 size = ftell(file);
+    fclose(file);
+
+    return size;
 }
 
 // MUST CALL FREE AFTER USE

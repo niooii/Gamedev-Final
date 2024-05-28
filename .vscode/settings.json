@@ -112,6 +112,7 @@
         "expected": "cpp",
         "optional": "cpp",
         "xtr1common": "cpp",
-        "list.h": "c"
+        "list.h": "c",
+        "event.h": "c"
     }
 }

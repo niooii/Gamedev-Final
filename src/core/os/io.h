@@ -44,6 +44,9 @@ bool GDF_ReadFile(const char* rel_path, char* out_buf, size_t bytes_to_read);
 // must be freed with GDF_Free
 // returns NULL on error
 char* GDF_ReadFileExactLen(const char* rel_path);
+// the size of the file in bytes
+u64 GDF_GetFileSize(const char* rel_path);
+u64 GDF_GetFileSizeAbs(const char* abs_path);
 char* GDF_StrcatNoOverwrite(const char* s1, const char* s2);
 // must be freed with GDF_Free
 char* GDF_StrDup(const char* str);

@@ -4,12 +4,12 @@
 // MAY CAUSE MEMORY LEAK
 // if none found out_buf = NULL and returns.
 static void replace_env_vars(const char* input, char* out_buf) {
-    // the pointer to the current percent sign being evaluated
-    char* prev_percent = strchr(input, '%');
-    char* current_percent = prev_percent;
     // the pointer of where we are in the input string in terms of
     // copying over parts of the string to the out_buf
     char* cpy_ptr = input;
+    // the pointer to the current percent sign being evaluated
+    char* prev_percent = strchr(input, '%');
+    char* current_percent = prev_percent;
     if (prev_percent == NULL)
     {
         out_buf = NULL;
@@ -26,12 +26,14 @@ static void replace_env_vars(const char* input, char* out_buf) {
 
         // a pair of percent signs was found
         u32 var_name_len = current_percent - prev_percent - 1;
-        const char* var_name = GDF_Malloc(var_name_len, GDF_MEMTAG_STRING);
+        // TODO! do i use a static array here or nah wtf
+        char* var_name = GDF_Malloc(var_name_len + 1, GDF_MEMTAG_STRING);
         strncpy(var_name, prev_percent + 1, var_name_len);
         // LOG_INFO("ENV VAR NAME: %s", var_name);
 
         // points to static data so should not call free.
         const char* var_value = getenv(var_name);
+        GDF_Free(var_name);
         if (var_value == NULL)
             var_value = "";
         // LOG_INFO("ENV VAR VALUE: %s", var_value);
@@ -48,14 +50,13 @@ static void replace_env_vars(const char* input, char* out_buf) {
 
         prev_percent = current_percent;
     }
-    // if no more iterations can happen, copy the rest over.
     if (percents_found <= 1)
     {
         out_buf = NULL;
         return;
     }
+    // if no more iterations can happen, copy the rest over.
     strcat(out_buf, cpy_ptr);
-    // LOG_INFO("new string: %s", out_buf);
 }
 
 // TODO!: the serialization of a map entry that
@@ -118,18 +119,18 @@ bool GDF_SerializeMap(GDF_Map* map, char* out_buf)
 
 bool GDF_DeserializeToMap(char* data, GDF_Map* out_map)
 {
-    char line_buf[650];    
-    char key_buf[150];
-    char val_buf[500];
-
     // iterate through lines
-    char* line = strtok(data, "\n");
+    const char* line = strtok(data, "\n");
     u32 line_num = 0;
+    char* line_buf = GDF_Malloc(650, GDF_MEMTAG_STRING);    
+    char* key_buf = GDF_Malloc(150, GDF_MEMTAG_STRING); 
+    char* val_buf = GDF_Malloc(500, GDF_MEMTAG_STRING); 
     while(line) {
+        LOG_DEBUG("line is %s", line);
         line_num++;
-        memset(line_buf, 0, 650);
-        memset(key_buf, 0, 150);
-        memset(val_buf, 0, 500);
+        GDF_MemZero(line_buf, 650);
+        GDF_MemZero(key_buf, 150);
+        GDF_MemZero(val_buf, 500);
         sscanf(line, "%[^=]=%[^\n]", key_buf, val_buf);
 
         char* loc_of_percent = strchr(val_buf, '%');
@@ -138,8 +139,9 @@ bool GDF_DeserializeToMap(char* data, GDF_Map* out_map)
         if (loc_of_percent != NULL)
         {
             char tmp_val_buf[500];
+            GDF_MemZero(tmp_val_buf, 500);
             replace_env_vars(val_buf, tmp_val_buf);
-            memcpy(val_buf, tmp_val_buf, 500);
+            strcpy(val_buf, tmp_val_buf);
         }
         
         // previously if GDF_AppSettings_Get()->verbose_output
@@ -161,9 +163,15 @@ bool GDF_DeserializeToMap(char* data, GDF_Map* out_map)
             // string value
             dtype = GDF_MAP_DTYPE_STRING;
             size_t len = strlen(val_buf);
-            value = GDF_Malloc(sizeof(char) * len - 1, GDF_MEMTAG_TEMP_RESOURCE);
+            LOG_DEBUG("value buf contents: %s", val_buf);
+            
+            value = GDF_Malloc(len, GDF_MEMTAG_TEMP_RESOURCE);
+            LOG_DEBUG("allocated %d bytes for value.", len);
+            LOG_DEBUG("allocated %d bytes for value.", strlen(val_buf));
+            LOG_DEBUG("value addr: %p", value);
             
             strncpy(value, val_buf + 1, len - 2);
+            LOG_DEBUG("copied str");
             ((char*)value)[len - 2] = '\0';
         }
         if (value == NULL && 
@@ -200,7 +208,10 @@ bool GDF_DeserializeToMap(char* data, GDF_Map* out_map)
             i32 i;
             if (sscanf(val_buf, "%d", &i) == 0)
             {
-                LOG_ERR("found bad value at line %d, stopping map deserialization...", line_num);
+                LOG_ERR("found bad value (%s) at line %d, stopping map deserialization...", line_buf, line_num);
+                GDF_Free(line_buf);
+                GDF_Free(key_buf);
+                GDF_Free(val_buf);
                 return false;
             }
             if (GDF_AppSettings_Get()->verbose_output)
@@ -213,6 +224,9 @@ bool GDF_DeserializeToMap(char* data, GDF_Map* out_map)
         GDF_Free(value);
         line = strtok(NULL, "\n");
     }
+    GDF_Free(line_buf);
+    GDF_Free(key_buf);
+    GDF_Free(val_buf);
     return true;
 }
 // max write capacity of 1mb
@@ -235,11 +249,11 @@ bool GDF_WriteMapToFile(GDF_Map* map, const char* rel_path)
 // max read capacity of 1mb
 bool GDF_ReadMapFromFile(const char* rel_path, GDF_Map* out_map)
 {
-    char* buf = GDF_Malloc(sizeof(char) * MB_BYTES, GDF_MEMTAG_TEMP_RESOURCE);
-    if (!GDF_ReadFile(rel_path, buf, MB_BYTES))
-        return false;
+    char* buf = GDF_ReadFileExactLen(rel_path);
     if (!GDF_DeserializeToMap(buf, out_map))
+    {
         return false;
+    }
     GDF_Free(buf);
     return true;
 }

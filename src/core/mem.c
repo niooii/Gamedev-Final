@@ -38,11 +38,6 @@ static struct memory_stats stats;
 bool GDF_InitMemory() 
 {
     GDF_MemZero(&stats, sizeof(stats));
-    if (!__init_heap())
-    {
-        LOG_FATAL("Failed to initialize the heap.");
-        return false;
-    }
 
     return true;
 }
@@ -59,51 +54,48 @@ void* GDF_Malloc(u64 size, GDF_MEMTAG tag)
     }
 
     u32 total_allocated = 0;
-    void* block = __heap_alloc(size, &total_allocated, tag, true);
+    void* block = malloc(size);
     if (block == NULL)
     {
         LOG_FATAL("It appears you have ran out of memory. womp womp");
     }
-    __heap_zero(block);
-    stats.total_allocated += total_allocated;
-    stats.tagged_allocations[tag] += total_allocated;
+    
+    memzero(block, size);
+    // stats.total_allocated += total_allocated;
+    // stats.tagged_allocations[tag] += total_allocated;
     return block;
 }
 
 void GDF_Free(void* block) 
 {
-    u32 size_freed = 0;
-    GDF_MEMTAG tag = __heap_free(block, &size_freed, true);
-    if (tag == GDF_MEMTAG_FREE)
-    {
-        LOG_WARN("Calling GDF_Free on already free memory.");
-        return;
-    }
-    if (tag == GDF_MEMTAG_UNKNOWN) {
-        LOG_WARN("GDF_Free called using GDF_MEMTAG_UNKNOWN. Re-class this allocation.");
-    }
-    stats.total_allocated -= size_freed;
-    stats.tagged_allocations[tag] -= size_freed;
+    free(block);
+    // if (tag == GDF_MEMTAG_FREE)
+    // {
+    //     LOG_WARN("Calling GDF_Free on already free memory.");
+    //     return;
+    // }
+    // if (tag == GDF_MEMTAG_UNKNOWN) {
+    //     LOG_WARN("GDF_Free called using GDF_MEMTAG_UNKNOWN. Re-class this allocation.");
+    // }
+    // stats.total_allocated -= size;
+    // stats.tagged_allocations[tag] -= size;
 }
 
-void GDF_HeapZero(void* block) 
+void GDF_MemZero(void* block, u64 size)
 {
-    __heap_zero(block);
+    memzero(block, size);
 }
 
-void GDF_HeapCopy(void* dest, const void* source) 
+// TODO!
+void GDF_MemCopy(void* dest, void* src, u64 size)
 {
-    __heap_copy(dest, source);
+    memcpy(dest, src, size);
 }
 
-void GDF_HeapCopyS(void* dest, const void* source, u64 size)
+// TODO!
+void GDF_MemSet(void* block, i32 val, u64 size)
 {
-    __heap_copy_sized(dest, source, size);
-}
-
-void GDF_HeapSet(void* dest, i32 value) 
-{
-    __heap_set(dest, value);
+    memset(block, val, size);
 }
 
 void GDF_GetMemUsageStr(char* out_str) 
