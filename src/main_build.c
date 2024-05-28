@@ -91,7 +91,6 @@ int main(int argc, char *argv[]) {
     BuildOptions* prev_built_with = GDF_Malloc(sizeof(*prev_built_with), GDF_MEMTAG_TEMP_RESOURCE);
     
     const char* build_options_path = BUILD_OPTIONS_FILE;
-    LOG_INFO("build options file moment %s", build_options_path);
 
     for (u16 i = 0; i < argc; i++)
     {
@@ -106,10 +105,9 @@ int main(int argc, char *argv[]) {
         {
             const char* override_opt_file = arg + 2;
             build_options_path = override_opt_file;
-            LOG_INFO("new path: %s", build_options_path);
+            // LOG_INFO("new path: %s", build_options_path);
             continue;
         }
-        LOG_INFO("nothing for arg %s", arg);
     }
     
     if (GDF_MakeFile(build_options_path) || !load_build_options(build_options_path, build_options))

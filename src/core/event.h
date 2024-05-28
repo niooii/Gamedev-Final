@@ -16,6 +16,9 @@ typedef struct GDF_EventCtx {
         i16 i16[8];
         u16 u16[8];
 
+        i16 i8[16];
+        u16 u8[16];
+
         char c[16];
     } data;
 } GDF_EventCtx;
