@@ -3,7 +3,8 @@
 #ifdef OS_WINDOWS
 #include "core/logging.h"
 #include "core/mem.h"
-#include <Windows.h>
+#include <windows.h>
+#include <windowsx.h>
 
 const char win_class_name[] = "gdf_window";
 static u16 current_window_id = 0;
@@ -23,7 +24,7 @@ LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
         }
         case WM_CLOSE:
         {
-
+            
         }
         case WM_DESTROY:
         {
@@ -32,6 +33,7 @@ LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
         }
         case WM_SIZE: 
         {
+            LOG_INFO("ABABABAAGFIWFIUFIAFIAFA");
             // RECT r;
             // GetClientRect(hwnd, &r);
             // u32 width = r.right - r.left;
@@ -45,6 +47,7 @@ LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
         case WM_KEYUP:
         case WM_SYSKEYUP: 
         {
+            LOG_INFO("oIEG)IEGOUS*GUIOWTHO$TOH");
             // Key pressed/released
             //b8 pressed = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
             // TODO: input processing
@@ -52,20 +55,20 @@ LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
         } break;
         case WM_MOUSEMOVE: 
         {
-            // Mouse move
-            //i32 x_position = GET_X_LPARAM(l_param);
-            //i32 y_position = GET_Y_LPARAM(l_param);
-            // TODO: input processing
+            i32 x = GET_X_LPARAM(l_param);
+            i32 y = GET_Y_LPARAM(l_param);
+
+            __input_process_mouse_move(x, y);
             break;
         }
         case WM_MOUSEWHEEL: 
         {
-            // i32 z_delta = GET_WHEEL_DELTA_WPARAM(w_param);
-            // if (z_delta != 0) {
-            //     // Flatten the input to an OS-independent (-1, 1)
-            //     z_delta = (z_delta < 0) ? -1 : 1;
-            //     // TODO: input processing.
-            // }
+            i32 z_delta = GET_WHEEL_DELTA_WPARAM(w_param);
+            if (z_delta != 0) {
+                // Flatten the input to an OS-independent (-1, 1)
+                z_delta = (z_delta < 0) ? -1 : 1;
+                __input_process_mouse_wheel(z_delta);
+            }
         } break;
         case WM_LBUTTONDOWN:
         case WM_MBUTTONDOWN:

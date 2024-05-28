@@ -53,7 +53,7 @@ void* GDF_Malloc(u64 size, GDF_MEMTAG tag)
         LOG_WARN("GDF_Malloc called using GDF_MEMTAG_UNKNOWN. Re-class this allocation.");
     }
 
-    u32 total_allocated = 0;
+    // u32 total_allocated = 0;
     void* block = malloc(size);
     if (block == NULL)
     {
