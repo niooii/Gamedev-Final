@@ -1,7 +1,7 @@
 @ECHO OFF
 SetLocal EnableDelayedExpansion
 
-.\build.exe
+.\build.exe -F"build_builder_opts.gdf"
 
 IF %ERRORLEVEL% EQU 0 (
     DEL .\build.exe

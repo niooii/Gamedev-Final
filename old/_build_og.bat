@@ -2,8 +2,6 @@
 SetLocal EnableDelayedExpansion
 
 IF NOT EXIST .\build\NUL MKDIR .\build
-IF NOT EXIST .\build\build_cache\NUL MKDIR .\build\build_cache
-IF NOT EXIST .\build\build_cache\checksums\NUL MKDIR .\build\build_cache\checksums
 
 REM Get a list of all the .c files and corresponding object files
 SET cFilenames=

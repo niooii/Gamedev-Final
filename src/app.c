@@ -64,8 +64,10 @@ bool GDF_InitFirstLaunch()
         if (!GDF_AppSettings_Save())
         {
             LOG_ERR("Something went wrong saving app settings...");
+            return false;
         }
     }
+    return true;
 }
 
 bool GDF_RunApp() 
@@ -75,13 +77,6 @@ bool GDF_RunApp()
         LOG_ERR("app not initialized properly");
         return false;
     }
-    LOG_INFO("allocating 10m values on the custom heap...");
-    for (u32 i = 0; i < 10000000; i++)
-    {
-        void* block = GDF_Malloc(sizeof(int), GDF_MEMTAG_APPLICATION);
-        GDF_Free(block);
-    }
-    LOG_INFO("done");
 
     while(APP_STATE.is_running) 
     {

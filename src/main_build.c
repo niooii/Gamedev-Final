@@ -88,17 +88,36 @@ int main(int argc, char *argv[]) {
     GDF_WriteFile(LAST_BUILD_STATUS_PATH, BUILD_STATUS_SUCCESS);
     // ----
     BuildOptions* build_options = GDF_Malloc(sizeof(*build_options), GDF_MEMTAG_TEMP_RESOURCE);
-    BuildOptions* prev_built_with = GDF_Malloc(sizeof(*build_options), GDF_MEMTAG_TEMP_RESOURCE);
+    BuildOptions* prev_built_with = GDF_Malloc(sizeof(*prev_built_with), GDF_MEMTAG_TEMP_RESOURCE);
     
-    if (GDF_MakeFile(BUILD_OPTIONS_FILE) || !load_build_options(BUILD_OPTIONS_FILE, build_options))
+    const char* build_options_path = BUILD_OPTIONS_FILE;
+    LOG_INFO("build options file moment %s", build_options_path);
+
+    for (u16 i = 0; i < argc; i++)
+    {
+        const char* arg = argv[i];
+
+        if (strcmp(arg, "-rebuild") == 0)
+        {
+            should_recompile_all = true;
+            continue;
+        }
+        if (strncmp(arg, "-F", 2) == 0)
+        {
+            const char* override_opt_file = arg + 2;
+            build_options_path = override_opt_file;
+            LOG_INFO("new path: %s", build_options_path);
+            continue;
+        }
+        LOG_INFO("nothing for arg %s", arg);
+    }
+    
+    if (GDF_MakeFile(build_options_path) || !load_build_options(build_options_path, build_options))
     {
         save_default_build_options();
-        load_build_options(BUILD_OPTIONS_FILE, build_options);
+        load_build_options(build_options_path, build_options);
     }
-    if (argc == 2 && strcmp(argv[1], "-rebuild") == 0)
-    {
-        should_recompile_all = true;
-    }
+
     // if recompile_all is true the changes wouldnt matter anyways
     if (!should_recompile_all)
     {
@@ -287,7 +306,6 @@ int main(int argc, char *argv[]) {
         GDF_WriteFile(CHECKSUM_FILE, c_file_checksums);
         // LOG_DEBUG("o files: %s", o_files);
     }
-    should_relink = true;
     if (files_compiled != 0 || should_relink)
     {
         LOG_INFO("Linking files...");
@@ -298,9 +316,9 @@ int main(int argc, char *argv[]) {
         strcat(executable_path, ".exe");
         sprintf(
             link_command,
-            "clang %s -o %s %s",
-            o_files,
+            "lld-link -out:%s %s %s",
             executable_path,
+            o_files,
             build_options->linker_flags
         );
 
@@ -429,7 +447,7 @@ bool save_default_build_options()
     BuildOptions out_opts = {
         .compile_flags = "-g -Wvarargs -Wall -O0",
         .include_flags = "-Isrc",
-        .linker_flags = "-luser32 -lvulkan-1 -L%VULKAN_SDK%/Lib",
+        .linker_flags = "-debug /defaultlib:user32.lib /defaultlib:libcmt.lib /defaultlib:vulkan-1.lib -LIBPATH:%VULKAN_SDK%/Lib",
         .defines = "-D_DEBUG -D_CRT_SECURE_NO_WARNINGS",
         .src_dir = "src",
         .executable_name = "gdf"

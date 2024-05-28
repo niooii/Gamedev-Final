@@ -52,4 +52,6 @@ inline bool GDF_ShutdownSubsystems()
 
     // should come last or something
     GDF_ShutdownMemory();
+
+    return true;
 }
