@@ -112,6 +112,12 @@ bool GDF_EVENT_Fire(u16 event_code, void* sender, GDF_EventCtx ctx)
     for (u64 i = 0; i < registered_count; i++)
     {
         registered_event* e = &registered_events[i];
-        e->callback(event_code, sender, e->listener, ctx);
+        if (e->callback(event_code, sender, e->listener, ctx))
+        {
+            // just a way to make it so the event cancels if it
+            // returns true, useful for stuff potentially
+            // but i dont like it so ill prob change it later
+            return true;
+        }
     }
 }

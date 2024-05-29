@@ -23,7 +23,7 @@ typedef struct GDF_EventCtx {
     } data;
 } GDF_EventCtx;
 
-typedef void (*GDF_EventHandlerFP)(u16 event_code, void* sender, void* listener_instance, GDF_EventCtx data);
+typedef bool (*GDF_EventHandlerFP)(u16 event_code, void* sender, void* listener_instance, GDF_EventCtx data);
 
 bool GDF_InitEvents();
 void GDF_ShutdownEvents();
