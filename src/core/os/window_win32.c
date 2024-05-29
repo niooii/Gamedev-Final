@@ -33,7 +33,6 @@ LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
         }
         case WM_SIZE: 
         {
-            LOG_INFO("ABABABAAGFIWFIUFIAFIAFA");
             // RECT r;
             // GetClientRect(hwnd, &r);
             // u32 width = r.right - r.left;
@@ -47,10 +46,11 @@ LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
         case WM_KEYUP:
         case WM_SYSKEYUP: 
         {
-            LOG_INFO("oIEG)IEGOUS*GUIOWTHO$TOH");
-            // Key pressed/released
-            //b8 pressed = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
-            // TODO: input processing
+            bool pressed = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
+            GDF_KEYCODE key = (u16)w_param;
+
+            // Pass to the input subsystem for processing.
+            __input_process_key(key, pressed);
 
         } break;
         case WM_MOUSEMOVE: 

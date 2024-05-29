@@ -14,6 +14,21 @@ static bool INITIALIZED = false;
 static AppState APP_STATE;
 static GDF_Window* MAIN_WINDOW;
 
+bool on_keypress(void *sender, void *listener_instance, GDF_EventCtx ctx)
+{
+    if (ctx.data.u16[0] == GDF_KEYCODE_ESCAPE)
+    {
+        // queue a quit next frame
+        APP_STATE.is_running = false;
+        return true;
+    }
+    else
+    {
+        LOG_INFO("SOMETHING PRESSED");
+    }
+    return false;
+}
+
 bool GDF_InitApp() 
 {
     if (INITIALIZED) 
@@ -54,6 +69,8 @@ bool GDF_InitApp()
     {
         GDF_ShowConsole();
     }
+
+    GDF_EVENT_Register(GDF_EVENT_INTERNAL_KEY_PRESSED, NULL, on_keypress);
     
     return true;
 }

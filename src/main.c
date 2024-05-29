@@ -11,6 +11,7 @@ int main()
     GDF_InitSubsystems(GDF_SUBSYSTEM_WINDOWING | GDF_SUBSYSTEM_EVENTS | GDF_SUBSYSTEM_INPUT);
     GDF_InitApp();
     GDF_RunApp();
+    GDF_ShutdownSubsystems();
     return 0;
 }
 
