@@ -6,10 +6,12 @@
 #include "os/window.h"
 #include "os/socket.h"
 #include "core/event.h"
+#include "core/input.h"
 
 enum {
     GDF_SUBSYSTEM_WINDOWING = 0b00000001,
     GDF_SUBSYSTEM_EVENTS =    0b00000010,
+    GDF_SUBSYSTEM_INPUT =    0b00000100,
 };
 
 static u32 _flags;
@@ -35,6 +37,10 @@ inline bool GDF_InitSubsystems(u32 flags)
         if (!GDF_InitEvents())
             return false;
     }
+    if (flags & GDF_SUBSYSTEM_INPUT)
+    {
+        GDF_InitInput();
+    }
     return true; 
 }
 
@@ -47,6 +53,10 @@ inline bool GDF_ShutdownSubsystems()
     if (_flags & GDF_SUBSYSTEM_WINDOWING)
     {
         GDF_ShutdownWindowing();
+    }
+    if (_flags & GDF_SUBSYSTEM_INPUT)
+    {
+        GDF_ShutdownInput();
     }
     GDF_ShutdownLogging();
 

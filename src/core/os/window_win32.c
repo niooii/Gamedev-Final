@@ -70,6 +70,7 @@ LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
                 __input_process_mouse_wheel(z_delta);
             }
         } break;
+        // cases fall through
         case WM_LBUTTONDOWN:
         case WM_MBUTTONDOWN:
         case WM_RBUTTONDOWN:
@@ -77,8 +78,26 @@ LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
         case WM_MBUTTONUP:
         case WM_RBUTTONUP: 
         {
-            // bool pressed = msg == WM_LBUTTONDOWN || msg == WM_RBUTTONDOWN || msg == WM_MBUTTONDOWN;
-            // TODO: input processing
+            bool pressed = msg == WM_LBUTTONDOWN || msg == WM_RBUTTONDOWN || msg == WM_MBUTTONDOWN;
+            GDF_MBUTTON mouse_button = GDF_MBUTTON_MAX;
+            switch (msg) {
+                case WM_LBUTTONDOWN:
+                case WM_LBUTTONUP:
+                    mouse_button = GDF_MBUTTON_LEFT;
+                    break;
+                case WM_MBUTTONDOWN:
+                case WM_MBUTTONUP:
+                    mouse_button = GDF_MBUTTON_MIDDLE;
+                    break;
+                case WM_RBUTTONDOWN:
+                case WM_RBUTTONUP:
+                    mouse_button = GDF_MBUTTON_RIGHT;
+                    break;
+            }
+
+            if (mouse_button != GDF_MBUTTON_MAX) {
+                __input_process_button(mouse_button, pressed);
+            }
             break;
         } 
     }

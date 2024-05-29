@@ -1,5 +1,7 @@
 #include "app.h"
 #include "core/containers/list.h"
+#include "core/input.h"
+
 typedef struct AppState {
     bool is_running;
     bool is_suspended;
@@ -81,6 +83,10 @@ bool GDF_RunApp()
     while(APP_STATE.is_running) 
     {
         GDF_PumpMessages();
+        if (GDF_INPUT_IsButtonDown(GDF_MBUTTON_LEFT))
+        {
+            LOG_INFO("heehaw");
+        }
     }
 
     return true;

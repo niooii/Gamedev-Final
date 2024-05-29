@@ -98,7 +98,6 @@ bool GDF_SerializeMap(GDF_Map* map, char* out_buf)
             case GDF_MAP_DTYPE_STRING:
             {
                 sprintf(val_buf, "\"%s\"", (char*)(map->entries[i]->value));
-                LOG_DEBUG("in serializemap: got value %s", (char*)(map->entries[i]->value));
                 break;
             }
             case GDF_MAP_DTYPE_MAP:

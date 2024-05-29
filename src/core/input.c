@@ -106,7 +106,6 @@ void __input_process_button(GDF_MBUTTON button, bool pressed) {
     // check if state changed
     if (state.mouse_current.mbutton_states[button] != pressed) {
         state.mouse_current.mbutton_states[button] = pressed;
-
         GDF_EventCtx context;
         context.data.u16[0] = button;
         GDF_EVENT_Fire(pressed ? GDF_EVENT_INTERNAL_MBUTTON_PRESSED : GDF_EVENT_INTERNAL_MBUTTON_RELEASED, NULL, context);
