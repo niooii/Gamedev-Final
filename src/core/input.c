@@ -19,7 +19,7 @@ typedef struct input_state {
 } input_state;
 
 static bool initialized = FALSE;
-static input_state state = {};
+static input_state state;
 
 void GDF_InitInput() {
     GDF_MemZero(&state, sizeof(input_state));
