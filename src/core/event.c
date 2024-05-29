@@ -14,12 +14,12 @@ typedef struct event_code_entry {
 
 #define MAX_EVENT_CODES 16384
 
-typedef struct event_system_state {
+typedef struct EVENT_SYS_STATE {
     event_code_entry entries[MAX_EVENT_CODES];
-} event_system_state;
+} EVENT_SYS_STATE;
 
 static bool INITIALIZED = false;
-static event_system_state state;
+static EVENT_SYS_STATE state;
 
 bool GDF_InitEvents()
 {
