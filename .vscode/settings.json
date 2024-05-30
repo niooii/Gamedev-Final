@@ -113,6 +113,10 @@
         "optional": "cpp",
         "xtr1common": "cpp",
         "list.h": "c",
-        "event.h": "c"
-    }
+        "event.h": "c",
+        "stopwatch.h": "c",
+        "render_types.h": "c",
+        "vk_renderer.h": "c",
+        "renderer_backend.h": "c"
+    },
 }

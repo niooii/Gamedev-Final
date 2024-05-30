@@ -3,7 +3,7 @@
 #include "core.h"
 #include "map.h"
 #include "core/os/io.h"
-#include "app_settings.h"
+#include "client/client_settings.h"
 #include <string.h>
 
 // what im thinking:

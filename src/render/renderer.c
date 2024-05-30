@@ -1,0 +1,50 @@
+#include "renderer.h"
+#include "renderer_backend.h"
+
+#include "core.h"
+
+// Backend render context.
+static renderer_backend* backend = 0;
+
+bool GDF_InitRenderer(GDF_RENDER_BACKEND_TYPE render_backend_type) {
+    backend = GDF_Malloc(sizeof(*backend), GDF_MEMTAG_RENDERER);
+
+    renderer_backend_create(render_backend_type, backend);
+    backend->frame_number = 0;
+
+    if (!backend->initialize(backend, "TODO! temp app name")) {
+        LOG_FATAL("Renderer failed to initialize. Shutting down.");
+        return FALSE;
+    }
+
+    return TRUE;
+}
+
+void GDF_ShutdownRenderer() {
+    backend->shutdown(backend);
+    GDF_Free(backend);
+}
+
+bool renderer_begin_frame(f32 delta_time) {
+    return backend->begin_frame(backend, delta_time);
+}
+
+bool renderer_end_frame(f32 delta_time) {
+    bool result = backend->end_frame(backend, delta_time);
+    backend->frame_number++;
+    return result;
+}
+
+bool GDF_Renderer_DrawFrame(GDF_RenderPacket* packet) {
+    if (renderer_begin_frame(packet->delta_time)) {
+
+        bool result = renderer_end_frame(packet->delta_time);
+
+        if (!result) {
+            LOG_ERR("Failed to end frame.");
+            return false;
+        }
+    }
+
+    return true;
+}

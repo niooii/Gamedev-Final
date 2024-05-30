@@ -1,36 +1,34 @@
 #include "stopwatch.h"
+#include "core/os/info.h"
 
-static inline f64 timespec_to_seconds(struct timespec* ts)
-{
-    return (f64)(ts->tv_sec) + ts->tv_nsec/1000000000.0;
-}
-
-static inline void reset_stopwatch(GDF_Stopwatch* stopwatch)
-{
-    struct timespec ts;
-    timespec_get(&ts, TIME_UTC);
-    stopwatch->prev = timespec_to_seconds(&ts);
-}
-
-GDF_Stopwatch* GDF_CreateStopwatch()
+GDF_Stopwatch* GDF_Stopwatch_Create()
 {
     GDF_Stopwatch* stopwatch = GDF_Malloc(sizeof(*stopwatch), GDF_MEMTAG_APPLICATION);
-    reset_stopwatch(stopwatch);
+    stopwatch->start_time = GDF_GetAbsoluteTime();
     return stopwatch;
 }
 
-// nanosecond presicion (kinda)
-f64 GDF_StopwatchTimeElapsed(GDF_Stopwatch* stopwatch)
+f64 GDF_Stopwatch_TimeElasped(GDF_Stopwatch* stopwatch)
 {
-    struct timespec ts;
-    timespec_get(&ts, TIME_UTC);
-    return timespec_to_seconds(&ts) - stopwatch->prev;
+    return GDF_GetAbsoluteTime() - stopwatch->start_time;
 }
-f64 GDF_StopwatchReset(GDF_Stopwatch* stopwatch)
+
+f64 GDF_Stopwatch_Reset(GDF_Stopwatch* stopwatch)
 {
-    reset_stopwatch(stopwatch);
+    stopwatch->start_time = GDF_GetAbsoluteTime();
 }
-void GDF_DestroyStopwatch(GDF_Stopwatch* stopwatch)
+
+void GDF_Stopwatch_Pause(GDF_Stopwatch* stopwatch)
 {
     
+}
+
+void GDF_Stopwatch_Resume(GDF_Stopwatch* stopwatch)
+{
+
+}
+
+void GDF_Stopwatch_Destroy(GDF_Stopwatch* stopwatch)
+{
+    GDF_Free(stopwatch);
 }

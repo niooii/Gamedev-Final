@@ -6,11 +6,12 @@
 #include "core/os/io.h"
 #include "core/subsystems.h"
 #include "core/serde/serde.h"
-#include "app_settings.h"
+#include "client/client_settings.h"
 // TODO! this file and app.c are quite useless put these into main.c
 
 bool GDF_InitApp();
 // responsible for initializing directories and files with default values.
 // TODO!
 bool GDF_InitFirstLaunch();
-bool GDF_RunApp();
+// returns the time the app ran for in seconds
+f64 GDF_RunApp();

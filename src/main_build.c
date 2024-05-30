@@ -67,14 +67,10 @@ int main(int argc, char *argv[]) {
     char* created_dirs = GDF_Malloc(CFILES_STR_LEN, GDF_MEMTAG_STRING);
     char* build_cache_abs_path = GDF_Malloc(MAX_PATH_LEN, GDF_MEMTAG_STRING);
     GDF_GetAbsolutePath(BUILD_CACHE_PATH, build_cache_abs_path);
-    // + 33 (32 bytes for md5, 1 byte for ':')
-    const size_t c_file_checksums_len = (MAX_PATH_LEN + 33) * NUM_CFILES;
-    char* c_file_checksums = GDF_Malloc(c_file_checksums_len, GDF_MEMTAG_STRING);
-    GDF_ReadFile(CHECKSUM_FILE, c_file_checksums, c_file_checksums_len);
 
     bool success = false;
 
-    GDF_Stopwatch* stopwatch = GDF_CreateStopwatch();
+    GDF_Stopwatch* stopwatch = GDF_Stopwatch_Create();
 
     // create a bunch of files and load build options
     GDF_MakeDir(BUILD_PATH);
@@ -109,6 +105,8 @@ int main(int argc, char *argv[]) {
             continue;
         }
     }
+
+    
     
     if (GDF_MakeFile(build_options_path) || !load_build_options(build_options_path, build_options))
     {
@@ -148,6 +146,17 @@ int main(int argc, char *argv[]) {
             }
         }
     }
+
+    if (should_recompile_all)
+    {
+        // purge the checksums file
+        GDF_WriteFile(CHECKSUM_FILE, "");
+    }
+
+    // + 33 (32 bytes for md5, 1 byte for ':')
+    const size_t c_file_checksums_len = (MAX_PATH_LEN + 33) * NUM_CFILES;
+    char* c_file_checksums = GDF_Malloc(c_file_checksums_len, GDF_MEMTAG_STRING);
+    GDF_ReadFile(CHECKSUM_FILE, c_file_checksums, c_file_checksums_len);
     
     char path[400];
     GDF_GetAbsolutePath(build_options->src_dir, path);
@@ -181,11 +190,11 @@ int main(int argc, char *argv[]) {
 
         // compare stored checksum in file vs the just calculated one
         char* stored_cs_p;
+        
         if ((stored_cs_p = get_checksum(c_file_checksums, rel_path)) == NULL)
         {
             LOG_DEBUG("checksum not found, compiling and storing checksum.");
             LOG_DEBUG("current md5 hash: %s", new_checksum);
-            add_checksum(c_file_checksums, rel_path, new_checksum);
             needs_compile = true;
         }
         else
@@ -287,7 +296,14 @@ int main(int argc, char *argv[]) {
                 GDF_Free(compile_command);
                 goto program_end;
             }
-            update_checksum(c_file_checksums, rel_path, new_checksum);
+            if (stored_cs_p == NULL)
+            {
+                add_checksum(c_file_checksums, rel_path, new_checksum);
+            }
+            else
+            {
+                update_checksum(c_file_checksums, rel_path, new_checksum);
+            }
             files_compiled++;
             GDF_Free(compile_command);
         }
@@ -344,7 +360,7 @@ int main(int argc, char *argv[]) {
     
     if (success)
     {
-        f64 sec_elapsed = GDF_StopwatchTimeElapsed(stopwatch);
+        f64 sec_elapsed = GDF_Stopwatch_TimeElasped(stopwatch);
         if (files_compiled > 0)
         {
             LOG_INFO("Compiled %d files in %lf seconds.", files_compiled, sec_elapsed);
@@ -355,7 +371,7 @@ int main(int argc, char *argv[]) {
         return 0;
     }
 
-    f64 sec_elapsed = GDF_StopwatchTimeElapsed(stopwatch);
+    f64 sec_elapsed = GDF_Stopwatch_TimeElasped(stopwatch);
     LOG_ERR("Build failed in %lf seconds.", sec_elapsed);
     LOG_ERR("Failed to build \"%s.exe\"", build_options->executable_name);
     GDF_Free(build_options);
@@ -365,7 +381,6 @@ int main(int argc, char *argv[]) {
 
 bool load_build_options(const char* rel_path, BuildOptions* out_opts)
 {
-    LOG_INFO("loading options from path %s", rel_path);
     GDF_Map* map = GDF_CreateMap();
     bool read_success = GDF_ReadMapFromFile(rel_path, map);
     if (!read_success)
@@ -445,11 +460,11 @@ bool save_default_build_options(const char* rel_path)
 
     BuildOptions out_opts = {
         .compile_flags = "-g -Wvarargs -Wall -O0",
-        .include_flags = "-Isrc",
+        .include_flags = "-Isrc -I%VULKAN_SDK%/Include",
         .linker_flags = "-debug /defaultlib:user32.lib /defaultlib:libcmt.lib /defaultlib:vulkan-1.lib -LIBPATH:%VULKAN_SDK%/Lib",
         .defines = "-D_DEBUG -D_CRT_SECURE_NO_WARNINGS",
         .src_dir = "src",
-        .executable_name = "gdf"
+        .executable_name = "EXENAME"
     };
 
     return save_build_options(rel_path, &out_opts);
@@ -518,7 +533,8 @@ char* get_checksum(const char* checksums_str, const char* cfile_rel_path)
 
 bool update_checksum(char* checksums_str, const char* cfile_rel_path, const char* new_checksum)
 {
-    char* checksum_p;
+    char* checksum_p = NULL;
+    get_checksum:
     if ((checksum_p = get_checksum(checksums_str, cfile_rel_path)) 
     == NULL)
     {
@@ -527,11 +543,10 @@ bool update_checksum(char* checksums_str, const char* cfile_rel_path, const char
             LOG_ERR("Failed to add checksum.");
             return false;
         }
+        goto get_checksum;
     }
 
     strncpy(checksum_p, new_checksum, 32);
-    char stored_checksum[33];
-    snprintf(stored_checksum, 33, "%s", checksum_p);
 }
 
 bool add_checksum(char* checksums_str, const char* cfile_rel_path, const char* checksum)

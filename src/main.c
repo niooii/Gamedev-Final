@@ -10,7 +10,8 @@ int main()
 {
     GDF_InitSubsystems(GDF_SUBSYSTEM_WINDOWING | GDF_SUBSYSTEM_EVENTS | GDF_SUBSYSTEM_INPUT);
     GDF_InitApp();
-    GDF_RunApp();
+    f64 time_ran_for = GDF_RunApp();
+    LOG_INFO("App has been running for %lf seconds... Time to rest!", time_ran_for);
     GDF_ShutdownSubsystems();
     return 0;
 }
