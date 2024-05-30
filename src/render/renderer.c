@@ -13,11 +13,10 @@ bool GDF_InitRenderer(GDF_RENDER_BACKEND_TYPE render_backend_type) {
     backend->frame_number = 0;
 
     if (!backend->initialize(backend, "TODO! temp app name")) {
-        LOG_FATAL("Renderer failed to initialize. Shutting down.");
-        return FALSE;
+        return false;
     }
 
-    return TRUE;
+    return true;
 }
 
 void GDF_ShutdownRenderer() {

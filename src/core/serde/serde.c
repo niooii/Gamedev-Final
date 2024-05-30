@@ -125,7 +125,7 @@ bool GDF_DeserializeToMap(char* data, GDF_Map* out_map)
     char* key_buf = GDF_Malloc(150, GDF_MEMTAG_STRING); 
     char* val_buf = GDF_Malloc(500, GDF_MEMTAG_STRING); 
     while(line) {
-        LOG_DEBUG("line is %s", line);
+        LOG_DEBUG("Deserializing line: %s", line);
         line_num++;
         GDF_MemZero(line_buf, 650);
         GDF_MemZero(key_buf, 150);

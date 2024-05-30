@@ -207,7 +207,6 @@ bool GDF_MakeFile(const char* rel_path) {
         LOG_INFO("Created file: %s", path);
         CloseHandle(h);
     }
-    LOG_DEBUG("womp womp");
     return success;
 }
 

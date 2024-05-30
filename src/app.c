@@ -78,6 +78,13 @@ bool GDF_InitApp()
     GDF_EVENT_Register(GDF_EVENT_INTERNAL_KEY_PRESSED, NULL, app_on_event);
     GDF_EVENT_Register(GDF_EVENT_INTERNAL_APP_QUIT, NULL, app_on_event);
 
+    // initialize the renderer
+    if (!GDF_InitRenderer(GDF_RENDER_BACKEND_TYPE_VULKAN))
+    {
+        LOG_ERR("Couldn't initialize renderer unlucky.");
+        return false;
+    }
+
     APP_STATE.stopwatch = GDF_Stopwatch_Create();
 
     INITIALIZED = true;
@@ -106,9 +113,6 @@ f64 GDF_RunApp()
         LOG_ERR("App not initialized properly");
         return -1;
     }
-    // quickly test renderer stuff
-    GDF_InitRenderer(GDF_RENDER_BACKEND_TYPE_VULKAN);
-    
 
     GDF_Stopwatch* running_timer = GDF_Stopwatch_Create();
     u8 frame_count = 0;

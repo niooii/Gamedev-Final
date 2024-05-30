@@ -10,6 +10,7 @@ extern const char* level_strings[6];
 #define GDF_WARN
 #define GDF_INFO
 #define GDF_TRACE
+#define GDF_DEBUG
 
 #ifdef GDF_RELEASE
     #undef GDF_DEBUG
