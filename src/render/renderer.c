@@ -4,7 +4,7 @@
 #include "core.h"
 
 // Backend render context.
-static renderer_backend* backend = 0;
+static renderer_backend* backend = NULL;
 
 bool GDF_InitRenderer(GDF_RENDER_BACKEND_TYPE render_backend_type) {
     backend = GDF_Malloc(sizeof(*backend), GDF_MEMTAG_RENDERER);

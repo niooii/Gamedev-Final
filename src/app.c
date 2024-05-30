@@ -51,14 +51,14 @@ bool GDF_InitApp()
         return false;
     }
 
-    // create required files and directory
+    // create required files and directories
     GDF_InitFirstLaunch();
 
     APP_STATE.is_running = true;
     APP_STATE.is_suspended = false;
     if (!GDF_ClientSettings_Load())
     {
-        LOG_FATAL("Failed to load app_settings.gdf, exiting...");
+        LOG_FATAL("Failed to load client_settings.gdf, exiting...");
         return false;
     }
 
@@ -88,11 +88,11 @@ bool GDF_InitApp()
 bool GDF_InitFirstLaunch()
 {
     // if it succeeds, we didnt have an app_settings before and creates one and then saves the default instance of appsettings
-    if (GDF_MakeFile("app_settings.gdf"))
+    if (GDF_MakeFile("client_settings.gdf"))
     {
         if (!GDF_ClientSettings_Save())
         {
-            LOG_ERR("Something went wrong saving app settings...");
+            LOG_ERR("Something went wrong saving client settings...");
             return false;
         }
     }
@@ -103,9 +103,12 @@ f64 GDF_RunApp()
 {
     if (!INITIALIZED)
     {
-        LOG_ERR("app not initialized properly");
+        LOG_ERR("App not initialized properly");
         return -1;
     }
+    // quickly test renderer stuff
+    GDF_InitRenderer(GDF_RENDER_BACKEND_TYPE_VULKAN);
+    
 
     GDF_Stopwatch* running_timer = GDF_Stopwatch_Create();
     u8 frame_count = 0;

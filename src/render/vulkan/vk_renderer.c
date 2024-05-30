@@ -1,5 +1,6 @@
 #include "vk_renderer.h"
 #include "vk_types.h"
+#include "core/containers/list.h"
 
 static vk_context context;
 
@@ -11,23 +12,31 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name) {
     app_info.apiVersion = VK_API_VERSION_1_2;
     app_info.pApplicationName = application_name;
     app_info.applicationVersion = VK_MAKE_VERSION(1, 0, 0);
-    app_info.pEngineName = "Kohi Engine";
+    app_info.pEngineName = "GDF";
     app_info.engineVersion = VK_MAKE_VERSION(1, 0, 0);
 
-    VkInstanceCreateInfo create_info = {VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO};
+    VkInstanceCreateInfo create_info = {};
+    create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO; 
     create_info.pApplicationInfo = &app_info;
+
+    // TODO! platform specific extensions
     create_info.enabledExtensionCount = 0;
     create_info.ppEnabledExtensionNames = 0;
-    create_info.enabledLayerCount = 0;
-    create_info.ppEnabledLayerNames = 0;
+
+    // validation layers
+    const char** validation_layers = GDF_LIST_Create(const char*);
+    const char* khr_validation = "VK_LAYER_KHRONOS_validation";
+    GDF_LIST_Push(validation_layers, khr_validation);
+    create_info.enabledLayerCount = GDF_LIST_GetLength(validation_layers);
+    create_info.ppEnabledLayerNames = validation_layers;
 
     VkResult result = vkCreateInstance(&create_info, context.allocator, &context.instance);
-    if(result != VK_SUCCESS) {
+    if (result != VK_SUCCESS) {
         LOG_ERR("vkCreateInstance failed with result: %u", result);
         return false;
     }
 
-    LOG_INFO("Vulkan renderer initialized successfully.");
+    LOG_INFO("Vulkan instance initialized successfully.");
     return true;
 }
 

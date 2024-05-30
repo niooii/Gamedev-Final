@@ -7,6 +7,8 @@
 #include "core/subsystems.h"
 #include "core/serde/serde.h"
 #include "client/client_settings.h"
+#include "render/renderer.h"
+
 // TODO! this file and app.c are quite useless put these into main.c
 
 bool GDF_InitApp();
