@@ -5,10 +5,13 @@
 #include "core/mem.h"
 #include <windows.h>
 #include <windowsx.h>
+#include <vulkan/vulkan_win32.h>
 
 const char win_class_name[] = "gdf_window";
 static u16 current_window_id = 0;
 static HMODULE class_h_instance = NULL;
+
+static GDF_Window* MAIN_WINDOW = NULL;
 
 typedef struct {
     HWND hwnd;
@@ -208,6 +211,11 @@ GDF_Window* GDF_CreateWindow(i16 x_, i16 y_, i16 w, i16 h, const char* title)
     // If initially maximized, use SW_SHOWMAXIMIZED : SW_MAXIMIZE
     ShowWindow(internals->hwnd, show_window_command_flags);
 
+    if (MAIN_WINDOW == NULL)
+    {
+        MAIN_WINDOW = window;
+    }
+
     return window;
 }
 
@@ -246,6 +254,22 @@ bool GDF_DestroyWindow(GDF_Window* window)
 void GDF_VK_GetRequiredExtensionNames(const char*** names_list)
 {
     GDF_LIST_Push(*names_list, &"VK_KHR_win32_surface");
+}
+
+bool GDF_VK_CreateSurface(vk_context* context)
+{
+    VkWin32SurfaceCreateInfoKHR create_info = {VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR};
+    create_info.hinstance = class_h_instance;
+    create_info.hwnd = ((InternalWindowState*)MAIN_WINDOW->internals)->hwnd;
+
+    VkResult result = vkCreateWin32SurfaceKHR(context->instance, &create_info, context->allocator, &context->surface);
+    if (result != VK_SUCCESS) {
+        LOG_ERR("Vulkan surface creation failed.");
+        return false;
+    }
+
+    LOG_DEBUG("Created Vulkan surface.");
+    return true;
 }
 
 #endif

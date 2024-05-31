@@ -1,6 +1,7 @@
 #pragma once
 
 #include "render/renderer_backend.h"
+#include "vk_device.h"
 
 bool vk_renderer_init(renderer_backend* backend, const char* application_name);
 void vk_renderer_shutdown(renderer_backend* backend);

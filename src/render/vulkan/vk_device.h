@@ -12,4 +12,9 @@ void vk_device_destroy(vk_context* context);
 void vk_device_query_swapchain_support(
     VkPhysicalDevice physical_device,
     VkSurfaceKHR surface,
-    vk_device_swapchain_support* out_support_info);
+    vk_pdevice_swapchain_support* out_support_info);
+
+void vk_device_query_queues(
+    vk_context* context,
+    VkPhysicalDevice physical_device,
+    vk_pdevice_queues* queues);
