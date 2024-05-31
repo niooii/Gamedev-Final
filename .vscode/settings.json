@@ -117,6 +117,8 @@
         "stopwatch.h": "c",
         "render_types.h": "c",
         "vk_renderer.h": "c",
-        "renderer_backend.h": "c"
+        "renderer_backend.h": "c",
+        "vk_enum_string_helper.h": "c",
+        "vk_device.h": "c"
     },
 }

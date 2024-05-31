@@ -42,6 +42,25 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name) {
     VK_ASSERT(vkCreateInstance(&create_info, context.allocator, &context.instance));
 
     LOG_INFO("Vulkan instance initialized successfully.");
+    
+    // enumerate physical devices then create logical 
+    u32 physical_device_count = 0;
+    VK_ASSERT(vkEnumeratePhysicalDevices(context.instance, &physical_device_count, NULL));
+    if (physical_device_count == 0)
+    {
+        LOG_FATAL("There are no devices supporting vulkan on your system.");
+        return false;
+    }
+    VkPhysicalDevice phys_device_list[physical_device_count];
+    VK_ASSERT(vkEnumeratePhysicalDevices(context.instance, &physical_device_count, phys_device_list));
+    VkPhysicalDeviceProperties device_properties_list[physical_device_count];
+
+    for (u32 i = 0; i < physical_device_count; i++)
+    {
+        vkGetPhysicalDeviceProperties(phys_device_list[i], &device_properties_list[i]);
+        LOG_DEBUG("Found device %s", device_properties_list[i].deviceName);
+    }
+
     return true;
 }
 
