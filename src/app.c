@@ -120,6 +120,10 @@ f64 GDF_RunApp()
     f64 secs_per_frame = 1.0/fps;
     GDF_Stopwatch* frame_timer = GDF_Stopwatch_Create();
 
+    GDF_ASSERT(2 == 3);
+    GDF_ASSERT(false);
+    GDF_ASSERT(3 == 3);
+
     while(APP_STATE.is_running) 
     {
         GDF_PumpMessages();

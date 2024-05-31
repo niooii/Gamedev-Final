@@ -2,6 +2,8 @@
 #include "core.h"
 #include "core/os/io.h"
 #include "core/input.h"
+#include "render/vulkan/vk_os.h"
+#include "core/containers/list.h"
 
 #define GDF_WIN_CENTERED 32767
 

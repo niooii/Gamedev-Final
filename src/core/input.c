@@ -115,8 +115,6 @@ void __input_process_button(GDF_MBUTTON button, bool pressed) {
 void __input_process_mouse_move(i16 x, i16 y) {
     // check if different
     if (state.mouse_current.x != x || state.mouse_current.y != y) {
-        LOG_DEBUG("Mouse pos: %i, %i!", x, y);
-
         state.mouse_current.x = x;
         state.mouse_current.y = y;
 

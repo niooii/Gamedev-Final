@@ -243,4 +243,9 @@ bool GDF_DestroyWindow(GDF_Window* window)
     return true;
 }
 
+void GDF_VK_GetRequiredExtensionNames(const char*** names_list)
+{
+    GDF_LIST_Push(*names_list, &"VK_KHR_win32_surface");
+}
+
 #endif

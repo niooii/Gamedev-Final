@@ -1,6 +1,7 @@
 #include "vk_renderer.h"
 #include "vk_types.h"
 #include "core/containers/list.h"
+#include "vk_os.h"
 
 static vk_context context;
 
@@ -19,17 +20,25 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name) {
     create_info.sType = VK_STRUCTURE_TYPE_INSTANCE_CREATE_INFO; 
     create_info.pApplicationInfo = &app_info;
 
-    // TODO! platform specific extensions
-    create_info.enabledExtensionCount = 0;
-    create_info.ppEnabledExtensionNames = 0;
+    // extensions
+    const char** extensions = GDF_LIST_Create(const char*);
+    GDF_LIST_Push(extensions, &VK_KHR_SURFACE_EXTENSION_NAME);  // Generic surface extension
+    GDF_VK_GetRequiredExtensionNames(&extensions);
+
+#ifndef GDF_RELEASE
+    GDF_LIST_Push(extensions, &VK_EXT_DEBUG_UTILS_EXTENSION_NAME);
+#endif
+
+    create_info.enabledExtensionCount = GDF_LIST_GetLength(extensions);
+    create_info.ppEnabledExtensionNames = extensions;
 
     // validation layers
+#ifndef GDF_RELEASE
     const char** validation_layers = GDF_LIST_Create(const char*);
-    const char* khr_validation = "VK_LAYER_KHRONOS_validation";
-    GDF_LIST_Push(validation_layers, khr_validation);
+    GDF_LIST_Push(validation_layers, &"VK_LAYER_KHRONOS_validation");
     create_info.enabledLayerCount = GDF_LIST_GetLength(validation_layers);
     create_info.ppEnabledLayerNames = validation_layers;
-
+#endif
     VkResult result = vkCreateInstance(&create_info, context.allocator, &context.instance);
     if (result != VK_SUCCESS) {
         LOG_ERR("vkCreateInstance failed with result: %u", result);
