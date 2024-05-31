@@ -16,7 +16,6 @@ void report_assertion_failure(const char* expression, const char* message, const
 
 #define GDF_ASSERT(expr)                                                \
     {   \            
-        LOG_INFO("there may be an assert here");                                                    \
         if (!(expr)) {                                                    \
             LOG_INFO("ASSERT FAILED");                                             \
             report_assertion_failure(#expr, "", __FILE__, __LINE__);    \

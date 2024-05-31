@@ -39,11 +39,7 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name) {
     create_info.enabledLayerCount = GDF_LIST_GetLength(validation_layers);
     create_info.ppEnabledLayerNames = validation_layers;
 #endif
-    VkResult result = vkCreateInstance(&create_info, context.allocator, &context.instance);
-    if (result != VK_SUCCESS) {
-        LOG_ERR("vkCreateInstance failed with result: %u", result);
-        return false;
-    }
+    VK_ASSERT(vkCreateInstance(&create_info, context.allocator, &context.instance));
 
     LOG_INFO("Vulkan instance initialized successfully.");
     return true;
