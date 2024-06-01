@@ -38,7 +38,7 @@ bool vk_swapchain_acquire_next_image_index(
     u32* out_image_idx)
 {
     VkResult r = vkAcquireNextImageKHR(
-        context->device->logical,
+        context->device.logical,
         swapchain,
         timeout_ns,
         image_available_semaphore,
@@ -89,8 +89,8 @@ void __create(vk_context* context, u32 w, u32 h, vk_swapchain* swapchain)
     swapchain->max_frames_in_flight = 2;
 
     // update swapchain support in case anything changed
-    vk_pdevice_swapchain_support* swapchain_support = &context->device->physical_info->sc_support_info;
-    vk_device_query_swapchain_support(context->device->physical_info->handle, context->surface, swapchain_support);
+    vk_pdevice_swapchain_support* swapchain_support = &context->device.physical_info->sc_support_info;
+    vk_device_query_swapchain_support(context->device.physical_info->handle, context->surface, swapchain_support);
 
     // use the first img format and switch if a better one is found
     swapchain->image_format = swapchain_support->formats[0];
@@ -142,11 +142,11 @@ void __create(vk_context* context, u32 w, u32 h, vk_swapchain* swapchain)
     swapchain_create_info.imageArrayLayers = 1;
     swapchain_create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
-    if (context->device->physical_info->queues.graphics_family_index != context->device->physical_info->queues.present_family_index) 
+    if (context->device.physical_info->queues.graphics_family_index != context->device.physical_info->queues.present_family_index) 
     {
         u32 queueFamilyIndices[] = {
-            (u32)context->device->physical_info->queues.graphics_family_index,
-            (u32)context->device->physical_info->queues.present_family_index
+            (u32)context->device.physical_info->queues.graphics_family_index,
+            (u32)context->device.physical_info->queues.present_family_index
         };
         swapchain_create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
         swapchain_create_info.queueFamilyIndexCount = 2;
@@ -167,7 +167,7 @@ void __create(vk_context* context, u32 w, u32 h, vk_swapchain* swapchain)
 
     VK_ASSERT(
         vkCreateSwapchainKHR(
-            context->device->logical,
+            context->device.logical,
             &swapchain_create_info,
             context->allocator,
             &swapchain->handle
@@ -181,7 +181,7 @@ void __create(vk_context* context, u32 w, u32 h, vk_swapchain* swapchain)
 
     VK_ASSERT(
         vkGetSwapchainImagesKHR(
-            context->device->logical, 
+            context->device.logical, 
             swapchain->handle,
             &swapchain->image_count, 
             NULL
@@ -191,7 +191,7 @@ void __create(vk_context* context, u32 w, u32 h, vk_swapchain* swapchain)
     swapchain->views = GDF_Malloc(sizeof(VkImageView) * swapchain->image_count, GDF_MEMTAG_RENDERER);
     VK_ASSERT(
         vkGetSwapchainImagesKHR(
-            context->device->logical, 
+            context->device.logical, 
             swapchain->handle, 
             &swapchain->image_count, 
             swapchain->images
@@ -212,7 +212,7 @@ void __create(vk_context* context, u32 w, u32 h, vk_swapchain* swapchain)
 
         VK_ASSERT(
             vkCreateImageView(
-                context->device->logical, 
+                context->device.logical, 
                 &view_info, 
                 context->allocator, 
                 &swapchain->views[i]
@@ -223,10 +223,10 @@ void __create(vk_context* context, u32 w, u32 h, vk_swapchain* swapchain)
     // TODO! this crashes for some unknown reason.
     // hardcoding it for now unlucky
     // if (!vk_device_find_depth_format(&context->device)) {
-    //     context->device->depth_format = VK_FORMAT_UNDEFINED;
+    //     context->device.depth_format = VK_FORMAT_UNDEFINED;
     //     LOG_FATAL("No depths format..");
     // }
-    context->device->depth_format = VK_FORMAT_D32_SFLOAT;
+    context->device.depth_format = VK_FORMAT_D32_SFLOAT;
 
     // Create depth image and its view.
     vk_image_create(
@@ -234,7 +234,7 @@ void __create(vk_context* context, u32 w, u32 h, vk_swapchain* swapchain)
         VK_IMAGE_TYPE_2D,
         swapchain_extent.width,
         swapchain_extent.height,
-        context->device->depth_format,
+        context->device.depth_format,
         VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
@@ -250,11 +250,11 @@ void __destroy(vk_context* context, vk_swapchain* swapchain)
     vk_image_destroy(context, &swapchain->depth_attachment);
 
     for (u32 i = 0; i < swapchain->image_count; ++i) {
-        vkDestroyImageView(context->device->logical, swapchain->views[i], context->allocator);
+        vkDestroyImageView(context->device.logical, swapchain->views[i], context->allocator);
     }
 
     GDF_Free(swapchain->images);
     GDF_Free(swapchain->views);
 
-    vkDestroySwapchainKHR(context->device->logical, swapchain->handle, context->allocator);
+    vkDestroySwapchainKHR(context->device.logical, swapchain->handle, context->allocator);
 }

@@ -262,7 +262,7 @@ bool GDF_VK_CreateSurface(vk_context* context)
     create_info.hinstance = class_h_instance;
     create_info.hwnd = ((InternalWindowState*)MAIN_WINDOW->internals)->hwnd;
 
-    if (vkCreateWin32SurfaceKHR == NULL)
+    if (&vkCreateWin32SurfaceKHR == NULL)
     {
         LOG_ERR("WTF BRO");
     }

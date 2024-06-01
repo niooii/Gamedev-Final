@@ -9,7 +9,7 @@
 #include <strsafe.h>
 
 static HWND console_window = NULL;
-static const char* EXECUTABLE_PATH;
+static char* EXECUTABLE_PATH;
 
 void GDF_InitIO() 
 {
@@ -97,7 +97,7 @@ GDF_DirInfo* GDF_GetDirInfo(const char* rel_path)
 {
     HANDLE hFind;
     WIN32_FIND_DATA FindData;
-    char* tmp_dir[MAX_PATH_LEN];
+    char tmp_dir[MAX_PATH_LEN];
     if (strcmp(rel_path, ".") == 0)
     {
         strcpy(tmp_dir, EXECUTABLE_PATH);
@@ -186,7 +186,7 @@ GDF_DirInfo* GDF_GetDirInfo(const char* rel_path)
 }
 
 bool GDF_MakeFile(const char* rel_path) {
-    const char* path[MAX_PATH_LEN];
+    char path[MAX_PATH_LEN];
     GDF_GetAbsolutePath(rel_path, path);
     HANDLE h = CreateFile(path, 0, 0, 0, CREATE_NEW, FILE_ATTRIBUTE_NORMAL, 0);
     bool success = h != INVALID_HANDLE_VALUE;
@@ -211,7 +211,7 @@ bool GDF_MakeFile(const char* rel_path) {
 }
 
 bool GDF_MakeDir(const char* rel_path) {
-    char* path[MAX_PATH_LEN];
+    char path[MAX_PATH_LEN];
     GDF_GetAbsolutePath(rel_path, path);
     bool success = CreateDirectoryA(path, NULL);
     // TODO! replace with custom allocator
@@ -243,7 +243,7 @@ bool GDF_MakeDirAbs(const char* abs_path)
 
 
 bool GDF_WriteFile(const char* rel_path, const char* data) {
-    const char* path[MAX_PATH_LEN];
+    char path[MAX_PATH_LEN];
     GDF_GetAbsolutePath(rel_path, path);
     HANDLE h = CreateFile(path, GENERIC_WRITE, 0, 0, TRUNCATE_EXISTING, 0, 0);
     bool success = h != INVALID_HANDLE_VALUE;
@@ -273,7 +273,7 @@ bool GDF_WriteFile(const char* rel_path, const char* data) {
 }
 
 bool GDF_ReadFile(const char* rel_path, char* out_buf, size_t bytes_to_read) {
-    const char* path[MAX_PATH_LEN];
+    const char path[MAX_PATH_LEN];
     GDF_GetAbsolutePath(rel_path, path);
     HANDLE h = CreateFile(path, GENERIC_READ, 0, 0, OPEN_EXISTING, 0, 0);
     bool success = h != INVALID_HANDLE_VALUE;
@@ -305,7 +305,7 @@ bool GDF_ReadFile(const char* rel_path, char* out_buf, size_t bytes_to_read) {
 
 char* GDF_ReadFileExactLen(const char* rel_path)
 {
-    const char* path[MAX_PATH_LEN];
+    char path[MAX_PATH_LEN];
     GDF_GetAbsolutePath(rel_path, path);
     // If i dont add a bit more, it reads some garbage characters after the end
     // of the file. please dont ask me why this happens, i will not know.
@@ -341,7 +341,7 @@ char* GDF_ReadFileExactLen(const char* rel_path)
 
 u64 GDF_GetFileSize(const char* rel_path)
 {
-    const char* path[MAX_PATH_LEN];
+    char path[MAX_PATH_LEN];
     GDF_GetAbsolutePath(rel_path, path);
 
     return GDF_GetFileSizeAbs(path);

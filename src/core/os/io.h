@@ -7,8 +7,8 @@
 #define MAX_PATH_LEN 512
 
 typedef struct GDF_DirInfoNode {
-    const char* name;
-    const char* full_path;
+    char* name;
+    char* full_path;
     bool is_directory;
 } GDF_DirInfoNode;
 

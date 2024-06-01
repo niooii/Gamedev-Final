@@ -74,14 +74,10 @@ typedef struct vk_context {
     VkSurfaceKHR surface;
     // GDF_LIST of physical device info structs
     vk_physical_device* physical_device_info_list;
-    // needs to be dynamically allocated
-    // for convenience so i can just free the m emory
-    // when changing and not have any leftover
-    // values in there
-    vk_device* device;
+    vk_device device;
 
     // swapchain stuff
-    vk_swapchain* swapchain;
+    vk_swapchain swapchain;
     u32 img_idx;
     u32 current_frame_num;
     bool recreating_swapchain;

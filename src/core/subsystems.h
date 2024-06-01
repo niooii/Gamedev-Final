@@ -17,7 +17,7 @@ enum {
 static u32 _flags;
 
 // womp womp
-inline bool GDF_InitSubsystems(u32 flags)
+static bool GDF_InitSubsystems(u32 flags)
 {
     _flags = flags;
     if (!GDF_InitMemory())
@@ -44,7 +44,7 @@ inline bool GDF_InitSubsystems(u32 flags)
     return true; 
 }
 
-inline bool GDF_ShutdownSubsystems()
+static bool GDF_ShutdownSubsystems()
 {
     if (_flags & GDF_SUBSYSTEM_EVENTS)
     {

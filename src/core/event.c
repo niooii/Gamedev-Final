@@ -119,4 +119,5 @@ bool GDF_EVENT_Fire(u16 e_code, void* sender, GDF_EventCtx ctx)
             return true;
         }
     }
+    return true;
 }

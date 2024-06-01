@@ -31,15 +31,15 @@ void vk_image_create(
     image_create_info.samples = VK_SAMPLE_COUNT_1_BIT; 
     image_create_info.sharingMode = VK_SHARING_MODE_EXCLUSIVE; 
 
-    VK_ASSERT(vkCreateImage(context->device->logical, &image_create_info, context->allocator, &out_image->handle));
+    VK_ASSERT(vkCreateImage(context->device.logical, &image_create_info, context->allocator, &out_image->handle));
 
     // Query memory requirements.
     VkMemoryRequirements memory_requirements;
-    vkGetImageMemoryRequirements(context->device->logical, out_image->handle, &memory_requirements);
+    vkGetImageMemoryRequirements(context->device.logical, out_image->handle, &memory_requirements);
 
     // find the memory index
     VkPhysicalDeviceMemoryProperties memory_properties;
-    vkGetPhysicalDeviceMemoryProperties(context->device->logical, &memory_properties);
+    vkGetPhysicalDeviceMemoryProperties(context->device.physical_info->handle, &memory_properties);
 
     i32 memory_type = -1;
     for (u32 i = 0; i < memory_properties.memoryTypeCount; i++) 
@@ -59,10 +59,10 @@ void vk_image_create(
     VkMemoryAllocateInfo memory_allocate_info = {VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO};
     memory_allocate_info.allocationSize = memory_requirements.size;
     memory_allocate_info.memoryTypeIndex = memory_type;
-    VK_ASSERT(vkAllocateMemory(context->device->logical, &memory_allocate_info, context->allocator, &out_image->memory));
+    VK_ASSERT(vkAllocateMemory(context->device.logical, &memory_allocate_info, context->allocator, &out_image->memory));
 
     // Bind the memory
-    VK_ASSERT(vkBindImageMemory(context->device->logical, out_image->handle, out_image->memory, 0));  // TODO: configurable memory offset.
+    VK_ASSERT(vkBindImageMemory(context->device.logical, out_image->handle, out_image->memory, 0));  // TODO: configurable memory offset.
 
     // Create view
     if (create_view) {
@@ -89,24 +89,24 @@ void vk_image_view_create(
     view_create_info.subresourceRange.baseArrayLayer = 0;
     view_create_info.subresourceRange.layerCount = 1;
 
-    VK_ASSERT(vkCreateImageView(context->device->logical, &view_create_info, context->allocator, &image->view));
+    VK_ASSERT(vkCreateImageView(context->device.logical, &view_create_info, context->allocator, &image->view));
 }
 
 void vk_image_destroy(vk_context* context, vk_image* image)
 {
     if (image->view) 
     {
-        vkDestroyImageView(context->device->logical, image->view, context->allocator);
+        vkDestroyImageView(context->device.logical, image->view, context->allocator);
         image->view = 0;
     }
     if (image->memory) 
     {
-        vkFreeMemory(context->device->logical, image->memory, context->allocator);
+        vkFreeMemory(context->device.logical, image->memory, context->allocator);
         image->memory = 0;
     }
     if (image->handle) 
     {
-        vkDestroyImage(context->device->logical, image->handle, context->allocator);
+        vkDestroyImage(context->device.logical, image->handle, context->allocator);
         image->handle = 0;
     }
 }

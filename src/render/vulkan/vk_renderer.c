@@ -123,7 +123,7 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
 
     PFN_vkCreateDebugUtilsMessengerEXT f =
         (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(context.instance, "vkCreateDebugUtilsMessengerEXT");
-    GDF_ASSERT_MSG(f != NULL, "Function returned was NULL.");
+    GDF_ASSERT_MSG((f) != NULL, "Function returned was NULL.");
     VK_ASSERT(f(context.instance, &debug_create_info, context.allocator, &context.debug_messenger));
     LOG_DEBUG("Vulkan debugger created.");
 #endif
@@ -136,7 +136,7 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
         LOG_FATAL("There are no devices supporting vulkan on your system.");
         return false;
     }
-    VkPhysicalDevice* physical_devices[physical_device_count];
+    VkPhysicalDevice physical_devices[physical_device_count];
     VK_ASSERT(vkEnumeratePhysicalDevices(context.instance, &physical_device_count, physical_devices));
 
     // test surface creation remove later and place elsewhwere maybe

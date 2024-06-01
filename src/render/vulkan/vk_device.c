@@ -67,36 +67,38 @@ bool vk_device_create(vk_context* context, const char* name)
     const char* extension_names = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
     device_create_info.ppEnabledExtensionNames = &extension_names;
 
-    context->device = GDF_Malloc(sizeof(vk_device), GDF_MEMTAG_RENDERER);
-    context->device->physical_info = phys_device_info;
+    context->device.physical_info = phys_device_info;
 
     // Create the device.
-    VK_ASSERT(vkCreateDevice(
-        phys_device_info->handle,
-        &device_create_info,
-        context->allocator,
-        &context->device->logical));
+    VK_ASSERT(
+        vkCreateDevice(
+            phys_device_info->handle,
+            &device_create_info,
+            context->allocator,
+            &context->device.logical
+        )
+    );
 
     LOG_DEBUG("Created logical device.");
 
     // Get queues.
     vkGetDeviceQueue(
-        context->device->logical,
-        context->device->physical_info->queues.graphics_family_index,
+        context->device.logical,
+        context->device.physical_info->queues.graphics_family_index,
         0,
-        &context->device->graphics_queue);
+        &context->device.graphics_queue);
 
     vkGetDeviceQueue(
-        context->device->logical,
-        context->device->physical_info->queues.present_family_index,
+        context->device.logical,
+        context->device.physical_info->queues.present_family_index,
         0,
-        &context->device->present_queue);
+        &context->device.present_queue);
 
     vkGetDeviceQueue(
-        context->device->logical,
-        context->device->physical_info->queues.transfer_family_index,
+        context->device.logical,
+        context->device.physical_info->queues.transfer_family_index,
         0,
-        &context->device->transfer_queue);
+        &context->device.transfer_queue);
     
     LOG_DEBUG("Got queues.");
 
@@ -106,8 +108,7 @@ bool vk_device_create(vk_context* context, const char* name)
 void vk_device_destroy(vk_context* context)
 {
     // TODO! destroy queues, then VkDevice, then free extra memory allocated by me.
-    vkDestroyDevice(context->device->logical, context->allocator);
-    GDF_Free(context->device);
+    vkDestroyDevice(context->device.logical, context->allocator);
 }
 
 void vk_device_query_swapchain_support(VkPhysicalDevice physical_device, VkSurfaceKHR surface, vk_pdevice_swapchain_support* out_support_info)
