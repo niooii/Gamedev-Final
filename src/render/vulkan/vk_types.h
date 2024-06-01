@@ -30,32 +30,61 @@ typedef struct vk_pdevice_queues {
 
 typedef struct vk_physical_device {
     VkPhysicalDevice handle;
-    VkPhysicalDeviceProperties properties;
     vk_pdevice_swapchain_support sc_support_info;
     vk_pdevice_queues queues;
+    VkPhysicalDeviceProperties properties;
+    VkPhysicalDeviceFeatures features;
+    VkPhysicalDeviceMemoryProperties memory;
     bool usable;
 } vk_physical_device;
 
 typedef struct vk_device {
-    vk_physical_device physical_device_info;
-    VkDevice logical_device;
-    vk_pdevice_swapchain_support swapchain_support;
-    i32 graphics_queue_index;
-    i32 present_queue_index;
-    i32 transfer_queue_index;
-
-    VkPhysicalDeviceProperties properties;
-    VkPhysicalDeviceFeatures features;
-    VkPhysicalDeviceMemoryProperties memory;
+    vk_physical_device* physical_info;
+    VkDevice logical;
+    VkQueue graphics_queue;
+    VkQueue present_queue;
+    VkQueue transfer_queue;
+    VkFormat depth_format;
 } vk_device;
 
+typedef struct vk_image {
+    VkImage handle;
+    VkDeviceMemory memory;
+    VkImageView view;
+    u32 width;
+    u32 height;
+} vk_image;
+
+typedef struct vk_swapchain {
+    VkSurfaceFormatKHR image_format;
+    u8 max_frames_in_flight;
+    VkSwapchainKHR handle;
+    u32 image_count;
+    VkImage* images;
+    VkImageView* views;
+
+    vk_image depth_attachment;
+} vk_swapchain;
+
 typedef struct vk_context {
+    u32 framebuffer_width;
+    u32 framebuffer_height;
     VkInstance instance;
     VkAllocationCallbacks* allocator;
     VkSurfaceKHR surface;
     // GDF_LIST of physical device info structs
     vk_physical_device* physical_device_info_list;
-    vk_device device;
+    // needs to be dynamically allocated
+    // for convenience so i can just free the m emory
+    // when changing and not have any leftover
+    // values in there
+    vk_device* device;
+
+    // swapchain stuff
+    vk_swapchain* swapchain;
+    u32 img_idx;
+    u32 current_frame_num;
+    bool recreating_swapchain;
 #ifndef GDF_RELEASE
     VkDebugUtilsMessengerEXT debug_messenger;
 #endif

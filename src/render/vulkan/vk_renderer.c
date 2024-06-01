@@ -2,11 +2,35 @@
 #include "vk_types.h"
 #include "core/containers/list.h"
 #include "vk_os.h"
+#include "vk_swapchain.h"
 
 static vk_context context;
 
+VKAPI_ATTR VkBool32 VKAPI_CALL __vk_dbg_callback(
+    VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
+    VkDebugUtilsMessageTypeFlagsEXT message_types,
+    const VkDebugUtilsMessengerCallbackDataEXT* callback_data,
+    void* user_data) {
+    switch (message_severity) {
+        default:
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT:
+            LOG_ERR(callback_data->pMessage);
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT:
+            LOG_WARN(callback_data->pMessage);
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT:
+            LOG_INFO(callback_data->pMessage);
+            break;
+        case VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT:
+            LOG_TRACE(callback_data->pMessage);
+            break;
+    }
+    return VK_FALSE;
+}
+
 // filters the context.physical_device_info list 
-static void filter_available_devices()
+static void __filter_available_devices()
 {
     u32 list_len = GDF_LIST_GetLength(context.physical_device_info_list);
     for (u32 i = list_len; i > 0; i--)
@@ -84,6 +108,25 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     VK_ASSERT(vkCreateInstance(&create_info, context.allocator, &context.instance));
 
     LOG_DEBUG("Vulkan instance initialized successfully.");
+
+#ifndef GDF_RELEASE
+    LOG_DEBUG("Creating Vulkan debugger...");
+    u32 log_severity = VK_DEBUG_UTILS_MESSAGE_SEVERITY_ERROR_BIT_EXT |
+                       VK_DEBUG_UTILS_MESSAGE_SEVERITY_WARNING_BIT_EXT |
+                       VK_DEBUG_UTILS_MESSAGE_SEVERITY_INFO_BIT_EXT;  //|
+                                                                      //    VK_DEBUG_UTILS_MESSAGE_SEVERITY_VERBOSE_BIT_EXT;
+
+    VkDebugUtilsMessengerCreateInfoEXT debug_create_info = {VK_STRUCTURE_TYPE_DEBUG_UTILS_MESSENGER_CREATE_INFO_EXT};
+    debug_create_info.messageSeverity = log_severity;
+    debug_create_info.messageType = VK_DEBUG_UTILS_MESSAGE_TYPE_GENERAL_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_PERFORMANCE_BIT_EXT | VK_DEBUG_UTILS_MESSAGE_TYPE_VALIDATION_BIT_EXT;
+    debug_create_info.pfnUserCallback = __vk_dbg_callback;
+
+    PFN_vkCreateDebugUtilsMessengerEXT f =
+        (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(context.instance, "vkCreateDebugUtilsMessengerEXT");
+    GDF_ASSERT_MSG(f != NULL, "Function returned was NULL.");
+    VK_ASSERT(f(context.instance, &debug_create_info, context.allocator, &context.debug_messenger));
+    LOG_DEBUG("Vulkan debugger created.");
+#endif
     
     // enumerate physical devices then create logical 
     u32 physical_device_count = 0;
@@ -95,26 +138,21 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     }
     VkPhysicalDevice* physical_devices[physical_device_count];
     VK_ASSERT(vkEnumeratePhysicalDevices(context.instance, &physical_device_count, physical_devices));
-    VkPhysicalDeviceProperties device_properties[physical_device_count];
-
-    for (u32 i = 0; i < physical_device_count; i++)
-    {
-        vkGetPhysicalDeviceProperties(physical_devices[i], &device_properties[i]);
-    }
 
     // test surface creation remove later and place elsewhwere maybe
     GDF_VK_CreateSurface(&context);
-
-    // TODO! setup debugger util extension callback thingy
 
     context.physical_device_info_list = GDF_LIST_Create(vk_physical_device);
     for (u32 i = 0; i < physical_device_count; i++)
     {
         vk_physical_device info = {
             .handle = physical_devices[i],
-            .properties = device_properties[i],
             .usable = true
         };
+        // fill properties, features, and memoryinfo field
+        vkGetPhysicalDeviceProperties(physical_devices[i], &info.properties);
+        vkGetPhysicalDeviceFeatures(physical_devices[i], &info.features);
+        vkGetPhysicalDeviceMemoryProperties(physical_devices[i], &info.memory);
         // fill the swapchain support info field
         vk_device_query_swapchain_support(info.handle, context.surface, &info.sc_support_info);
         // fill the queue info field
@@ -123,14 +161,43 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
         GDF_LIST_Push(context.physical_device_info_list, info);
     }
 
-    filter_available_devices();
+    __filter_available_devices();
+    vk_device_create(&context, NULL);
+
+    vk_swapchain_create(
+        &context,
+        context.framebuffer_width,
+        context.framebuffer_height,
+        &context.swapchain
+    );
 
     return true;
 }
 
 void vk_renderer_shutdown(renderer_backend* backend) 
 {
+    // Destroy in the opposite order of creation.
 
+    // Swapchain
+    vk_swapchain_destroy(&context, &context.swapchain);
+
+    LOG_DEBUG("Destroying Vulkan device...");
+    vk_device_destroy(&context);
+
+    LOG_DEBUG("Destroying Vulkan surface...");
+    if (context.surface) {
+        vkDestroySurfaceKHR(context.instance, context.surface, context.allocator);
+        context.surface = 0;
+    }
+
+    LOG_DEBUG("Destroying Vulkan debugger...");
+    if (context.debug_messenger) {
+        PFN_vkDestroyDebugUtilsMessengerEXT f =
+            (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(context.instance, "vkDestroyDebugUtilsMessengerEXT");
+        f(context.instance, context.debug_messenger, context.allocator);
+    }
+    LOG_DEBUG("Destroying Vulkan instance...");
+    vkDestroyInstance(context.instance, context.allocator);
 }
 
 void vk_renderer_resize(renderer_backend* backend, u16 width, u16 height) 

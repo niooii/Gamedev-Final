@@ -2,6 +2,7 @@
 
 #include "core.h"
 #include "vk_types.h"
+#include "vk_image.h"
 
 // if name is NULL/0, chooses the best one
 bool vk_device_create(vk_context* context, const char* name);
@@ -18,3 +19,5 @@ void vk_device_query_queues(
     vk_context* context,
     VkPhysicalDevice physical_device,
     vk_pdevice_queues* queues);
+
+bool vk_device_find_depth_format(vk_device* device);
