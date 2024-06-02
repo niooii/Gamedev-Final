@@ -38,6 +38,12 @@ typedef struct vk_physical_device {
     bool usable;
 } vk_physical_device;
 
+typedef struct vk_fence {
+    VkFence handle;
+
+    bool is_signaled;
+} vk_fence;
+
 typedef struct vk_device {
     vk_physical_device* physical_info;
     VkDevice logical;
