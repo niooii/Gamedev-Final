@@ -45,6 +45,8 @@ typedef struct vk_device {
     VkQueue present_queue;
     VkQueue transfer_queue;
     VkFormat depth_format;
+
+    VkCommandPool graphics_cmd_pool;
 } vk_device;
 
 typedef struct vk_image {
@@ -55,6 +57,33 @@ typedef struct vk_image {
     u32 height;
 } vk_image;
 
+typedef enum vk_renderpass_state {
+    READY,
+    RECORDING,
+    IN_RENDER_PASS,
+    RECORDING_ENDED,
+    SUBMITTED,
+    NOT_ALLOCATED
+} vk_renderpass_state;
+
+typedef struct vk_renderpass {
+    VkRenderPass handle;
+    f32 x, y, w, h;
+    f32 r, g, b, a;
+
+    f32 depth;
+    u32 stencil;
+
+    vk_renderpass_state state;
+} vk_renderpass;
+
+typedef struct vk_framebuffer {
+    VkFramebuffer handle;
+    u32 attachment_count;
+    VkImageView* attachments;
+    vk_renderpass* renderpass;
+} vk_framebuffer;
+
 typedef struct vk_swapchain {
     VkSurfaceFormatKHR image_format;
     u8 max_frames_in_flight;
@@ -64,7 +93,26 @@ typedef struct vk_swapchain {
     VkImageView* views;
 
     vk_image depth_attachment;
+
+    // framebuffers used for on-screen rendering.
+    vk_framebuffer* framebuffers;
 } vk_swapchain;
+
+typedef enum vk_cmd_buf_state {
+    CMD_BUF_STATE_READY,
+    CMD_BUF_STATE_RECORDING,
+    CMD_BUF_STATE_IN_RENDER_PASS,
+    CMD_BUF_STATE_RECORDING_ENDED,
+    CMD_BUF_STATE_SUBMITTED,
+    CMD_BUF_STATE_NOT_ALLOCATED
+} vk_cmd_buf_state;
+
+typedef struct vk_cmd_buf {
+    VkCommandBuffer handle;
+
+    // Command buffer state.
+    vk_cmd_buf_state state;
+} vk_cmd_buf;
 
 typedef struct vk_context {
     u32 framebuffer_width;
@@ -78,10 +126,17 @@ typedef struct vk_context {
 
     // swapchain stuff
     vk_swapchain swapchain;
+    vk_renderpass main_renderpass;
+    // GDF_LIST, GDF_LIST methods should be used
+    vk_cmd_buf* graphics_cmd_buf_list;
     u32 img_idx;
     u32 current_frame_num;
     bool recreating_swapchain;
+
+
 #ifndef GDF_RELEASE
     VkDebugUtilsMessengerEXT debug_messenger;
 #endif
+    // function ptrs
+    // i32 (*find_memory_idx)(u32 type_filter, u32 property_flags);
 } vk_context;

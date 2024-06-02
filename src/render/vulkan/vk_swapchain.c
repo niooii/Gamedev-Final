@@ -105,6 +105,8 @@ void __create(vk_context* context, u32 w, u32 h, vk_swapchain* swapchain)
         }
     }
 
+    LOG_INFO("found format %u %u", swapchain->image_format.format, swapchain->image_format.colorSpace);
+
     // spec says its present on every device but find a better one
     // TODO! if turning off vsync make it immediate mode
     VkPresentModeKHR present_mode = VK_PRESENT_MODE_FIFO_KHR;
@@ -174,7 +176,7 @@ void __create(vk_context* context, u32 w, u32 h, vk_swapchain* swapchain)
         )
     );
 
-    LOG_DEBUG("Created swapchain.");
+    LOG_DEBUG("Created VkSwapchainKhr.");
 
     context->current_frame_num = 0;
     swapchain->image_count = 0;
@@ -220,13 +222,10 @@ void __create(vk_context* context, u32 w, u32 h, vk_swapchain* swapchain)
         );
     }
 
-    // TODO! this crashes for some unknown reason.
-    // hardcoding it for now unlucky
-    // if (!vk_device_find_depth_format(&context->device)) {
-    //     context->device.depth_format = VK_FORMAT_UNDEFINED;
-    //     LOG_FATAL("No depths format..");
-    // }
-    context->device.depth_format = VK_FORMAT_D32_SFLOAT;
+    if (!vk_device_find_depth_format(&context->device)) {
+        context->device.depth_format = VK_FORMAT_UNDEFINED;
+        LOG_FATAL("No depths format..");
+    }
 
     // Create depth image and its view.
     vk_image_create(
@@ -242,14 +241,15 @@ void __create(vk_context* context, u32 w, u32 h, vk_swapchain* swapchain)
         VK_IMAGE_ASPECT_DEPTH_BIT,
         &swapchain->depth_attachment);
 
-    LOG_DEBUG("Swapchain created successfully.");
+    LOG_DEBUG("Finished swapchain creation.");
 }
 
 void __destroy(vk_context* context, vk_swapchain* swapchain)
 {
     vk_image_destroy(context, &swapchain->depth_attachment);
 
-    for (u32 i = 0; i < swapchain->image_count; ++i) {
+    for (u32 i = 0; i < swapchain->image_count; i++) 
+    {
         vkDestroyImageView(context->device.logical, swapchain->views[i], context->allocator);
     }
 

@@ -102,12 +102,36 @@ bool vk_device_create(vk_context* context, const char* name)
     
     LOG_DEBUG("Got queues.");
 
+    // Create command pool for graphics queue.
+    VkCommandPoolCreateInfo pool_create_info = {VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
+    pool_create_info.queueFamilyIndex = context->device.physical_info->queues.graphics_family_index;
+    pool_create_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    VK_ASSERT(
+        vkCreateCommandPool(
+            context->device.logical,
+            &pool_create_info,
+            context->allocator,
+            &context->device.graphics_cmd_pool
+        )
+    );
+    LOG_DEBUG("graphics command pool created.");
+
     return true;
 }
 
 void vk_device_destroy(vk_context* context)
 {
     // TODO! destroy queues, then VkDevice, then free extra memory allocated by me.
+    LOG_DEBUG("destroying command pools...");
+    vkDestroyCommandPool(
+        context->device.logical,
+        context->device.graphics_cmd_pool,
+        context->allocator
+    );
+    context->device.physical_info = NULL;
+    context->device.graphics_queue = NULL;
+    context->device.present_queue = NULL;
+    context->device.transfer_queue = NULL;
     vkDestroyDevice(context->device.logical, context->allocator);
 }
 
@@ -200,7 +224,7 @@ bool vk_device_find_depth_format(vk_device* device)
 {
     // we need to find one of these
     const u64 candidate_count = 3;
-    VkFormat candidates[3] = {
+    const VkFormat candidates[3] = {
         VK_FORMAT_D32_SFLOAT,
         VK_FORMAT_D32_SFLOAT_S8_UINT,
         VK_FORMAT_D24_UNORM_S8_UINT

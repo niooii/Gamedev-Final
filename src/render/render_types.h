@@ -12,7 +12,7 @@ typedef struct renderer_backend {
 
     bool (*initialize)(struct renderer_backend* backend, const char* application_name);
 
-    void (*shutdown)(struct renderer_backend* backend);
+    void (*destroy)(struct renderer_backend* backend);
 
     void (*resized)(struct renderer_backend* backend, u16 width, u16 height);
 

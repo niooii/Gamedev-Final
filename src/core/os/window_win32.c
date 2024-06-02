@@ -6,6 +6,7 @@
 #include <windows.h>
 #include <windowsx.h>
 #include <vulkan/vulkan_win32.h>
+#include "core/event.h"
 
 const char win_class_name[] = "gdf_window";
 static u16 current_window_id = 0;
@@ -15,6 +16,8 @@ static GDF_Window* MAIN_WINDOW = NULL;
 
 typedef struct {
     HWND hwnd;
+    u32 client_w;
+    u32 client_h;
 } InternalWindowState;
 
 LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
@@ -27,7 +30,9 @@ LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
         }
         case WM_CLOSE:
         {
-            
+            GDF_EventCtx ctx = {};
+            GDF_EVENT_Fire(GDF_EVENT_INTERNAL_APP_QUIT, NULL, ctx);
+            return true;
         }
         case WM_DESTROY:
         {
@@ -52,10 +57,9 @@ LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
             bool pressed = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
             GDF_KEYCODE key = (u16)w_param;
 
-            // Pass to the input subsystem for processing.
             __input_process_key(key, pressed);
-
-        } break;
+            break;
+        } 
         case WM_MOUSEMOVE: 
         {
             i32 x = GET_X_LPARAM(l_param);
@@ -67,12 +71,14 @@ LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
         case WM_MOUSEWHEEL: 
         {
             i32 z_delta = GET_WHEEL_DELTA_WPARAM(w_param);
-            if (z_delta != 0) {
+            if (z_delta != 0) 
+            {
                 // Flatten the input to an OS-independent (-1, 1)
                 z_delta = (z_delta < 0) ? -1 : 1;
                 __input_process_mouse_wheel(z_delta);
             }
-        } break;
+            break;
+        } 
         // cases fall through
         case WM_LBUTTONDOWN:
         case WM_MBUTTONDOWN:
@@ -83,7 +89,8 @@ LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
         {
             bool pressed = msg == WM_LBUTTONDOWN || msg == WM_RBUTTONDOWN || msg == WM_MBUTTONDOWN;
             GDF_MBUTTON mouse_button = GDF_MBUTTON_MAX;
-            switch (msg) {
+            switch (msg) 
+            {
                 case WM_LBUTTONDOWN:
                 case WM_LBUTTONUP:
                     mouse_button = GDF_MBUTTON_LEFT;
@@ -98,7 +105,8 @@ LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
                     break;
             }
 
-            if (mouse_button != GDF_MBUTTON_MAX) {
+            if (mouse_button != GDF_MBUTTON_MAX) 
+            {
                 __input_process_button(mouse_button, pressed);
             }
             break;
@@ -167,6 +175,9 @@ GDF_Window* GDF_CreateWindow(i16 x_, i16 y_, i16 w, i16 h, const char* title)
     u32 client_width = w;
     u32 client_height = h;
 
+    internals->client_w = client_width;
+    internals->client_h = client_height;
+
     u32 window_x = client_x;
     u32 window_y = client_y;
     u32 window_width = client_width;
@@ -229,6 +240,13 @@ bool GDF_SetWindowSize(i16 w, i16 h)
     return false;
 }
 
+void GDF_GetWindowSize(i16* w, i16* h)
+{
+    InternalWindowState* internals = (InternalWindowState*) MAIN_WINDOW->internals;
+    *w = internals->client_w;
+    *h = internals->client_h;
+}
+
 bool GDF_PumpMessages()
 {
     MSG msg;
@@ -274,6 +292,11 @@ bool GDF_VK_CreateSurface(vk_context* context)
 
     LOG_DEBUG("Created Vulkan surface.");
     return true;
+}
+
+GDF_Window* GDF_GetMainWindow()
+{
+    return MAIN_WINDOW;
 }
 
 #endif

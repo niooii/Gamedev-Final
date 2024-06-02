@@ -2,9 +2,10 @@
 #include "vk_types.h"
 #include "core/containers/list.h"
 #include "vk_os.h"
-#include "vk_swapchain.h"
 
 static vk_context context;
+static u32 tmp_framebuf_w;
+static u32 tmp_framebuf_h;
 
 VKAPI_ATTR VkBool32 VKAPI_CALL __vk_dbg_callback(
     VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
@@ -70,10 +71,71 @@ static void __filter_available_devices()
     }
 }
 
+void __create_cmd_bufs(renderer_backend* backend)
+{
+    if (context.graphics_cmd_buf_list == NULL) 
+    {
+        context.graphics_cmd_buf_list = GDF_LIST_Reserve(vk_cmd_buf, context.swapchain.image_count);
+        for (u32 i = 0; i < context.swapchain.image_count; i++) 
+        {
+            GDF_MemZero(&context.graphics_cmd_buf_list[i], sizeof(vk_cmd_buf));
+        }
+    }
+
+    for (u32 i = 0; i < context.swapchain.image_count; ++i) 
+    {
+        if (context.graphics_cmd_buf_list[i].handle) {
+            vk_cmd_buf_free(
+                &context,
+                context.device.graphics_cmd_pool,
+                &context.graphics_cmd_buf_list[i]
+            );
+        }
+        GDF_MemZero(&context.graphics_cmd_buf_list[i], sizeof(vk_cmd_buf));
+        vk_cmd_buf_allocate(
+            &context,
+            context.device.graphics_cmd_pool,
+            TRUE,
+            &context.graphics_cmd_buf_list[i]
+        );
+    }
+
+    LOG_DEBUG("Vulkan command buffers created.");
+}
+
+void __regenerate_framebuffers(renderer_backend* backend, vk_swapchain* swapchain, vk_renderpass* renderpass) {
+    for (u32 i = 0; i < swapchain->image_count; i++) 
+    {
+        // TODO! make this dynamic based on the currently configured attachments
+        u32 attachment_count = 2;
+        VkImageView attachments[] = {
+            swapchain->views[i],
+            swapchain->depth_attachment.view};
+
+        vulkan_framebuffer_create(
+            &context,
+            renderpass,
+            context.framebuffer_width,
+            context.framebuffer_height,
+            attachment_count,
+            attachments,
+            &context.swapchain.framebuffers[i]);
+    }
+}
+
+// ===== FORWARD DECLARATIONS END =====
 bool vk_renderer_init(renderer_backend* backend, const char* application_name) 
 {
     // TODO! custom allocator.
     context.allocator = 0;
+    
+    GDF_GetWindowSize(&tmp_framebuf_w, &tmp_framebuf_h);
+    context.framebuffer_width = tmp_framebuf_w;
+    context.framebuffer_height = tmp_framebuf_h;
+
+    tmp_framebuf_w = 0;
+    tmp_framebuf_h = 0;
+
 
     VkApplicationInfo app_info = {VK_STRUCTURE_TYPE_APPLICATION_INFO};
     app_info.apiVersion = VK_API_VERSION_1_2;
@@ -171,14 +233,52 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
         &context.swapchain
     );
 
+    vk_renderpass_create(
+        &context,
+        &context.main_renderpass,
+        0, 0, context.framebuffer_width, context.framebuffer_height,
+        0.0f, 0.0f, 0.2f, 1.0f,
+        1.0f,
+        0
+    );
+
+    context.swapchain.framebuffers = GDF_LIST_Reserve(vk_framebuffer, context.swapchain.image_count);
+    __regenerate_framebuffers(backend, &context.swapchain, &context.main_renderpass);
+
+    __create_cmd_bufs(backend);
+
+
+    LOG_INFO("Finished initialization of vulkan stuff...");
+
     return true;
 }
 
-void vk_renderer_shutdown(renderer_backend* backend) 
+void vk_renderer_destroy(renderer_backend* backend) 
 {
-    // Destroy in the opposite order of creation.
+    // destroy in the opposite order of creation.
 
-    // Swapchain
+    for (u32 i = 0; i < context.swapchain.image_count; i++) 
+    {
+        if (context.graphics_cmd_buf_list[i].handle) 
+        {
+            vk_cmd_buf_free(
+                &context,
+                context.device.graphics_cmd_pool,
+                &context.graphics_cmd_buf_list[i]
+            );
+            context.graphics_cmd_buf_list[i].handle = NULL;
+        }
+    }
+    GDF_LIST_Destroy(context.graphics_cmd_buf_list);
+    context.graphics_cmd_buf_list = NULL;
+
+    for (u32 i = 0; i < context.swapchain.image_count; i++) 
+    {
+        vk_framebuffer_destroy(&context, &context.swapchain.framebuffers[i]);
+    }
+
+    vk_renderpass_destroy(&context, &context.main_renderpass);
+
     vk_swapchain_destroy(&context, &context.swapchain);
 
     LOG_DEBUG("Destroying Vulkan device...");

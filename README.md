@@ -1,6 +1,8 @@
 ﻿# Gamedev-Final
 
 Literally my gamedev final.
+**Todos** are denoted with a comment containing TODO!
+**Possible/validation errors** are denoted with a comment containing ERR!
 
 # How to build
 1. Install vulkansdk

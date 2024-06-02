@@ -120,6 +120,10 @@
         "renderer_backend.h": "c",
         "vk_enum_string_helper.h": "c",
         "vk_device.h": "c",
-        "vk_types.h": "c"
+        "vk_types.h": "c",
+        "vk_swapchain.h": "c",
+        "vk_cmd_buf.h": "c",
+        "iosfwd": "c",
+        "vk_renderpass.h": "c"
     },
 }

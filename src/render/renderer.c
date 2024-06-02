@@ -19,8 +19,8 @@ bool GDF_InitRenderer(GDF_RENDER_BACKEND_TYPE render_backend_type) {
     return true;
 }
 
-void GDF_ShutdownRenderer() {
-    backend->shutdown(backend);
+void GDF_DestroyRenderer() {
+    backend->destroy(backend);
     GDF_Free(backend);
 }
 

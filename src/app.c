@@ -149,10 +149,13 @@ f64 GDF_RunApp()
         APP_STATE.last_time = current_time;
     }
 
+    // CLEAN UP STUFF
     f64 time_ran_for = GDF_Stopwatch_TimeElasped(running_timer);
     // destroy resources
     GDF_Stopwatch_Destroy(APP_STATE.stopwatch);
     GDF_Stopwatch_Destroy(running_timer);
+
+    GDF_DestroyRenderer();
 
     return time_ran_for;
 }
