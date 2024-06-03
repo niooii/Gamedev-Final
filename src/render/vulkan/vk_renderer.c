@@ -95,7 +95,7 @@ void __create_cmd_bufs(renderer_backend* backend)
         vk_cmd_buf_allocate(
             &context,
             context.device.graphics_cmd_pool,
-            TRUE,
+            true,
             &context.graphics_cmd_buf_list[i]
         );
     }
@@ -132,7 +132,7 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     GDF_GetWindowSize(&tmp_framebuf_w, &tmp_framebuf_h);
     context.framebuffer_width = tmp_framebuf_w;
     context.framebuffer_height = tmp_framebuf_h;
-
+    LOG_INFO("Framebuffer size %d, %d", context.framebuffer_width, context.framebuffer_height);
     tmp_framebuf_w = 0;
     tmp_framebuf_h = 0;
 
@@ -247,6 +247,28 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
 
     __create_cmd_bufs(backend);
 
+    context.image_available_semaphores = GDF_LIST_Reserve(VkSemaphore, context.swapchain.max_frames_in_flight);
+    context.queue_complete_semaphores = GDF_LIST_Reserve(VkSemaphore, context.swapchain.max_frames_in_flight);
+    context.in_flight_fences = GDF_LIST_Reserve(vk_fence, context.swapchain.max_frames_in_flight);
+
+    for (u8 i = 0; i < context.swapchain.max_frames_in_flight; ++i) {
+        VkSemaphoreCreateInfo semaphore_create_info = {VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
+        vkCreateSemaphore(context.device.logical, &semaphore_create_info, context.allocator, &context.image_available_semaphores[i]);
+        vkCreateSemaphore(context.device.logical, &semaphore_create_info, context.allocator, &context.queue_complete_semaphores[i]);
+
+        // Create the fence in a signaled state, indicating that the first frame has already been "rendered".
+        // This will prevent the application from waiting indefinitely for the first frame to render since it
+        // cannot be rendered until a frame is "rendered" before it.
+        vk_fence_create(&context, true, &context.in_flight_fences[i]);
+    }
+
+    // In flight fences should not yet exist at this point, so clear the list. These are stored in pointers
+    // because the initial state should be 0, and will be 0 when not in use. Acutal fences are not owned
+    // by this list.
+    context.images_in_flight = GDF_LIST_Reserve(vk_fence, context.swapchain.image_count);
+    for (u32 i = 0; i < context.swapchain.image_count; ++i) {
+        context.images_in_flight[i] = NULL;
+    }
 
     LOG_INFO("Finished initialization of vulkan stuff...");
 
@@ -255,8 +277,43 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
 
 void vk_renderer_destroy(renderer_backend* backend) 
 {
+    vkDeviceWaitIdle(context.device.logical);
     // destroy in the opposite order of creation.
 
+    // sync objects
+    for (u8 i = 0; i < context.swapchain.max_frames_in_flight; i++) 
+    {
+        if (context.image_available_semaphores[i]) 
+        {
+            vkDestroySemaphore(
+                context.device.logical,
+                context.image_available_semaphores[i],
+                context.allocator);
+            context.image_available_semaphores[i] = NULL;
+        }
+        if (context.queue_complete_semaphores[i]) 
+        {
+            vkDestroySemaphore(
+                context.device.logical,
+                context.queue_complete_semaphores[i],
+                context.allocator);
+            context.queue_complete_semaphores[i] = NULL;
+        }
+        vk_fence_destroy(&context, &context.in_flight_fences[i]);
+    }
+    GDF_LIST_Destroy(context.image_available_semaphores);
+    context.image_available_semaphores = NULL;
+
+    GDF_LIST_Destroy(context.queue_complete_semaphores);
+    context.queue_complete_semaphores = NULL;
+
+    GDF_LIST_Destroy(context.in_flight_fences);
+    context.in_flight_fences = NULL;
+
+    GDF_LIST_Destroy(context.images_in_flight);
+    context.images_in_flight = NULL;
+
+    // command bufs
     for (u32 i = 0; i < context.swapchain.image_count; i++) 
     {
         if (context.graphics_cmd_buf_list[i].handle) 
@@ -272,15 +329,19 @@ void vk_renderer_destroy(renderer_backend* backend)
     GDF_LIST_Destroy(context.graphics_cmd_buf_list);
     context.graphics_cmd_buf_list = NULL;
 
+    // framebuffers
     for (u32 i = 0; i < context.swapchain.image_count; i++) 
     {
         vk_framebuffer_destroy(&context, &context.swapchain.framebuffers[i]);
     }
 
+    // renderpass
     vk_renderpass_destroy(&context, &context.main_renderpass);
 
+    // swapchain
     vk_swapchain_destroy(&context, &context.swapchain);
 
+    // device
     LOG_DEBUG("Destroying Vulkan device...");
     vk_device_destroy(&context);
 
@@ -302,7 +363,8 @@ void vk_renderer_destroy(renderer_backend* backend)
 
 void vk_renderer_resize(renderer_backend* backend, u16 width, u16 height) 
 {
-
+    tmp_framebuf_w = width;
+    tmp_framebuf_h = height;
 }
 
 bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time) 

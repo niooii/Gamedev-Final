@@ -39,7 +39,7 @@ bool vk_swapchain_acquire_next_image_index(
 {
     VkResult r = vkAcquireNextImageKHR(
         context->device.logical,
-        swapchain,
+        swapchain->handle,
         timeout_ns,
         image_available_semaphore,
         fence,
@@ -237,7 +237,7 @@ void __create(vk_context* context, u32 w, u32 h, vk_swapchain* swapchain)
         VK_IMAGE_TILING_OPTIMAL,
         VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
         VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT,
-        TRUE,
+        true,
         VK_IMAGE_ASPECT_DEPTH_BIT,
         &swapchain->depth_attachment);
 
