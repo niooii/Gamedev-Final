@@ -56,6 +56,8 @@ bool vk_swapchain_acquire_next_image_index(
         LOG_ERR("Could not acquire swapchain image.");
         return false;
     }
+
+    return true;
 }
 
 void vk_swapchain_present(
