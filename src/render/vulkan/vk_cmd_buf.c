@@ -81,8 +81,8 @@ void vk_cmd_buf_allocate_and_begin_single_use(
     VkCommandPool pool,
     vk_cmd_buf* out_cmd_buf)
 {
-    vk_cmd_buf_allocate(context, pool, TRUE, out_cmd_buf);
-    vk_cmd_buf_begin(out_cmd_buf, TRUE, FALSE, FALSE);
+    vk_cmd_buf_allocate(context, pool, true, out_cmd_buf);
+    vk_cmd_buf_begin(out_cmd_buf, true, false, false);
 }
 
 void vk_cmd_buf_end_single_use(

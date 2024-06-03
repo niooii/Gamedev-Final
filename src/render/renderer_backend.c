@@ -10,10 +10,10 @@ bool renderer_backend_create(GDF_RENDER_BACKEND_TYPE type, renderer_backend* out
         out_renderer_backend->end_frame = vk_renderer_end_frame;
         out_renderer_backend->resized = vk_renderer_resize;
 
-        return TRUE;
+        return true;
     }
 
-    return FALSE;
+    return false;
 }
 
 void renderer_backend_destroy(renderer_backend* renderer_backend) {

@@ -18,18 +18,18 @@ typedef struct input_state {
     mouse_state mouse_previous;
 } input_state;
 
-static bool initialized = FALSE;
+static bool initialized = false;
 static input_state state;
 
 void GDF_InitInput() {
     GDF_MemZero(&state, sizeof(input_state));
-    initialized = TRUE;
+    initialized = true;
     LOG_INFO("Input subsystem initialized.");
 }
 
 void GDF_ShutdownInput() {
     // TODO: shutdown routine later
-    initialized = FALSE;
+    initialized = false;
 }
 
 void GDF_INPUT_Update(f64 delta_time) {
@@ -43,31 +43,31 @@ void GDF_INPUT_Update(f64 delta_time) {
 
 bool GDF_INPUT_IsKeyDown(GDF_KEYCODE key) {
     if (!initialized) {
-        return FALSE;
+        return false;
     }
-    return state.keyboard_current.key_states[key] == TRUE;
+    return state.keyboard_current.key_states[key] == true;
 }
 
 bool GDF_INPUT_WasKeyDown(GDF_KEYCODE key) {
     if (!initialized) {
-        return FALSE;
+        return false;
     }
-    return state.keyboard_previous.key_states[key] == TRUE;
+    return state.keyboard_previous.key_states[key] == true;
 }
 
 // mouse input
 bool GDF_INPUT_IsButtonDown(GDF_MBUTTON button) {
     if (!initialized) {
-        return FALSE;
+        return false;
     }
-    return state.mouse_current.mbutton_states[button] == TRUE;
+    return state.mouse_current.mbutton_states[button] == true;
 }
 
 bool GDF_INPUT_WasButtonDown(GDF_MBUTTON button) {
     if (!initialized) {
-        return FALSE;
+        return false;
     }
-    return state.mouse_previous.mbutton_states[button] == TRUE;
+    return state.mouse_previous.mbutton_states[button] == true;
 }
 
 void GDF_INPUT_GetMousePos(i32* x, i32* y) {

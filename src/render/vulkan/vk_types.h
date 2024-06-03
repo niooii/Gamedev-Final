@@ -123,6 +123,7 @@ typedef struct vk_cmd_buf {
 typedef struct vk_context {
     u32 framebuffer_width;
     u32 framebuffer_height;
+    bool pending_resize_event;
     VkInstance instance;
     VkAllocationCallbacks* allocator;
     VkSurfaceKHR surface;
@@ -135,9 +136,19 @@ typedef struct vk_context {
     vk_renderpass main_renderpass;
     // GDF_LIST, GDF_LIST methods should be used
     vk_cmd_buf* graphics_cmd_buf_list;
+    // GDF_LIST, GDF_LIST methods should be used
+    VkSemaphore* image_available_semaphores;
+    // GDF_LIST, GDF_LIST methods should be used
+    VkSemaphore* queue_complete_semaphores;
+    u32 in_flight_fence_count;
+    vk_fence* in_flight_fences;
+
+    // holds pointers to fences which exist and are owned elsewhere.
+    vk_fence** images_in_flight;
     u32 img_idx;
     u32 current_frame_num;
     bool recreating_swapchain;
+    
 
 
 #ifndef GDF_RELEASE
