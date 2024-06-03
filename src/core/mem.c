@@ -30,6 +30,7 @@ static const char* GDF_MEMTAG_strings[GDF_MEMTAG_MAX_TAGS] = {
     "ENTITY_NODE  ",
     "SCENE        ",
     "TEMP RESOURCE",
+    "IO           ",
     "FREE         "
 };
 

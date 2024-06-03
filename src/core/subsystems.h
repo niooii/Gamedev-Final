@@ -12,6 +12,7 @@ enum {
     GDF_SUBSYSTEM_WINDOWING = 0b00000001,
     GDF_SUBSYSTEM_EVENTS =    0b00000010,
     GDF_SUBSYSTEM_INPUT =     0b00000100,
+    GDF_SUBSYSTEM_NET =       0b00001000,
 };
 
 static u32 _flags;
@@ -27,19 +28,24 @@ static bool GDF_InitSubsystems(u32 flags)
     GDF_InitIO();
     if (!GDF_InitInfo())
         return false;
-    if (flags & GDF_SUBSYSTEM_WINDOWING)
+    if (flags & GDF_SUBSYSTEM_WINDOWING == GDF_SUBSYSTEM_WINDOWING)
     {
         if (!GDF_InitWindowing())
             return false;
     }
-    if (flags & GDF_SUBSYSTEM_EVENTS)
+    if (flags & GDF_SUBSYSTEM_EVENTS == GDF_SUBSYSTEM_EVENTS)
     {
         if (!GDF_InitEvents())
             return false;
     }
-    if (flags & GDF_SUBSYSTEM_INPUT)
+    if (flags & GDF_SUBSYSTEM_INPUT == GDF_SUBSYSTEM_INPUT)
     {
         GDF_InitInput();
+    }
+    if (flags & GDF_SUBSYSTEM_NET == GDF_SUBSYSTEM_NET)
+    {
+        if (!GDF_InitSockets())
+            return false;
     }
     return true; 
 }

@@ -124,6 +124,7 @@
         "vk_swapchain.h": "c",
         "vk_cmd_buf.h": "c",
         "iosfwd": "c",
-        "vk_renderpass.h": "c"
+        "vk_renderpass.h": "c",
+        "winsock.h": "c"
     },
 }
