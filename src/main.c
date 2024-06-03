@@ -9,7 +9,9 @@
 int main()
 {
     GDF_InitSubsystems(GDF_SUBSYSTEM_WINDOWING | GDF_SUBSYSTEM_EVENTS | GDF_SUBSYSTEM_INPUT | GDF_SUBSYSTEM_NET);
-    GDF_InitApp();
+    u64 yes = 0b10000000111;
+    printf("val unshifted: %lu\n", yes);
+    printf("val u8 shifted: %u\n", (yes >> 8));
     GDF_Socket* serverSocket = GDF_MakeSocket();
     if (!serverSocket) {
         printf("Failed to create server socket.\n");
@@ -24,7 +26,21 @@ int main()
         GDF_ShutdownSockets();
         return -1;
     }
+
     printf("Server listening on port 8080...\n");
+    GDF_Socket* client = GDF_MakeSocket();
+
+    if (!GDF_SocketConnect(client, "127.0.0.1", 8080))
+    {
+        LOG_ERR("FALIED TO CONNECT");
+    }
+    else
+    {
+        printf("CONECTED\n");
+    }
+    return 0;
+    
+    GDF_InitApp();
     f64 time_ran_for = GDF_RunApp();
     if (time_ran_for != -1)
     {

@@ -3,16 +3,16 @@
 #include "core.h"
 #include "game/entities/player.h"
 
-typedef struct GDF_World {
+typedef struct World {
     const char* world_name;
     bool is_multiplayer;
     GDF_Player* players[];
     // Chunk* something something
-} GDF_World;
+} World;
 
-typedef struct GDF_WorldCreateOptions {
+typedef struct WorldCreateOptions {
     const char* name;
-} GDF_WorldCreateOptions;
+} WorldCreateOptions;
 
-GDF_World* GDF_CreateWorld(GDF_WorldCreateOptions* options);
+World* GDF_CreateWorld(WorldCreateOptions* options);
 void GDF_FreeWorld();

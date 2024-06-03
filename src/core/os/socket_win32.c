@@ -76,11 +76,6 @@ void GDF_DestroySocket(GDF_Socket* socket)
 
 bool GDF_SocketListen(GDF_Socket* socket, u16 port)
 {
-    if (!socket || !socket->internals)
-    {
-        return false;
-    }
-
     InternalState* state = (InternalState*)socket->internals;
     struct sockaddr_in service;
 
