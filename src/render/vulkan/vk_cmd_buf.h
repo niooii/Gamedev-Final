@@ -25,7 +25,7 @@ void vk_cmd_buf_begin(
 
 void vk_cmd_buf_end(vk_cmd_buf* cmd_buf);
 
-void vk_cmd_buf_update_submitted(vk_cmd_buf* cmd_buf);
+void vk_cmd_buf_set_submitted(vk_cmd_buf* cmd_buf);
 
 void vk_cmd_buf_reset(vk_cmd_buf* cmd_buf);
 

@@ -66,7 +66,7 @@ void vk_cmd_buf_end(vk_cmd_buf* cmd_buf)
     cmd_buf->state = CMD_BUF_STATE_RECORDING_ENDED;
 }
 
-void vk_cmd_buf_update_submitted(vk_cmd_buf* cmd_buf)
+void vk_cmd_buf_set_submitted(vk_cmd_buf* cmd_buf)
 {
     cmd_buf->state = CMD_BUF_STATE_SUBMITTED;
 }

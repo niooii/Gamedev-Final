@@ -1,6 +1,6 @@
 BUILD_SRC_DIR="src"
-BUILD_DEFINES="-D_DEBUG -D_CRT_SECURE_NO_WARNINGS"
-BUILD_COMPILEFLAGS="-g -Wvarargs -Wall -O0"
+BUILD_DEFINES="-DGDF_RELEASE -D_CRT_SECURE_NO_WARNINGS"
+BUILD_COMPILEFLAGS="-g -Wvarargs -Wall -Wno-unused-variable -Wno-unused-function -Ofast"
 BUILD_LINKERFLAGS="-debug /defaultlib:user32.lib /defaultlib:libcmt.lib /defaultlib:vulkan-1.lib -LIBPATH:%VULKAN_SDK%/Lib"
 BUILD_INCLUDEFLAGS="-Isrc -I%VULKAN_SDK%/Include"
 BUILD_EXECUTABLE_NAME="gdf"

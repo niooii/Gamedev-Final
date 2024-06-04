@@ -15,7 +15,7 @@
 void report_assertion_failure(const char* expression, const char* message, const char* file, i32 line);
 
 #define GDF_ASSERT(expr)                                                \
-    {   \            
+    {   \
         if (!(expr)) {                                                    \
             LOG_INFO("ASSERT FAILED");                                             \
             report_assertion_failure(#expr, "", __FILE__, __LINE__);    \

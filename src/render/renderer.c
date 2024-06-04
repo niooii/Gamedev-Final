@@ -6,7 +6,8 @@
 // Backend render context.
 static renderer_backend* backend = NULL;
 
-bool GDF_InitRenderer(GDF_RENDER_BACKEND_TYPE render_backend_type) {
+bool GDF_InitRenderer(GDF_RENDER_BACKEND_TYPE render_backend_type) 
+{
     backend = GDF_Malloc(sizeof(*backend), GDF_MEMTAG_RENDERER);
 
     renderer_backend_create(render_backend_type, backend);
@@ -19,22 +20,31 @@ bool GDF_InitRenderer(GDF_RENDER_BACKEND_TYPE render_backend_type) {
     return true;
 }
 
-void GDF_DestroyRenderer() {
+void GDF_DestroyRenderer() 
+{
     backend->destroy(backend);
     GDF_Free(backend);
 }
 
-bool renderer_begin_frame(f32 delta_time) {
+bool renderer_begin_frame(f32 delta_time) 
+{
     return backend->begin_frame(backend, delta_time);
 }
 
-bool renderer_end_frame(f32 delta_time) {
+bool renderer_end_frame(f32 delta_time) 
+{
     bool result = backend->end_frame(backend, delta_time);
     backend->frame_number++;
     return result;
 }
 
-bool GDF_Renderer_DrawFrame(GDF_RenderPacket* packet) {
+void GDF_Renderer_Resize(u16 width, u16 height)
+{
+    backend->resized(backend, width, height);
+}
+
+bool GDF_Renderer_DrawFrame(GDF_RenderPacket* packet) 
+{
     if (renderer_begin_frame(packet->delta_time)) {
 
         bool result = renderer_end_frame(packet->delta_time);

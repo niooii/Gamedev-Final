@@ -146,7 +146,7 @@ typedef struct vk_context {
     // holds pointers to fences which exist and are owned elsewhere.
     vk_fence** images_in_flight;
     u32 img_idx;
-    u32 current_frame_num;
+    u32 current_frame;
     bool recreating_swapchain;
     
 

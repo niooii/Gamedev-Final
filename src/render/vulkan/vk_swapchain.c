@@ -83,6 +83,9 @@ void vk_swapchain_present(
     } else if (result != VK_SUCCESS) {
         LOG_FATAL("Failed to present swap chain image!");
     }
+
+    // increment and loop the index over
+    context->current_frame = (context->current_frame + 1) % swapchain->max_frames_in_flight;
 }
 
 void __create(vk_context* context, u32 w, u32 h, vk_swapchain* swapchain)
@@ -107,7 +110,7 @@ void __create(vk_context* context, u32 w, u32 h, vk_swapchain* swapchain)
         }
     }
 
-    LOG_INFO("found format %u %u", swapchain->image_format.format, swapchain->image_format.colorSpace);
+    // LOG_INFO("found format %u %u", swapchain->image_format.format, swapchain->image_format.colorSpace);
 
     // spec says its present on every device but find a better one
     // TODO! if turning off vsync make it immediate mode
@@ -180,7 +183,7 @@ void __create(vk_context* context, u32 w, u32 h, vk_swapchain* swapchain)
 
     LOG_DEBUG("Created VkSwapchainKhr.");
 
-    context->current_frame_num = 0;
+    context->current_frame = 0;
     swapchain->image_count = 0;
 
     VK_ASSERT(

@@ -8,3 +8,5 @@ void vk_fence_create(vk_context* context, bool create_signaled, vk_fence* out_fe
 void vk_fence_destroy(vk_context* context, vk_fence* fence);
 
 bool vk_fence_wait(vk_context* context, vk_fence* fence, u64 timeout_ns);
+
+void vk_fence_reset(vk_context* context, vk_fence* fence);

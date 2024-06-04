@@ -4,7 +4,7 @@
 
 typedef struct AppState {
     bool is_running;
-    bool is_suspended;
+    // bool is_suspended;
     i16 width;
     i16 height;
     f64 last_time;
@@ -31,12 +31,37 @@ bool app_on_event(u16 event_code, void *sender, void *listener_instance, GDF_Eve
             }
             break;
         }
+        case GDF_EVENT_INTERNAL_WINDOW_RESIZE:
+        {
+            u16 width = ctx.data.u16[0];
+            u16 height = ctx.data.u16[1];
+
+            // Check if different. If so, trigger a resize event.
+            u16 old_w;
+            u16 old_h;
+            GDF_GetWindowSize(&old_w, &old_h);
+            if (width != old_w || height != old_h) 
+            {
+                GDF_SetWindowSizeInternal(width, height);
+
+                LOG_DEBUG("Window resize: %i, %i", width, height);
+
+                // Handle minimization
+                if (width == 0 || height == 0) 
+                {
+                    LOG_INFO("Window is minimized kinda.");
+                }
+                GDF_Renderer_Resize(width, height);
+            }
+            return false;
+        }
         case GDF_EVENT_INTERNAL_APP_QUIT:
         {
             LOG_INFO("Shutting down app...");
             APP_STATE.is_running = false;
             // dont return true as other listeners may want to destroy resources
             // on app quit
+            return false;
         }
     }
 
@@ -55,7 +80,6 @@ bool GDF_InitApp()
     GDF_InitFirstLaunch();
 
     APP_STATE.is_running = true;
-    APP_STATE.is_suspended = false;
     if (!GDF_ClientSettings_Load())
     {
         LOG_FATAL("Failed to load client_settings.gdf, exiting...");
@@ -77,6 +101,7 @@ bool GDF_InitApp()
 
     GDF_EVENT_Register(GDF_EVENT_INTERNAL_KEY_PRESSED, NULL, app_on_event);
     GDF_EVENT_Register(GDF_EVENT_INTERNAL_APP_QUIT, NULL, app_on_event);
+    GDF_EVENT_Register(GDF_EVENT_INTERNAL_WINDOW_RESIZE, NULL, app_on_event);
 
     // initialize the renderer
     if (!GDF_InitRenderer(GDF_RENDER_BACKEND_TYPE_VULKAN))
@@ -116,14 +141,14 @@ f64 GDF_RunApp()
 
     GDF_Stopwatch* running_timer = GDF_Stopwatch_Create();
     u8 frame_count = 0;
-    u32 fps = 144;
+    u32 fps = 12441244;
     f64 secs_per_frame = 1.0/fps;
     GDF_Stopwatch* frame_timer = GDF_Stopwatch_Create();
 
     while(APP_STATE.is_running) 
     {
         GDF_PumpMessages();
-        
+
         f64 current_time = GDF_Stopwatch_TimeElasped(APP_STATE.stopwatch);
         f64 dt = (current_time - APP_STATE.last_time);
         GDF_Stopwatch_Reset(frame_timer);
@@ -133,6 +158,10 @@ f64 GDF_RunApp()
         {
             // LOG_INFO("heehaw");
         }
+
+        GDF_RenderPacket packet;
+        packet.delta_time = dt;
+        GDF_Renderer_DrawFrame(&packet);
 
         f64 frame_time = GDF_Stopwatch_TimeElasped(frame_timer);
         
@@ -145,6 +174,7 @@ f64 GDF_RunApp()
         }
 
         GDF_INPUT_Update(dt);
+        LOG_INFO("dt: %lf", dt);
         // only thing that should produce innacuracies is if pumpmessages takes a bit of time
         APP_STATE.last_time = current_time;
     }

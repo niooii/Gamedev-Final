@@ -14,5 +14,5 @@ typedef struct WorldCreateOptions {
     const char* name;
 } WorldCreateOptions;
 
-World* GDF_CreateWorld(WorldCreateOptions* options);
-void GDF_FreeWorld();
+World* create_world(WorldCreateOptions* options);
+void free_world(World*);

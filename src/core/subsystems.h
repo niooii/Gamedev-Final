@@ -28,21 +28,21 @@ static bool GDF_InitSubsystems(u32 flags)
     GDF_InitIO();
     if (!GDF_InitInfo())
         return false;
-    if (flags & GDF_SUBSYSTEM_WINDOWING == GDF_SUBSYSTEM_WINDOWING)
+    if ((flags & GDF_SUBSYSTEM_WINDOWING) == GDF_SUBSYSTEM_WINDOWING)
     {
         if (!GDF_InitWindowing())
             return false;
     }
-    if (flags & GDF_SUBSYSTEM_EVENTS == GDF_SUBSYSTEM_EVENTS)
+    if ((flags & GDF_SUBSYSTEM_EVENTS) == GDF_SUBSYSTEM_EVENTS)
     {
         if (!GDF_InitEvents())
             return false;
     }
-    if (flags & GDF_SUBSYSTEM_INPUT == GDF_SUBSYSTEM_INPUT)
+    if ((flags & GDF_SUBSYSTEM_INPUT) == GDF_SUBSYSTEM_INPUT)
     {
         GDF_InitInput();
     }
-    if (flags & GDF_SUBSYSTEM_NET == GDF_SUBSYSTEM_NET)
+    if ((flags & GDF_SUBSYSTEM_NET) == GDF_SUBSYSTEM_NET)
     {
         if (!GDF_InitSockets())
             return false;

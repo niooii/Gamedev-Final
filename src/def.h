@@ -54,3 +54,12 @@ STATIC_ASSERT(sizeof(f32) == 4, "expected f32 to be 4 bytes.");
 STATIC_ASSERT(sizeof(f64) == 8, "expected f64 to be 8 bytes.");
 
 #define CLAMP(value, min, max) (value <= min) ? min : (value >= max) ? max : value;
+
+// Inlining
+#ifdef _MSC_VER
+#define FORCEINLINE __forceinline
+#define NOINLINE __declspec(noinline)
+#else
+#define FORCEINLINE static inline
+#define NOINLINE
+#endif

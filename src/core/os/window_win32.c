@@ -41,12 +41,15 @@ LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
         }
         case WM_SIZE: 
         {
-            // RECT r;
-            // GetClientRect(hwnd, &r);
-            // u32 width = r.right - r.left;
-            // u32 height = r.bottom - r.top;
-
-            // TODO: Fire an event for window resize
+            RECT r;
+            GetClientRect(hwnd, &r);
+            u32 width = r.right - r.left;
+            u32 height = r.bottom - r.top;
+            
+            GDF_EventCtx ctx;
+            ctx.data.u16[0] = width;
+            ctx.data.u16[1] = height;
+            GDF_EVENT_Fire(GDF_EVENT_INTERNAL_WINDOW_RESIZE, NULL, ctx);
             break;
         } 
         case WM_KEYDOWN:
@@ -235,9 +238,12 @@ bool GDF_SetWindowPos(i16 dest_x, i16 dest_y)
     return false;
 }
 
-bool GDF_SetWindowSize(i16 w, i16 h)
+bool GDF_SetWindowSizeInternal(i16 w, i16 h)
 {
-    return false;
+    InternalWindowState* internals = (InternalWindowState*) MAIN_WINDOW->internals;
+    internals->client_w = w;
+    internals->client_h = h;
+    return true;
 }
 
 void GDF_GetWindowSize(i16* w, i16* h)

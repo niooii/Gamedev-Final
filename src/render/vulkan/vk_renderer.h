@@ -7,6 +7,7 @@
 #include "vk_cmd_buf.h"
 #include "vk_framebuffer.h"
 #include "vk_fence.h"
+#include "vk_utils.h"
 #include "core/os/window.h"
 
 bool vk_renderer_init(renderer_backend* backend, const char* application_name);
