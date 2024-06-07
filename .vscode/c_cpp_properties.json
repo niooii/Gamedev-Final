@@ -27,7 +27,7 @@
                 "_DEBUG",
                 "UNICODE",
                 "_UNICODE",
-                "GDFEXPORT"
+                "COMPILE_BUILDER"
             ],
             "windowsSdkVersion": "10.0.18362.0",
             "compilerPath": "C:\\Program Files\\LLVM\\bin\\clang.exe",

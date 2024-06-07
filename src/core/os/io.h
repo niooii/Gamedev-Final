@@ -44,6 +44,9 @@ bool GDF_ReadFile(const char* rel_path, char* out_buf, size_t bytes_to_read);
 // must be freed with GDF_Free
 // returns NULL on error
 char* GDF_ReadFileExactLen(const char* rel_path);
+// returns false if overwrite_existing is false and a file already exists at dest_path,
+// or the src_path or dest_path is invalid.
+bool GDF_CopyFile(const char* src_path, const char* dest_path, bool overwrite_existing);
 // the size of the file in bytes
 u64 GDF_GetFileSize(const char* rel_path);
 u64 GDF_GetFileSizeAbs(const char* abs_path);

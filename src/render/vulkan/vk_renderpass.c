@@ -4,7 +4,7 @@ void vk_renderpass_create(
     vk_context* context, 
     vk_renderpass* out_renderpass,
     f32 x, f32 y, f32 w, f32 h,
-    f32 r, f32 g, f32 b, f32 a,
+    vec4 color,
     f32 depth,
     u32 stencil) 
 {
@@ -13,10 +13,10 @@ void vk_renderpass_create(
     out_renderpass->w = w;
     out_renderpass->h = h;
 
-    out_renderpass->r = r;
-    out_renderpass->g = g;
-    out_renderpass->b = b;
-    out_renderpass->a = a;
+    out_renderpass->r = color.x;
+    out_renderpass->g = color.y;
+    out_renderpass->b = color.z;
+    out_renderpass->a = color.w;
 
     out_renderpass->depth = depth;
     out_renderpass->stencil = stencil;

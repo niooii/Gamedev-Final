@@ -9,6 +9,7 @@
 #include "vk_fence.h"
 #include "vk_utils.h"
 #include "core/os/window.h"
+#include "math/math.h"
 
 bool vk_renderer_init(renderer_backend* backend, const char* application_name);
 void vk_renderer_destroy(renderer_backend* backend);

@@ -1,3 +1,5 @@
+#ifdef COMPILE_BUILDER
+
 // from https://github.com/Zunawe/md5-c/blob/main/md5.h
 
 #ifndef MD5_H
@@ -22,5 +24,7 @@ void md5Step(uint32_t *buffer, uint32_t *input);
 
 void md5String(char *input, uint8_t *result);
 void md5File(FILE *file, uint8_t *result);
+
+#endif
 
 #endif

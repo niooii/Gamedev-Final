@@ -8,7 +8,9 @@
 #include <direct.h>
 #include "io.h"
 #include "core/subsystems.h"
-#include "core/md5.h"
+#include "md5.h"
+#include "build_options.h"
+#include "checksums.h"
 #include "core/serde/serde.h"
 
 #define NUM_CFILES 500
@@ -29,29 +31,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// All these flags will be in clang format.
-typedef struct BuildOptions {
-    const char* src_dir;
-    const char* defines;
-    const char* compile_flags;
-    const char* linker_flags;
-    const char* include_flags;
-    const char* executable_name;
-    const char* profile;
-} BuildOptions;
-bool load_build_options(const char* rel_path, BuildOptions* out_opts);
-bool save_build_options(const char* rel_path, BuildOptions* options);
-bool save_default_build_options(const char* rel_path);
-
 // FUCK PLATFORM INDEPENDENCY ILL
 // DEAL WITH THAT LATER
 bool get_cfile_names(const char *sDir, char* cfile_names);
-// returns pointer to the first character of hash, which spans 32 characters.
-// DOES NOT ALLOCATE MEMORY
-// returns NULL on failure.
-char* get_checksum(const char* checksums_str, const char* cfile_rel_path);
-bool update_checksum(char* checksums_str, const char* cfile_rel_path, const char* new_checksum);
-bool add_checksum(char* checksums_str, const char* cfile_rel_path, const char* checksum);
 
 static u32 files_compiled = 0;
 
@@ -189,9 +171,10 @@ int main(int argc, char *argv[]) {
         bool needs_compile = false;
 
         // compare stored checksum in file vs the just calculated one
-        char* stored_cs_p;
+        char stored_checksum[33];
+        bool has_stored_checksum = get_checksum(c_file_checksums, rel_path, stored_checksum);
         
-        if ((stored_cs_p = get_checksum(c_file_checksums, rel_path)) == NULL)
+        if (!has_stored_checksum)
         {
             LOG_DEBUG("checksum not found, compiling and storing checksum.");
             LOG_DEBUG("current md5 hash: %s", new_checksum);
@@ -199,9 +182,7 @@ int main(int argc, char *argv[]) {
         }
         else
         {
-            char stored_checksum[33];
             LOG_DEBUG("current md5 hash: %s", new_checksum);
-            snprintf(stored_checksum, 33, stored_cs_p);
             LOG_DEBUG("stored hash: %s", stored_checksum);
             if (strcmp(stored_checksum, new_checksum) == 0)
             {
@@ -287,7 +268,8 @@ int main(int argc, char *argv[]) {
                 o_file
             );
             LOG_INFO("Compiling \"%s\"", rel_path);
-            if (system(compile_command) != 0)
+            int result = system(compile_command);
+            if (result != 0)
             {
                 LOG_ERR("Failed to compile \"%s\". Stopping...", rel_path);
                 GDF_WriteFile(CHECKSUM_FILE, c_file_checksums);
@@ -296,14 +278,8 @@ int main(int argc, char *argv[]) {
                 GDF_Free(compile_command);
                 goto program_end;
             }
-            if (stored_cs_p == NULL)
-            {
-                add_checksum(c_file_checksums, rel_path, new_checksum);
-            }
-            else
-            {
-                update_checksum(c_file_checksums, rel_path, new_checksum);
-            }
+            // upd checksum adds if there isnt one already
+            update_checksum(c_file_checksums, rel_path, new_checksum);
             files_compiled++;
             GDF_Free(compile_command);
         }
@@ -379,97 +355,6 @@ int main(int argc, char *argv[]) {
     return 1;
 }
 
-bool load_build_options(const char* rel_path, BuildOptions* out_opts)
-{
-    GDF_Map* map = GDF_CreateMap();
-    bool read_success = GDF_ReadMapFromFile(rel_path, map);
-    if (!read_success)
-    {
-        return false;
-    }
-    char* val;
-    if ((val = GDF_MAP_GetValueString(map, GDF_MKEY_BUILD_SRC_DIR)) == NULL)
-        return false;
-    out_opts->src_dir = GDF_StrDup(val);
-    if ((val = GDF_MAP_GetValueString(map, GDF_MKEY_BUILD_COMPILEFLAGS)) == NULL)
-        return false;
-    out_opts->compile_flags = GDF_StrDup(val);
-    if ((val = GDF_MAP_GetValueString(map, GDF_MKEY_BUILD_INCLUDEFLAGS)) == NULL)
-        return false;
-    out_opts->include_flags = GDF_StrDup(val);
-    if ((val = GDF_MAP_GetValueString(map, GDF_MKEY_BUILD_LINKERFLAGS)) == NULL)
-        return false;
-    out_opts->linker_flags = GDF_StrDup(val);
-    if ((val = GDF_MAP_GetValueString(map, GDF_MKEY_BUILD_DEFINES)) == NULL)
-        return false;
-    out_opts->defines = GDF_StrDup(val);
-    if ((val = GDF_MAP_GetValueString(map, GDF_MKEY_BUILD_EXECUTABLE_NAME)) == NULL)
-        return false;
-    out_opts->executable_name = GDF_StrDup(val);
-    GDF_FreeMap(map);
-    return true;
-}
-
-bool save_build_options(const char* rel_path, BuildOptions* options)
-{
-    GDF_Map* map = GDF_CreateMap();
-    GDF_AddMapEntry(
-        map, 
-        GDF_MKEY_BUILD_COMPILEFLAGS,
-        options->compile_flags,
-        GDF_MAP_DTYPE_STRING
-    );
-    GDF_AddMapEntry(
-        map, 
-        GDF_MKEY_BUILD_INCLUDEFLAGS,
-        options->include_flags,
-        GDF_MAP_DTYPE_STRING
-    );
-    GDF_AddMapEntry(
-        map, 
-        GDF_MKEY_BUILD_LINKERFLAGS,
-        options->linker_flags,
-        GDF_MAP_DTYPE_STRING
-    );
-    GDF_AddMapEntry(
-        map, 
-        GDF_MKEY_BUILD_DEFINES,
-        options->defines,
-        GDF_MAP_DTYPE_STRING
-    );
-    GDF_AddMapEntry(
-        map, 
-        GDF_MKEY_BUILD_SRC_DIR,
-        options->src_dir,
-        GDF_MAP_DTYPE_STRING
-    );
-    GDF_AddMapEntry(
-        map, 
-        GDF_MKEY_BUILD_EXECUTABLE_NAME,
-        options->executable_name,
-        GDF_MAP_DTYPE_STRING
-    );
-    bool success = GDF_WriteMapToFile(map, rel_path);
-    GDF_FreeMap(map);
-    return success;
-}
-
-bool save_default_build_options(const char* rel_path)
-{
-    const char* linker_flags = "-luser32 -lvulkan-1 -L%s/Lib";
-
-    BuildOptions out_opts = {
-        .compile_flags = "-g -Wvarargs -Wall -O0",
-        .include_flags = "-Isrc -I%VULKAN_SDK%/Include",
-        .linker_flags = "-debug /defaultlib:user32.lib /defaultlib:libcmt.lib /defaultlib:vulkan-1.lib -LIBPATH:%VULKAN_SDK%/Lib",
-        .defines = "-D_DEBUG -D_CRT_SECURE_NO_WARNINGS",
-        .src_dir = "src",
-        .executable_name = "EXENAME"
-    };
-
-    return save_build_options(rel_path, &out_opts);
-}
-
 bool get_cfile_names(const char *sDir, char* cfile_names)
 {
     WIN32_FIND_DATA fdFile;
@@ -517,44 +402,6 @@ bool get_cfile_names(const char *sDir, char* cfile_names)
 
     FindClose(hFind); 
 
-    return true;
-}
-
-char* get_checksum(const char* checksums_str, const char* cfile_rel_path)
-{
-    char* checksum = strstr(checksums_str, cfile_rel_path);
-    if (checksum == NULL)
-        return NULL;
-    // advance pointer forward by the length of the path + ":", 
-    // only getting the checksum
-    checksum += (strlen(cfile_rel_path) + 1);
-    return checksum;
-}
-
-bool update_checksum(char* checksums_str, const char* cfile_rel_path, const char* new_checksum)
-{
-    char* checksum_p = NULL;
-    get_checksum:
-    if ((checksum_p = get_checksum(checksums_str, cfile_rel_path)) 
-    == NULL)
-    {
-        if (!add_checksum(checksums_str, cfile_rel_path, new_checksum))
-        {
-            LOG_ERR("Failed to add checksum.");
-            return false;
-        }
-        goto get_checksum;
-    }
-
-    strncpy(checksum_p, new_checksum, 32);
-}
-
-bool add_checksum(char* checksums_str, const char* cfile_rel_path, const char* checksum)
-{
-    char line_buf[MAX_PATH_LEN + 33];
-    sprintf(line_buf, "%s:%s\n", cfile_rel_path, checksum);
-    strcat(checksums_str, line_buf);
-    // LOG_DEBUG("new checksum string: %s", checksums_str);
     return true;
 }
 

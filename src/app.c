@@ -174,7 +174,6 @@ f64 GDF_RunApp()
         }
 
         GDF_INPUT_Update(dt);
-        LOG_INFO("dt: %lf", dt);
         // only thing that should produce innacuracies is if pumpmessages takes a bit of time
         APP_STATE.last_time = current_time;
     }

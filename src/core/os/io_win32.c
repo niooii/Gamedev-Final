@@ -339,6 +339,16 @@ char* GDF_ReadFileExactLen(const char* rel_path)
     return out_buf;
 }
 
+bool GDF_CopyFile(const char* src_path, const char* dest_path, bool overwrite_existing)
+{
+    char src_path_abs[MAX_PATH_LEN];
+    GDF_GetAbsolutePath(src_path, src_path_abs);
+    char dest_path_abs[MAX_PATH_LEN];
+    GDF_GetAbsolutePath(dest_path, dest_path_abs);
+
+    return CopyFile(src_path_abs, dest_path_abs, !overwrite_existing);
+}
+
 u64 GDF_GetFileSize(const char* rel_path)
 {
     char path[MAX_PATH_LEN];

@@ -125,6 +125,9 @@
         "vk_cmd_buf.h": "c",
         "iosfwd": "c",
         "vk_renderpass.h": "c",
-        "vk_framebuffer.h": "c"
+        "vk_framebuffer.h": "c",
+        "cmath": "cpp",
+        "direct.h": "c",
+        "checksums.h": "c"
     },
 }

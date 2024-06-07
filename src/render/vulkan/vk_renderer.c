@@ -305,11 +305,13 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
         &context.swapchain
     );
 
+    vec4 clear_col = vec4_new(0.3f, 0.f, 0.2f, 1.0);
+
     vk_renderpass_create(
         &context,
         &context.main_renderpass,
         0, 0, context.framebuffer_width, context.framebuffer_height,
-        0.0f, 0.0f, 0.2f, 1.0f,
+        clear_col,
         1.0f,
         0
     );
