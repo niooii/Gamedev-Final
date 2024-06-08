@@ -22,6 +22,7 @@
 #define BUILD_STATUS_SUCCESS "success"
 #define BUILD_STATUS_LINK_FAIL "link_fail"
 #define BUILD_STATUS_COMPILE_FAIL "compile_fail"
+#define BUILD_STATUS_POST_BUILD_FAIL "postbuild_fail"
 
 #define CHECKSUM_FILE BUILD_CACHE_PATH "_checksums.txt"
 #define BUILD_OPTIONS_FILE "build_options.gdf"
@@ -61,6 +62,7 @@ int main(int argc, char *argv[]) {
     GDF_MakeFile(LAST_BUILD_STATUS_PATH);
     const char* last_build_status = GDF_ReadFileExactLen(LAST_BUILD_STATUS_PATH);
     bool should_relink = strcmp(last_build_status, BUILD_STATUS_LINK_FAIL) == 0;
+    bool should_run_post_build = strcmp(last_build_status, BUILD_STATUS_POST_BUILD_FAIL) == 0;
     bool should_recompile_all = false;
     // should be success if nothing happens anyways
     GDF_WriteFile(LAST_BUILD_STATUS_PATH, BUILD_STATUS_SUCCESS);
@@ -128,6 +130,18 @@ int main(int argc, char *argv[]) {
             }
         }
     }
+
+    if (!should_run_post_build)
+    {
+        if (
+            strcmp(build_options->post_build_command, prev_built_with->post_build_command) != 0
+        )
+        {
+            should_run_post_build = true;
+            LOG_INFO("Post-build command changed, new one will be ran...");
+        }
+    }
+    GDF_Free(prev_built_with);
 
     if (should_recompile_all)
     {
@@ -276,7 +290,7 @@ int main(int argc, char *argv[]) {
                 save_build_options(BUILT_WITH_OPTIONS_FILE, build_options);
                 GDF_WriteFile(LAST_BUILD_STATUS_PATH, BUILD_STATUS_COMPILE_FAIL);
                 GDF_Free(compile_command);
-                goto program_end;
+                goto build_stage_end;
             }
             // upd checksum adds if there isnt one already
             update_checksum(c_file_checksums, rel_path, new_checksum);
@@ -320,14 +334,14 @@ int main(int argc, char *argv[]) {
             save_build_options(BUILT_WITH_OPTIONS_FILE, build_options);
             GDF_WriteFile(LAST_BUILD_STATUS_PATH, BUILD_STATUS_LINK_FAIL);
             GDF_Free(link_command);
-            goto program_end;
+            goto build_stage_end;
         }
         GDF_Free(link_command);
     }
 
     success = true;
     
-    program_end:
+    build_stage_end:
     GDF_Free(c_files);
     GDF_Free(c_file_checksums);
     GDF_Free(o_files);
@@ -340,10 +354,37 @@ int main(int argc, char *argv[]) {
         if (files_compiled > 0)
         {
             LOG_INFO("Compiled %d files in %lf seconds.", files_compiled, sec_elapsed);
+            LOG_INFO("Finished building \"%s.exe\" successfully.", build_options->executable_name);
+            // TODO! right now only reruns post-build when a file changes for some reason
+            // idk a better method unlucky just run it manually igs
+            should_run_post_build = true;
         }
-        LOG_INFO("Finished building \"%s.exe\" successfully.", build_options->executable_name);
-        GDF_Free(build_options);
-        GDF_Free(prev_built_with);
+        else 
+        {
+            GDF_Free(build_options);
+            return 0;
+        }
+    }
+
+    if (should_run_post_build)
+    {
+        GDF_Stopwatch_Reset(stopwatch);
+        // run post build routine
+        LOG_INFO("Running post-build routine...");
+        if (strlen(build_options->post_build_command) == 0)
+        {
+            LOG_INFO("No post-build routine to run, finished.");
+        }
+        else if (system(build_options->post_build_command) != 0)
+        {
+            LOG_ERR("Post-build routine failed in %lf seconds.", GDF_Stopwatch_TimeElasped(stopwatch));
+            GDF_WriteFile(LAST_BUILD_STATUS_PATH, BUILD_STATUS_POST_BUILD_FAIL);
+            GDF_Free(build_options);
+            return 1;
+        }
+
+        LOG_INFO("Post-build routine finished in %lf seconds.", GDF_Stopwatch_TimeElasped(stopwatch));
+
         return 0;
     }
 
@@ -351,7 +392,6 @@ int main(int argc, char *argv[]) {
     LOG_ERR("Build failed in %lf seconds.", sec_elapsed);
     LOG_ERR("Failed to build \"%s.exe\"", build_options->executable_name);
     GDF_Free(build_options);
-    GDF_Free(prev_built_with);
     return 1;
 }
 

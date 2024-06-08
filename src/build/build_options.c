@@ -1,3 +1,4 @@
+#ifdef COMPILE_BUILDER
 #include "build_options.h"
 #include "core/serde/serde.h"
 #include "core/os/io.h"
@@ -29,6 +30,9 @@ bool load_build_options(const char* rel_path, BuildOptions* out_opts)
     if ((val = GDF_MAP_GetValueString(map, GDF_MKEY_BUILD_EXECUTABLE_NAME)) == NULL)
         return false;
     out_opts->executable_name = GDF_StrDup(val);
+    if ((val = GDF_MAP_GetValueString(map, GDF_MKEY_BUILD_POSTBUILD_COMMAND)) == NULL)
+        return false;
+    out_opts->post_build_command = GDF_StrDup(val);
     GDF_FreeMap(map);
     return true;
 }
@@ -72,6 +76,12 @@ bool save_build_options(const char* rel_path, BuildOptions* options)
         options->executable_name,
         GDF_MAP_DTYPE_STRING
     );
+    GDF_AddMapEntry(
+        map, 
+        GDF_MKEY_BUILD_POSTBUILD_COMMAND,
+        options->post_build_command,
+        GDF_MAP_DTYPE_STRING
+    );
     bool success = GDF_WriteMapToFile(map, rel_path);
     GDF_FreeMap(map);
     return success;
@@ -87,8 +97,10 @@ bool save_default_build_options(const char* rel_path)
         .linker_flags = "-debug /defaultlib:user32.lib /defaultlib:libcmt.lib /defaultlib:vulkan-1.lib -LIBPATH:%VULKAN_SDK%/Lib",
         .defines = "-D_DEBUG -D_CRT_SECURE_NO_WARNINGS",
         .src_dir = "src",
-        .executable_name = "EXENAME"
+        .executable_name = "EXENAME",
+        .post_build_command = ".\\post_build.bat"
     };
 
     return save_build_options(rel_path, &out_opts);
 }
+#endif

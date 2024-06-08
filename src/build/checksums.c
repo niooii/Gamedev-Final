@@ -45,8 +45,6 @@ bool add_checksum(char* checksums_str, const char* cfile_rel_path, const char* c
     char line_buf[MAX_PATH_LEN + 33];
     sprintf(line_buf, "%s:%s\n", cfile_rel_path, checksum);
     strcat(checksums_str, line_buf);
-    // yes
-    LOG_DEBUG("new checksum string: %s", checksums_str);
     return true;
 }
 

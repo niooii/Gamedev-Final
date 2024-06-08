@@ -9,6 +9,7 @@ typedef struct BuildOptions {
     const char* linker_flags;
     const char* include_flags;
     const char* executable_name;
+    const char* post_build_command;
     const char* profile;
 } BuildOptions;
 bool load_build_options(const char* rel_path, BuildOptions* out_opts);
