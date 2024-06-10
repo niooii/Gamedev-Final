@@ -22,6 +22,9 @@ void GDF_ShowConsole();
 void GDF_HideConsole();
 void GDF_WriteConsole(const char* msg, u8 color);
 void GDF_GetAbsolutePath(const char* rel_path, char* out_buf);
+// gets path of resource in a resources/ directory
+// ex: resources/icon.ico can be accessed by GDF_GetResourcePath("icon.ico", buf)
+void GDF_GetResourcePath(const char* rel_path, char* out_buf);
 // if the path is outside the directory of the executable
 // out_buf will be set to NULL. 
 void GDF_GetRelativePath(const char* abs_path, char* out_buf);

@@ -158,8 +158,7 @@ void __create(vk_context* context, u32 w, u32 h, vk_swapchain* swapchain)
     {
         swapchain_create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
         swapchain_create_info.queueFamilyIndexCount = 2;
-        // 1988763351
-        swapchain_create_info.pQueueFamilyIndices = queueFamilyIndices;
+       swapchain_create_info.pQueueFamilyIndices = queueFamilyIndices;
     } 
     else 
     {
@@ -207,7 +206,7 @@ void __create(vk_context* context, u32 w, u32 h, vk_swapchain* swapchain)
         )
     );
 
-    for (u32 i = 0; i < swapchain->image_count; ++i) 
+    for (u32 i = 0; i < swapchain->image_count; i++) 
     {
         VkImageViewCreateInfo view_info = {VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO};
         view_info.image = swapchain->images[i];
@@ -229,7 +228,9 @@ void __create(vk_context* context, u32 w, u32 h, vk_swapchain* swapchain)
         );
     }
 
-    if (!vk_device_find_depth_format(&context->device)) {
+
+    if (!vk_device_find_depth_format(&context->device)) 
+    {
         context->device.depth_format = VK_FORMAT_UNDEFINED;
         LOG_FATAL("No depths format..");
     }

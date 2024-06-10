@@ -21,6 +21,14 @@ typedef struct vk_pdevice_swapchain_support {
     VkPresentModeKHR* present_modes;
 } vk_pdevice_swapchain_support;
 
+typedef struct vk_shader_module {
+    VkShaderModule handle;
+} vk_shader_module;
+
+typedef struct vk_graphics_pipeline {
+    VkPipeline handle;
+} vk_shader_module;
+
 typedef struct vk_pdevice_queues {
     u32 graphics_family_index;
     u32 present_family_index;
