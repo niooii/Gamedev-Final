@@ -25,9 +25,10 @@ typedef struct vk_shader_module {
     VkShaderModule handle;
 } vk_shader_module;
 
-typedef struct vk_graphics_pipeline {
+typedef struct vk_pipeline {
     VkPipeline handle;
-} vk_shader_module;
+    VkPipelineLayout layout;
+} vk_pipeline;
 
 typedef struct vk_pdevice_queues {
     u32 graphics_family_index;

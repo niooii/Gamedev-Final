@@ -10,14 +10,12 @@ void vk_shader_module_create(vk_context* context, const char* resource_path, VkS
     create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
     create_info.codeSize = strlen(src);
     // this will probably fail diabolically
-    create_info.pCode = src;
+    create_info.pCode = (u32*)src;
     VK_ASSERT(
         vkCreateShaderModule(
             context->device.logical, &create_info, context->allocator, &out_module->handle
         )
     );
-
-    out_module
 }
 
 void vk_shader_module_destroy(vk_shader_module* module)
