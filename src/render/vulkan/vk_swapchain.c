@@ -149,14 +149,16 @@ void __create(vk_context* context, u32 w, u32 h, vk_swapchain* swapchain)
     swapchain_create_info.imageArrayLayers = 1;
     swapchain_create_info.imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT;
 
+    u32 queueFamilyIndices[] = {
+        (u32)context->device.physical_info->queues.graphics_family_index,
+        (u32)context->device.physical_info->queues.present_family_index
+    };
+
     if (context->device.physical_info->queues.graphics_family_index != context->device.physical_info->queues.present_family_index) 
     {
-        u32 queueFamilyIndices[] = {
-            (u32)context->device.physical_info->queues.graphics_family_index,
-            (u32)context->device.physical_info->queues.present_family_index
-        };
         swapchain_create_info.imageSharingMode = VK_SHARING_MODE_CONCURRENT;
         swapchain_create_info.queueFamilyIndexCount = 2;
+        // 1988763351
         swapchain_create_info.pQueueFamilyIndices = queueFamilyIndices;
     } 
     else 
