@@ -18,6 +18,10 @@ static char* get_checksum_ptr(const char* checksums_str, const char* cfile_rel_p
 bool get_checksum(const char* checksums_str, const char* cfile_rel_path, char* out_checksum)
 {
     char* checksum_p = get_checksum_ptr(checksums_str, cfile_rel_path);
+    if (checksum_p == NULL)
+    {
+        return false;
+    }
     snprintf(out_checksum, 33, checksum_p);
     out_checksum[32] = '\0';
     return true;

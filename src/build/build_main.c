@@ -79,6 +79,7 @@ int main(int argc, char *argv[]) {
         if (strcmp(arg, "-rebuild") == 0)
         {
             should_recompile_all = true;
+            should_run_post_build = true;
             continue;
         }
         if (strncmp(arg, "-F", 2) == 0)
@@ -97,7 +98,7 @@ int main(int argc, char *argv[]) {
         save_default_build_options(build_options_path);
         load_build_options(build_options_path, build_options);
     }
-
+    
     // if recompile_all is true the changes wouldnt matter anyways
     if (!should_recompile_all)
     {
@@ -129,19 +130,19 @@ int main(int argc, char *argv[]) {
                 LOG_INFO("Build options changed, files will be linked again...");
             }
         }
-    }
 
-    if (!should_run_post_build)
-    {
-        if (
-            strcmp(build_options->post_build_command, prev_built_with->post_build_command) != 0
-        )
+        if (!should_run_post_build)
         {
-            should_run_post_build = true;
-            LOG_INFO("Post-build command changed, new one will be ran...");
+            if (
+                strcmp(build_options->post_build_command, prev_built_with->post_build_command) != 0
+            )
+            {
+                should_run_post_build = true;
+                LOG_INFO("Post-build command changed, new one will be ran...");
+            }
         }
+        GDF_Free(prev_built_with);
     }
-    GDF_Free(prev_built_with);
 
     if (should_recompile_all)
     {

@@ -20,7 +20,7 @@
             "type": "cppvsdbg",
             "request": "launch",
             "program": "${workspaceFolder}/build.exe",
-            "args": [],
+            "args": ["-rebuild"],
             "stopAtEntry": false,
             "cwd": "${workspaceFolder}/",
             "environment": [],

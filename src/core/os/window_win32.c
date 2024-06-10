@@ -60,8 +60,29 @@ LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
             bool pressed = (msg == WM_KEYDOWN || msg == WM_SYSKEYDOWN);
             GDF_KEYCODE key = (u16)w_param;
 
+            // COPY AND PASTED HOW DOES THIS WORK WTF
+            bool is_extended = (HIWORD(l_param) & KF_EXTENDED) == KF_EXTENDED;
+
+            // Keypress only determines if _any_ alt/ctrl/shift key is pressed. Determine which one if so.
+            if (w_param == VK_MENU) {
+                key = is_extended ? GDF_KEYCODE_RALT : GDF_KEYCODE_LALT;
+            } else if (w_param == VK_SHIFT) {
+                // Annoyingly, KF_EXTENDED is not set for shift keys.
+                u32 left_shift = MapVirtualKey(VK_LSHIFT, MAPVK_VK_TO_VSC);
+                u32 scancode = ((l_param & (0xFF << 16)) >> 16);
+                key = scancode == left_shift ? GDF_KEYCODE_LSHIFT : GDF_KEYCODE_RSHIFT;
+            } else if (w_param == VK_CONTROL) {
+                key = is_extended ? GDF_KEYCODE_RCONTROL : GDF_KEYCODE_LCONTROL;
+            }
+
+            // HACK: This is gross windows keybind crap.
+            if (key == VK_OEM_1) {
+                key = GDF_KEYCODE_SEMICOLON;
+            }
+
             __input_process_key(key, pressed);
-            break;
+
+            return 0; // to prevent default window behaviors
         } 
         case WM_MOUSEMOVE: 
         {
