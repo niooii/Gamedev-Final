@@ -335,8 +335,41 @@ char* GDF_ReadFileExactLen(const char* rel_path)
     {
         LOG_ERR("Unknown error (%d) reading file: %s", GetLastError(), path);
     }
+    LOG_DEBUG("%02X", out_buf);
     CloseHandle(h);
     return out_buf;
+}
+
+u8* GDF_ReadBytesExactLen(const char* rel_path)
+{
+    char path[MAX_PATH_LEN];
+    GDF_GetAbsolutePath(rel_path, path);
+    FILE* file = fopen(path, "rb");
+
+    if (file == NULL)
+        return NULL;
+
+    fseek(file, 0, SEEK_END);
+    u64 size = ftell(file);
+    rewind(file);
+    LOG_DEBUG("File size: %u", size);
+
+    u8* out_bytes = GDF_Malloc(size, GDF_MEMTAG_STRING);
+    u64 bytes_read = fread(out_bytes, 1, size, file);
+    LOG_DEBUG("bytes read: %u", bytes_read);
+    LOG_DEBUG("%s", out_bytes);
+    rewind(file);
+    fclose(file);    
+    if (bytes_read != size)
+    {
+        LOG_WARN("Reading binary from file failed...");
+        return NULL;
+    }
+    FILE* file1 = fopen(path, "wb");
+    fwrite(out_bytes, 1, size, file1);
+    fclose(file1);
+
+    return out_bytes;
 }
 
 bool GDF_CopyFile(const char* src_path, const char* dest_path, bool overwrite_existing)

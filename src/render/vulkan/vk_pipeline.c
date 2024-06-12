@@ -1,8 +1,8 @@
 #include "vk_pipeline.h"
-#include "render_types.h"
+#include "../render_types.h"
+#include "vk_utils.h"
 
-
-void vk_pipeline_create_graphics(
+bool vk_pipeline_create_graphics(
     vk_context* context,
     vk_renderpass* renderpass,
     u32 attribute_count,
@@ -54,7 +54,7 @@ void vk_pipeline_create_graphics(
     depth_stencil.stencilTestEnable = VK_FALSE;
 
     VkPipelineColorBlendAttachmentState color_blend_attachment_state;
-    kzero_memory(&color_blend_attachment_state, sizeof(VkPipelineColorBlendAttachmentState));
+    GDF_MemZero(&color_blend_attachment_state, sizeof(VkPipelineColorBlendAttachmentState));
     color_blend_attachment_state.blendEnable = VK_TRUE;
     color_blend_attachment_state.srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA;
     color_blend_attachment_state.dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA;
@@ -109,11 +109,14 @@ void vk_pipeline_create_graphics(
     pipeline_layout_create_info.pSetLayouts = descriptor_set_layouts;
 
     // Create the pipeline layout.
-    VK_CHECK(vkCreatePipelineLayout(
-        context->device.logical,
-        &pipeline_layout_create_info,
-        context->allocator,
-        &out_pipeline->layout));
+    VK_ASSERT(
+        vkCreatePipelineLayout(
+            context->device.logical,
+            &pipeline_layout_create_info,
+            context->allocator,
+            &out_pipeline->layout
+        )
+    );
 
     // Pipeline create
     VkGraphicsPipelineCreateInfo pipeline_create_info = {VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO};
@@ -143,14 +146,16 @@ void vk_pipeline_create_graphics(
         1,
         &pipeline_create_info,
         context->allocator,
-        &out_pipeline->handle);
+        &out_pipeline->handle
+    );
 
-    if (vulkan_result_is_success(result)) {
-        KDEBUG("Graphics pipeline created!");
+    if (vk_result_is_success(result)) 
+    {
+        LOG_DEBUG("Graphics pipeline created!");
         return true;
     }
 
-    KERROR("vkCreateGraphicsPipelines failed with %s.", vulkan_result_string(result, true));
+    LOG_ERR("vkCreateGraphicsPipelines failed");
     return false;
 }
 

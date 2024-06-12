@@ -15,18 +15,19 @@ static bool create_shader_module(
 
     char rel_path[512];
     sprintf(rel_path, "resources/shaders/%s.%s.spv", name, type_str);
+    LOG_DEBUG("??? %s", rel_path);
 
     GDF_MemZero(&shader_stages[stage_index].create_info, sizeof(VkShaderModuleCreateInfo));
     shader_stages[stage_index].create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 
-    u64 size;
-    char* src_buf;
-    if ((src_buf = GDF_ReadFileExactLen(rel_path)) == NULL) {
+    u8* src_buf;
+    if ((src_buf = GDF_ReadBytesExactLen(rel_path)) == NULL) {
         LOG_ERR("Unable to read shader module: %s.", rel_path);
         return false;
     }
-    shader_stages[stage_index].create_info.codeSize = size;
+    shader_stages[stage_index].create_info.codeSize = strlen(src_buf);
     shader_stages[stage_index].create_info.pCode = (u32*)src_buf;
+    LOG_DEBUG("%02x", src_buf);
 
     VK_ASSERT(
         vkCreateShaderModule(
@@ -49,25 +50,45 @@ static bool create_shader_module(
     return true;
 }
 
-void vk_shader_create(vk_context* context, const char* resource_path, VkShaderStageFlags stage, vk_shader* out_module)
+void vk_shader_create(vk_context* context, const char* resource_path, vk_shader* out_shader)
 {
-    const char src_path[MAX_PATH_LEN + 50];
-    GDF_GetResourcePath(resource_path, src_path);
+	// TODO! hardcoded for now 
+	const char* default_name = "default";
 
-    char* src = GDF_ReadFileExactLen(src_path);
-    VkShaderModuleCreateInfo create_info = {};
-    create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
-    create_info.codeSize = strlen(src);
-    // this will probably fail diabolically
-    create_info.pCode = (u32*)src;
-    VK_ASSERT(
-        vkCreateShaderModule(
-            context->device.logical, &create_info, context->allocator, &out_module->handle
-        )
-    );
+	if (
+		!create_shader_module(
+			context,
+			default_name,
+			"vert",
+			VK_SHADER_STAGE_VERTEX_BIT,
+			0,
+			out_shader->stages
+		)
+	)
+    {
+        LOG_ERR("failed to create default vertex shader might wanna look into that.");
+    }
+
+    if (
+		!create_shader_module(
+			context,
+			default_name,
+			"frag",
+			VK_SHADER_STAGE_FRAGMENT_BIT,
+			1,
+			out_shader->stages
+		)
+	)
+    {
+        LOG_ERR("failed to create default frag shader might wanna look into that.");
+    }
 }
 
-void vk_shader_destroy(vk_shader* module)
+void vk_shader_destroy(vk_context* context, vk_shader* shader)
 {
-    
+
+}
+void vk_shader_use(vk_context* context, vk_shader* shader)
+{
+
 }

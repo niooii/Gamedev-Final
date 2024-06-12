@@ -4,7 +4,7 @@
 
 #include "vk_types.h"
 
-void vk_pipeline_create_graphics(
+bool vk_pipeline_create_graphics(
     vk_context* context,
     vk_renderpass* renderpass,
     u32 attribute_count,

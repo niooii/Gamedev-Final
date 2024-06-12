@@ -4,5 +4,6 @@
 #include "core/os/io.h"
 #include "vk_types.h"
 
-void vk_shader_create(vk_context* context, const char* resource_path, VkShaderStageFlags stage, vk_shader* out_module);
-void vk_shader_destroy(vk_shader* module);
+void vk_shader_create(vk_context* context, const char* resource_path, vk_shader* out_shader);
+void vk_shader_destroy(vk_context* context, vk_shader* shader);
+void vk_shader_use(vk_context* context, vk_shader* shader);

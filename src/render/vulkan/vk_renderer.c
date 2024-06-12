@@ -345,6 +345,8 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
         context.images_in_flight[i] = NULL;
     }
 
+    vk_shader_create(&context, "nothingfornow", &context.default_object_shader);
+
     LOG_INFO("Finished initialization of vulkan stuff...");
 
     return true;

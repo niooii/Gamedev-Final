@@ -8,6 +8,7 @@
 #include "vk_framebuffer.h"
 #include "vk_fence.h"
 #include "vk_utils.h"
+#include "vk_shader.h"
 #include "core/os/window.h"
 #include "math/math.h"
 
