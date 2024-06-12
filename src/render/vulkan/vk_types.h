@@ -21,9 +21,17 @@ typedef struct vk_pdevice_swapchain_support {
     VkPresentModeKHR* present_modes;
 } vk_pdevice_swapchain_support;
 
-typedef struct vk_shader_module {
+typedef struct vk_shader_stage {
+    VkShaderModuleCreateInfo create_info;
     VkShaderModule handle;
-} vk_shader_module;
+    VkPipelineShaderStageCreateInfo shader_stage_create_info;
+} vk_shader_stage;
+
+// TODO! make more dynamic 
+#define DEFAULT_SHADER_STAGE_COUNT 2
+typedef struct vk_shader {
+    vk_shader_stage stages[DEFAULT_SHADER_STAGE_COUNT];
+} vk_shader;
 
 typedef struct vk_pipeline {
     VkPipeline handle;
@@ -157,7 +165,8 @@ typedef struct vk_context {
     u32 img_idx;
     u32 current_frame;
     bool recreating_swapchain;
-    
+
+    vk_shader default_object_shader;
 
 
 #ifndef GDF_RELEASE

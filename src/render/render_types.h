@@ -1,6 +1,7 @@
 #pragma once
 
 #include "core.h"
+#include "math/math_types.h"
 
 typedef enum GDF_RENDER_BACKEND_TYPE {
     GDF_RENDER_BACKEND_TYPE_VULKAN,
@@ -23,3 +24,7 @@ typedef struct renderer_backend {
 typedef struct GDF_RenderPacket {
     f32 delta_time;
 } GDF_RenderPacket;
+
+typedef struct vertex_3d {
+    vec3 position;
+} vertex_3d;
