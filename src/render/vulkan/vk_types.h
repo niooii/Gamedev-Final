@@ -21,6 +21,11 @@ typedef struct vk_pdevice_swapchain_support {
     VkPresentModeKHR* present_modes;
 } vk_pdevice_swapchain_support;
 
+typedef struct vk_pipeline {
+    VkPipeline handle;
+    VkPipelineLayout layout;
+} vk_pipeline;
+
 typedef struct vk_shader_stage {
     VkShaderModuleCreateInfo create_info;
     VkShaderModule handle;
@@ -31,12 +36,8 @@ typedef struct vk_shader_stage {
 #define DEFAULT_SHADER_STAGE_COUNT 2
 typedef struct vk_shader {
     vk_shader_stage stages[DEFAULT_SHADER_STAGE_COUNT];
+    vk_pipeline pipeline;
 } vk_shader;
-
-typedef struct vk_pipeline {
-    VkPipeline handle;
-    VkPipelineLayout layout;
-} vk_pipeline;
 
 typedef struct vk_pdevice_queues {
     u32 graphics_family_index;
@@ -121,6 +122,16 @@ typedef struct vk_swapchain {
     vk_framebuffer* framebuffers;
 } vk_swapchain;
 
+typedef struct vk_buffer {
+    u64 total_size;
+    VkBuffer handle;
+    VkBufferUsageFlagBits usage;
+    bool is_locked;
+    VkDeviceMemory memory;
+    i32 memory_index;
+    u32 memory_property_flags;
+} vk_buffer;
+
 typedef enum vk_cmd_buf_state {
     CMD_BUF_STATE_READY,
     CMD_BUF_STATE_RECORDING,
@@ -166,6 +177,12 @@ typedef struct vk_context {
     u32 current_frame;
     bool recreating_swapchain;
 
+    vk_buffer object_vertex_buffer;
+    vk_buffer object_idx_buffer;
+
+    u64 vertex_offset;
+    u64 idx_offset;
+
     vk_shader default_object_shader;
 
 
@@ -173,5 +190,5 @@ typedef struct vk_context {
     VkDebugUtilsMessengerEXT debug_messenger;
 #endif
     // function ptrs
-    // i32 (*find_memory_idx)(u32 type_filter, u32 property_flags);
+    i32 (*find_memory_idx)(u32 type_filter, u32 property_flags);
 } vk_context;

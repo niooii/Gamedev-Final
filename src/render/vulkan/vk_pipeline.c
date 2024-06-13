@@ -160,7 +160,7 @@ bool vk_pipeline_create_graphics(
 }
 
 // void vk_pipeline_create_compute(vk_pipeline* out_pipeline); 
-void vulkan_pipeline_destroy(vk_context* context, vk_pipeline* pipeline)
+void vk_pipeline_destroy(vk_context* context, vk_pipeline* pipeline)
 {
     vkDestroyPipeline(context->device.logical, pipeline->handle, context->allocator);
     vkDestroyPipelineLayout(context->device.logical, pipeline->layout, context->allocator);
@@ -168,7 +168,7 @@ void vulkan_pipeline_destroy(vk_context* context, vk_pipeline* pipeline)
     pipeline->layout = VK_NULL_HANDLE;
 }
 
-void vulkan_pipeline_bind(vk_cmd_buf* command_buffer, VkPipelineBindPoint bind_point, vk_pipeline* pipeline)
+void vk_pipeline_bind(vk_cmd_buf* command_buffer, VkPipelineBindPoint bind_point, vk_pipeline* pipeline)
 {
     vkCmdBindPipeline(command_buffer->handle, bind_point, pipeline->handle);
 }

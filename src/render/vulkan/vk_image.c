@@ -41,6 +41,7 @@ void vk_image_create(
     VkPhysicalDeviceMemoryProperties memory_properties;
     vkGetPhysicalDeviceMemoryProperties(context->device.physical_info->handle, &memory_properties);
 
+    // TODO! use the function i just made bruh
     i32 memory_type = -1;
     for (u32 i = 0; i < memory_properties.memoryTypeCount; i++) 
     {

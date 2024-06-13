@@ -195,11 +195,62 @@ bool __recreate_swapchain(renderer_backend* backend) {
     return true;
 }
 
+bool __create_buffers(vk_context* context) {
+    // TODO! remove VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT and use staging buffers
+    VkMemoryPropertyFlagBits memory_property_flags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
+
+    const u64 vertex_buffer_size = sizeof(vertex_3d) * 1024 * 1024;
+    if (!vk_buffer_create(
+            context,
+            vertex_buffer_size,
+            VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+            memory_property_flags,
+            true,
+            &context->object_vertex_buffer)) {
+        LOG_ERR("Error creating vertex buffer.");
+        return false;
+    }
+    context->vertex_offset = 0;
+
+    const u64 index_buffer_size = sizeof(u32) * 1024 * 1024;
+    if (!vk_buffer_create(
+            context,
+            index_buffer_size,
+            VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
+            memory_property_flags,
+            true,
+            &context->object_idx_buffer)) {
+        LOG_ERR("Error creating vertex buffer.");
+        return false;
+    }
+    context->idx_offset = 0;
+
+    return true;
+}
+
+i32 __find_memory_index(u32 type_filter, u32 property_flags) {
+    VkPhysicalDeviceMemoryProperties memory_properties;
+    vkGetPhysicalDeviceMemoryProperties(context.device.physical_info->handle, &memory_properties);
+
+    for (u32 i = 0; i < memory_properties.memoryTypeCount; i++) 
+    {
+        // check each memory type to see if its bit is set to 1.
+        if (type_filter & (1 << i) && (memory_properties.memoryTypes[i].propertyFlags & property_flags) == property_flags) 
+        {
+            return i;
+        }
+    }
+
+    LOG_WARN("Unable to find suitable memory type!");
+    return -1;
+}
+
 // ===== FORWARD DECLARATIONS END =====
 bool vk_renderer_init(renderer_backend* backend, const char* application_name) 
 {
     // TODO! custom allocator.
     context.allocator = 0;
+    context.find_memory_idx = __find_memory_index;
     
     GDF_GetWindowSize(&cached_framebuf_w, &cached_framebuf_h);
     context.framebuffer_width = cached_framebuf_w;
@@ -346,6 +397,33 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     }
 
     vk_shader_create(&context, "nothingfornow", &context.default_object_shader);
+    LOG_DEBUG("Created default shaders");
+
+    __create_buffers(&context);
+    LOG_DEBUG("CREATED BUFFERS.");
+
+    // TODO! remove later
+    const u32 vert_count = 4;
+    vertex_3d verts[vert_count];
+    GDF_MemZero(verts, sizeof(vertex_3d) * vert_count);
+
+    verts[0].position.x = 0.0;
+    verts[0].position.y = -0.5;
+
+    verts[1].position.x = 0.7;
+    verts[1].position.y = 0.7;
+
+    verts[2].position.x = 0;
+    verts[2].position.y = 0.5;
+
+    verts[3].position.x = 0.7;
+    verts[3].position.y = -0.7;
+
+    const u32 index_count = 6;
+    u32 indices[index_count] = {0, 1, 2, 0, 3, 1};
+    vk_buffer_load_data(&context, &context.object_vertex_buffer, 0, sizeof(vertex_3d) * vert_count, 0, verts);
+    vk_buffer_load_data(&context, &context.object_idx_buffer, 0, sizeof(u32) * index_count, 0, indices);
+    // dont remove this later.. 
 
     LOG_INFO("Finished initialization of vulkan stuff...");
 
@@ -356,6 +434,11 @@ void vk_renderer_destroy(renderer_backend* backend)
 {
     vkDeviceWaitIdle(context.device.logical);
     // destroy in the opposite order of creation.
+    // destroy buffers
+    vk_buffer_destroy(&context, &context.object_vertex_buffer);
+    vk_buffer_destroy(&context, &context.object_idx_buffer);
+    LOG_DEBUG("Destroying shader and pipelines.,.,.");
+    vk_shader_destroy(&context, &context.default_object_shader);
 
     // sync objects
     for (u8 i = 0; i < context.swapchain.max_frames_in_flight; i++) 
@@ -537,6 +620,17 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
         &context.main_renderpass,
         context.swapchain.framebuffers[context.img_idx].handle
     );
+
+    // TODO! remove later
+    vk_shader_use(&context, &context.default_object_shader);
+
+    VkDeviceSize offsets[1] = {0};
+    vkCmdBindVertexBuffers(command_buffer->handle, 0, 1, &context.object_vertex_buffer.handle, (VkDeviceSize*)offsets);
+
+    vkCmdBindIndexBuffer(command_buffer->handle, context.object_idx_buffer.handle, 0, VK_INDEX_TYPE_UINT32);
+
+    vkCmdDrawIndexed(command_buffer->handle, 6, 1, 0, 0, 0);
+    // ok dont remove anything else
 
     return true;
 }

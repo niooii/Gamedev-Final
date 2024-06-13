@@ -129,6 +129,7 @@
         "cmath": "cpp",
         "direct.h": "c",
         "checksums.h": "c",
-        "build_options.h": "c"
+        "build_options.h": "c",
+        "math_types.h": "c"
     },
 }

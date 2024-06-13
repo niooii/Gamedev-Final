@@ -19,6 +19,6 @@ bool vk_pipeline_create_graphics(
     vk_pipeline* out_pipeline);
 
 void vk_pipeline_create_compute(vk_pipeline* out_pipeline); 
-void vulkan_pipeline_destroy(vk_context* context, vk_pipeline* pipeline);
+void vk_pipeline_destroy(vk_context* context, vk_pipeline* pipeline);
 
-void vulkan_pipeline_bind(vk_cmd_buf* command_buffer, VkPipelineBindPoint bind_point, vk_pipeline* pipeline);
+void vk_pipeline_bind(vk_cmd_buf* command_buffer, VkPipelineBindPoint bind_point, vk_pipeline* pipeline);
