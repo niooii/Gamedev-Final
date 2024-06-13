@@ -7,6 +7,9 @@ static vk_context context;
 static u32 cached_framebuf_w;
 static u32 cached_framebuf_h;
 
+static f32 offset = 0;
+static f32 yoffset = 0;
+
 VKAPI_ATTR VkBool32 VKAPI_CALL __vk_dbg_callback(
     VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
     VkDebugUtilsMessageTypeFlagsEXT message_types,
@@ -402,29 +405,6 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     __create_buffers(&context);
     LOG_DEBUG("CREATED BUFFERS.");
 
-    // TODO! remove later
-    const u32 vert_count = 4;
-    vertex_3d verts[vert_count];
-    GDF_MemZero(verts, sizeof(vertex_3d) * vert_count);
-
-    verts[0].position.x = 0.0;
-    verts[0].position.y = -0.5;
-
-    verts[1].position.x = 0.7;
-    verts[1].position.y = 0.7;
-
-    verts[2].position.x = 0;
-    verts[2].position.y = 0.5;
-
-    verts[3].position.x = 0.7;
-    verts[3].position.y = -0.7;
-
-    const u32 index_count = 6;
-    u32 indices[index_count] = {0, 1, 2, 0, 3, 1};
-    vk_buffer_load_data(&context, &context.object_vertex_buffer, 0, sizeof(vertex_3d) * vert_count, 0, verts);
-    vk_buffer_load_data(&context, &context.object_idx_buffer, 0, sizeof(u32) * index_count, 0, indices);
-    // dont remove this later.. 
-
     LOG_INFO("Finished initialization of vulkan stuff...");
 
     return true;
@@ -577,6 +557,29 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
         return false;
     }
 
+    // TODO! remove later
+    const u32 vert_count = 4;
+    vertex_3d verts[vert_count];
+    GDF_MemZero(verts, sizeof(vertex_3d) * vert_count);
+
+    verts[0].position.x = 0.0 + offset;
+    verts[0].position.y = -0.5 + yoffset * 1.8;
+
+    verts[1].position.x = 0.7 + offset * 1.2;
+    verts[1].position.y = 0.7 + yoffset * 1.5;
+
+    verts[2].position.x = 0 + offset * 1.5;
+    verts[2].position.y = 0.5 + yoffset * 1.2;
+
+    verts[3].position.x = 0.7 + offset * 1.8;
+    verts[3].position.y = -0.7 + yoffset;
+
+    const u32 index_count = 6;
+    u32 indices[index_count] = {0, 1, 2, 0, 3, 1};
+    vk_buffer_load_data(&context, &context.object_vertex_buffer, 0, sizeof(vertex_3d) * vert_count, 0, verts);
+    vk_buffer_load_data(&context, &context.object_idx_buffer, 0, sizeof(u32) * index_count, 0, indices);
+    // dont remove this later.. 
+
     // Acquire the next image from the swap chain. Pass along the semaphore that should signaled when this completes.
     // This same semaphore will later be waited on by the queue submission to ensure this image is available.
     if (!vk_swapchain_acquire_next_image_index(
@@ -705,4 +708,14 @@ bool vk_renderer_end_frame(renderer_backend* backend, f32 delta_time)
 
 
     return true;
+}
+
+void yes(f32 _offset)
+{
+    offset += _offset;
+}
+
+void no(f32 _offset)
+{
+    yoffset += _offset;
 }

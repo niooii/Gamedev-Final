@@ -1,6 +1,7 @@
 #include "app.h"
 #include "core/containers/list.h"
 #include "core/input.h"
+#include "render/vulkan/vk_renderer.h"
 
 typedef struct AppState {
     bool is_running;
@@ -29,6 +30,10 @@ bool app_on_event(u16 event_code, void *sender, void *listener_instance, GDF_Eve
                 GDF_EventCtx tmp_ctx = {.data = 0};
                 GDF_EVENT_Fire(GDF_EVENT_INTERNAL_APP_QUIT, NULL, tmp_ctx);
                 return true;
+            }
+            switch (key_code)
+            {
+                
             }
             break;
         }
@@ -173,6 +178,24 @@ f64 GDF_RunApp()
         if (wait_secs > 0)
         {
             GDF_Sleep((u64)(wait_secs * 1000));
+        }
+
+        // TODO! remove later
+        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_A))
+        {
+            yes(-1 * dt);
+        }
+        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_D))
+        {
+            yes(dt);
+        }
+        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_W))
+        {
+            no(dt);
+        }
+        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_S))
+        {
+            no(-1 * dt);
         }
 
         GDF_INPUT_Update(dt);
