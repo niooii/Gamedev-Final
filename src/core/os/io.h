@@ -48,7 +48,7 @@ bool GDF_ReadFile(const char* rel_path, char* out_buf, size_t bytes_to_read);
 // returns NULL on error
 char* GDF_ReadFileExactLen(const char* rel_path);
 // returns NULL on error
-u8* GDF_ReadBytesExactLen(const char* rel_path);
+u8* GDF_ReadBytesExactLen(const char* rel_path, u64* bytes_read);
 // returns false if overwrite_existing is false and a file already exists at dest_path,
 // or the src_path or dest_path is invalid.
 bool GDF_CopyFile(const char* src_path, const char* dest_path, bool overwrite_existing);

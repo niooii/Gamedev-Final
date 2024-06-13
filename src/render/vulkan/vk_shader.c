@@ -21,13 +21,13 @@ static bool create_shader_module(
     shader_stages[stage_index].create_info.sType = VK_STRUCTURE_TYPE_SHADER_MODULE_CREATE_INFO;
 
     u8* src_buf;
-    if ((src_buf = GDF_ReadBytesExactLen(rel_path)) == NULL) {
+    u64 src_len;
+    if ((src_buf = GDF_ReadBytesExactLen(rel_path, &src_len)) == NULL) {
         LOG_ERR("Unable to read shader module: %s.", rel_path);
         return false;
     }
-    shader_stages[stage_index].create_info.codeSize = strlen(src_buf);
+    shader_stages[stage_index].create_info.codeSize = src_len;
     shader_stages[stage_index].create_info.pCode = (u32*)src_buf;
-    LOG_DEBUG("%02x", src_buf);
 
     VK_ASSERT(
         vkCreateShaderModule(

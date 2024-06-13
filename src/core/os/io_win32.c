@@ -327,9 +327,9 @@ char* GDF_ReadFileExactLen(const char* rel_path)
     }
     DWORD bytes_read = 0;
     bool w_success = ReadFile(h, (LPVOID)out_buf, size, &bytes_read, NULL);
-    if (w_success)
+    if (w_success)e:
     {
-        // LOG_INFO("Read file: %s", path);
+        // LOG_INFO("Read fil %s", path);
     }
     else
     {
@@ -340,7 +340,7 @@ char* GDF_ReadFileExactLen(const char* rel_path)
     return out_buf;
 }
 
-u8* GDF_ReadBytesExactLen(const char* rel_path)
+u8* GDF_ReadBytesExactLen(const char* rel_path, u64* bytes_read)
 {
     char path[MAX_PATH_LEN];
     GDF_GetAbsolutePath(rel_path, path);
@@ -355,19 +355,18 @@ u8* GDF_ReadBytesExactLen(const char* rel_path)
     LOG_DEBUG("File size: %u", size);
 
     u8* out_bytes = GDF_Malloc(size, GDF_MEMTAG_STRING);
-    u64 bytes_read = fread(out_bytes, 1, size, file);
+    *bytes_read = fread(out_bytes, 1, size, file);
     LOG_DEBUG("bytes read: %u", bytes_read);
-    LOG_DEBUG("%s", out_bytes);
-    rewind(file);
     fclose(file);    
-    if (bytes_read != size)
+    if (*bytes_read != size)
     {
+        *bytes_read = 0;
         LOG_WARN("Reading binary from file failed...");
         return NULL;
     }
-    FILE* file1 = fopen(path, "wb");
-    fwrite(out_bytes, 1, size, file1);
-    fclose(file1);
+    // FILE* file1 = fopen(path, "wb");
+    // fwrite(out_bytes, 1, size, file1);
+    // fclose(file1);
 
     return out_bytes;
 }
