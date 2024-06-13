@@ -23,6 +23,7 @@ bool app_on_event(u16 event_code, void *sender, void *listener_instance, GDF_Eve
         case GDF_EVENT_INTERNAL_KEY_PRESSED:
         {
             u16 key_code = ctx.data.u16[0];
+            LOG_DEBUG("KEY PRESSED: %u", key_code);
             if (key_code == GDF_KEYCODE_ESCAPE)
             {
                 GDF_EventCtx tmp_ctx = {.data = 0};
@@ -36,7 +37,7 @@ bool app_on_event(u16 event_code, void *sender, void *listener_instance, GDF_Eve
             u16 width = ctx.data.u16[0];
             u16 height = ctx.data.u16[1];
 
-            // Check if different. If so, trigger a resize event.
+            // check if different bc i need to resize renderer and whatnot
             u16 old_w;
             u16 old_h;
             GDF_GetWindowSize(&old_w, &old_h);
@@ -119,6 +120,7 @@ bool GDF_InitApp()
 
 bool GDF_InitFirstLaunch()
 {
+    // TODO! WRITE A BETTER FILE FORMAT THIS ONE SUCKS 
     // if it succeeds, we didnt have an app_settings before and creates one and then saves the default instance of appsettings
     if (GDF_MakeFile("client_settings.gdf"))
     {
