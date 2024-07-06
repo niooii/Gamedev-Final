@@ -3,9 +3,9 @@
 #include "core/containers/list.h"
 #include "vk_os.h"
 
-static vk_context context;
-static u32 cached_framebuf_w;
-static u32 cached_framebuf_h;
+static vk_renderer_context context;
+static u16 new_framebuf_w;
+static u16 new_framebuf_h;
 
 VKAPI_ATTR VkBool32 VKAPI_CALL __vk_dbg_callback(
     VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
@@ -31,9 +31,9 @@ VKAPI_ATTR VkBool32 VKAPI_CALL __vk_dbg_callback(
 }
 
 // filters the context.physical_device_info list 
-static void __filter_available_devices()
+static void __filter_available_devices(vk_physical_device* phys_list)
 {
-    u32 list_len = GDF_LIST_GetLength(context.physical_device_info_list);
+    u32 list_len = GDF_LIST_GetLength(phys_list);
     for (u32 i = list_len; i > 0; i--)
     {
         vk_physical_device* device = &context.physical_device_info_list[i - 1]; 
@@ -123,7 +123,7 @@ void __regenerate_framebuffers(renderer_backend* backend, vk_swapchain* swapchai
     }
 }
 
-bool __recreate_swapchain(renderer_backend* backend) {
+bool __recreate_swapchain() {
     if (context.recreating_swapchain) {
         LOG_WARN("Already recreating swapchain calm down there");
         return false;
@@ -138,12 +138,6 @@ bool __recreate_swapchain(renderer_backend* backend) {
 
     // in case theres any operations going on rn
     vkDeviceWaitIdle(context.device.logical);
-
-    // clear these out just in case.
-    for (u32 i = 0; i < context.swapchain.image_count; i++) 
-    {
-        context.images_in_flight[i] = NULL;
-    }
 
     // requery details 
     vk_device_query_swapchain_support(
@@ -195,7 +189,7 @@ bool __recreate_swapchain(renderer_backend* backend) {
     return true;
 }
 
-bool __create_buffers(vk_context* context) {
+bool __create_buffers(vk_renderer_context* context) {
     // TODO! remove VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT and use staging buffers
     VkMemoryPropertyFlagBits memory_property_flags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
 
@@ -313,7 +307,9 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     LOG_DEBUG("Vulkan debugger created.");
 #endif
     
-    // enumerate physical devices then create logical 
+    /* ======================================== */
+    /* ----- ENUMERATE PHYSICAL DEVICE INFORMATION ----- */
+    /* ======================================== */
     u32 physical_device_count = 0;
     VK_ASSERT(vkEnumeratePhysicalDevices(context.instance, &physical_device_count, NULL));
     if (physical_device_count == 0)
@@ -324,7 +320,9 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     VkPhysicalDevice physical_devices[physical_device_count];
     VK_ASSERT(vkEnumeratePhysicalDevices(context.instance, &physical_device_count, physical_devices));
 
-    // test surface creation remove later and place elsewhwere maybe
+    /* ======================================== */
+    /* ----- CREATE WINDOW SURFACE ----- */
+    /* ======================================== */
     GDF_VK_CreateSurface(&context);
 
     context.physical_device_info_list = GDF_LIST_Create(vk_physical_device);
@@ -346,84 +344,138 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
         GDF_LIST_Push(context.physical_device_info_list, info);
     }
 
+    // erm actually this ins't good functional programming :nerd:
     __filter_available_devices();
-    vk_device_create(&context, NULL);
 
-    vk_swapchain_create(
-        &context,
-        context.framebuffer_width,
-        context.framebuffer_height,
-        &context.swapchain
-    );
+    /* ======================================== */
+    /* ----- DEVICE SELECTION ----- */
+    /* ======================================== */
 
-    vec4 clear_col = vec4_new(0.3f, 0.f, 0.2f, 1.0);
-
-    vk_renderpass_create(
-        &context,
-        &context.main_renderpass,
-        0, 0, context.framebuffer_width, context.framebuffer_height,
-        clear_col,
-        1.0f,
-        0
-    );
-
-    context.swapchain.framebuffers = GDF_LIST_Reserve(vk_framebuffer, context.swapchain.image_count);
-    __regenerate_framebuffers(backend, &context.swapchain, &context.main_renderpass);
-
-    __create_cmd_bufs(backend);
-
-    context.image_available_semaphores = GDF_LIST_Reserve(VkSemaphore, context.swapchain.max_frames_in_flight);
-    context.queue_complete_semaphores = GDF_LIST_Reserve(VkSemaphore, context.swapchain.max_frames_in_flight);
-    context.in_flight_fences = GDF_LIST_Reserve(vk_fence, context.swapchain.max_frames_in_flight);
-
-    for (u8 i = 0; i < context.swapchain.max_frames_in_flight; i++) 
+    vk_physical_device* selected_physical_device = NULL;
+    u32 device_num = GDF_LIST_GetLength(context.physical_device_info_list);
+    for (u32 i = 0; i < device_num; i++)
     {
-        VkSemaphoreCreateInfo semaphore_create_info = {VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO};
-        vkCreateSemaphore(context.device.logical, &semaphore_create_info, context.allocator, &context.image_available_semaphores[i]);
-        vkCreateSemaphore(context.device.logical, &semaphore_create_info, context.allocator, &context.queue_complete_semaphores[i]);
-
-        // Create the fence in a signaled state, indicating that the first frame has already been "rendered".
-        // This will prevent the application from waiting indefinitely for the first frame to render since it
-        // cannot be rendered until a frame is "rendered" before it.
-        vk_fence_create(&context, true, &context.in_flight_fences[i]);
+        if (context.physical_device_info_list[i].usable)
+        {
+            selected_physical_device = &context.physical_device_info_list[i];
+        }
     }
 
-    // In flight fences should not yet exist at this point, so clear the list. These are stored in pointers
-    // because the initial state should be 0, and will be 0 when not in use. Acutal fences are not owned
-    // by this list.
-    context.images_in_flight = GDF_LIST_Reserve(vk_fence, context.swapchain.image_count);
-    for (u32 i = 0; i < context.swapchain.image_count; ++i) {
-        context.images_in_flight[i] = NULL;
+    if (selected_physical_device == NULL)
+    {
+        LOG_FATAL("Could not find a device to use.");
+        return false;
     }
 
-    vk_shader_create(&context, "nothingfornow", &context.default_object_shader);
-    LOG_DEBUG("Created default shaders");
+    /* ======================================== */
+    /* ----- FIND QUEUE INDICES ----- */
+    /* ======================================== */
 
-    __create_buffers(&context);
-    LOG_DEBUG("CREATED BUFFERS.");
+    bool present_shares_graphics_queue = selected_physical_device->queues.graphics_family_index == selected_physical_device->queues.present_family_index;
+    bool transfer_shares_graphics_queue = selected_physical_device->queues.graphics_family_index == selected_physical_device->queues.transfer_family_index;
+    u32 index_count = 1;
+    // don't create queues for shared indices
+    if (!present_shares_graphics_queue) {
+        index_count++;
+    }
+    if (!transfer_shares_graphics_queue) {
+        index_count++;
+    }
+    u32 indices[index_count];
+    u8 index = 0;
+    indices[index++] = selected_physical_device->queues.graphics_family_index;
+    if (!present_shares_graphics_queue) {
+        indices[index++] = selected_physical_device->queues.present_family_index;
+    }
+    if (!transfer_shares_graphics_queue) {
+        indices[index++] = selected_physical_device->queues.transfer_family_index;
+    }
 
-    // TODO! remove later
-    const u32 vert_count = 4;
-    vertex_3d verts[vert_count];
-    GDF_MemZero(verts, sizeof(vertex_3d) * vert_count);
+    /* ======================================== */
+    /* ----- CREATE DEVICE & FETCH QUEUES ----- */
+    /* ======================================== */
 
-    verts[0].position.x = 0.0;
-    verts[0].position.y = -0.5;
+    VkDeviceQueueCreateInfo queue_create_infos[index_count];
+    for (u32 i = 0; i < index_count; ++i) {
+        queue_create_infos[i].sType = VK_STRUCTURE_TYPE_DEVICE_QUEUE_CREATE_INFO;
+        queue_create_infos[i].queueFamilyIndex = indices[i];
+        queue_create_infos[i].queueCount = 1;
+        if (indices[i] == selected_physical_device->queues.graphics_family_index) {
+            queue_create_infos[i].queueCount = 2;
+        }
+        queue_create_infos[i].flags = 0;
+        queue_create_infos[i].pNext = 0;
+        f32 queue_priority = 1.0f;
+        queue_create_infos[i].pQueuePriorities = &queue_priority;
+    }
 
-    verts[1].position.x = 0.7;
-    verts[1].position.y = 0.7;
+    VkPhysicalDeviceFeatures device_features = {};
+    device_features.samplerAnisotropy = VK_TRUE; 
 
-    verts[2].position.x = 0;
-    verts[2].position.y = 0.5;
+    VkDeviceCreateInfo device_create_info = {VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO};
+    device_create_info.queueCreateInfoCount = index_count;
+    device_create_info.pQueueCreateInfos = queue_create_infos;
+    device_create_info.pEnabledFeatures = &device_features;
+    device_create_info.enabledExtensionCount = 1;
+    const char* extension_names = VK_KHR_SWAPCHAIN_EXTENSION_NAME;
+    device_create_info.ppEnabledExtensionNames = &extension_names;
 
-    verts[3].position.x = 0.7;
-    verts[3].position.y = -0.7;
+    context.device.physical_info = selected_physical_device;
 
-    const u32 index_count = 6;
-    u32 indices[index_count] = {0, 1, 2, 0, 3, 1};
-    vk_buffer_load_data(&context, &context.object_vertex_buffer, 0, sizeof(vertex_3d) * vert_count, 0, verts);
-    vk_buffer_load_data(&context, &context.object_idx_buffer, 0, sizeof(u32) * index_count, 0, indices);
-    // dont remove this later.. 
+    VK_ASSERT(
+        vkCreateDevice(
+            selected_physical_device->handle,
+            &device_create_info,
+            context.allocator,
+            &context.device.logical
+        )
+    );
+
+    LOG_DEBUG("Created device.");
+
+    vkGetDeviceQueue(
+        context.device.logical,
+        context.device.physical_info->queues.graphics_family_index,
+        0,
+        &context.device.graphics_queue
+    );
+
+    vkGetDeviceQueue(
+        context.device.logical,
+        context.device.physical_info->queues.present_family_index,
+        0,
+        &context.device.present_queue
+    );
+
+    vkGetDeviceQueue(
+        context.device.logical,
+        context.device.physical_info->queues.transfer_family_index,
+        0,
+        &context.device.transfer_queue
+    );
+    
+    LOG_DEBUG("Got queues");
+
+    /* ======================================== */
+    /* ----- CREATE COMMAND POOL FOR GRAPHICS QUEUE ----- */
+    /* ======================================== */
+
+    VkCommandPoolCreateInfo pool_create_info = {VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
+    pool_create_info.queueFamilyIndex = context.device.physical_info->queues.graphics_family_index;
+    pool_create_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    VK_ASSERT(
+        vkCreateCommandPool(
+            context.device.logical,
+            &pool_create_info,
+            context.allocator,
+            &context.device.graphics_cmd_pool
+        )
+    );
+    LOG_DEBUG("graphics command pool created.");
+
+    VkSwapchainCreateInfoKHR swapchain_create_info = {};
+    swapchain_create_info.clipped = VK_TRUE;
+
 
     LOG_INFO("Finished initialization of vulkan stuff...");
 
@@ -525,8 +577,8 @@ void vk_renderer_destroy(renderer_backend* backend)
 
 void vk_renderer_resize(renderer_backend* backend, u16 width, u16 height) 
 {
-    cached_framebuf_w = width;
-    cached_framebuf_h = height;
+    new_framebuf_w = width;
+    new_framebuf_h = height;
     context.pending_resize_event = true;
 }
 

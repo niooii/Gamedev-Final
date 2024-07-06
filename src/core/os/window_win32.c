@@ -301,7 +301,7 @@ void GDF_VK_GetRequiredExtensionNames(const char*** names_list)
     GDF_LIST_Push(*names_list, &"VK_KHR_win32_surface");
 }
 
-bool GDF_VK_CreateSurface(vk_context* context)
+bool GDF_VK_CreateSurface(vk_renderer_context* context)
 {
     VkWin32SurfaceCreateInfoKHR create_info = {VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR};
     create_info.hinstance = class_h_instance;

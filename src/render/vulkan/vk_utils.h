@@ -7,7 +7,7 @@
 inline bool vk_result_is_success(VkResult result)
 {
     switch (result) {
-            // Success Codes
+        // Success Codes
         default:
         case VK_SUCCESS:
         case VK_NOT_READY:

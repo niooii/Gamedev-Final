@@ -8,4 +8,4 @@
 void GDF_VK_GetRequiredExtensionNames(const char*** names_list);
 
 // Function definition found in implememntations of window.h
-bool GDF_VK_CreateSurface(vk_context* context);
+bool GDF_VK_CreateSurface(vk_renderer_context* context);

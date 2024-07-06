@@ -1,15 +1,7 @@
 #pragma once
 
 #include "render/renderer_backend.h"
-#include "vk_device.h"
-#include "vk_swapchain.h"
-#include "vk_renderpass.h"
-#include "vk_cmd_buf.h"
-#include "vk_framebuffer.h"
-#include "vk_fence.h"
 #include "vk_utils.h"
-#include "vk_shader.h"
-#include "vk_buffer.h"
 #include "core/os/window.h"
 #include "math/math.h"
 
