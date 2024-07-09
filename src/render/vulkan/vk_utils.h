@@ -50,3 +50,5 @@ inline bool vk_result_is_success(VkResult result)
             return false;
     }
 }
+
+bool vk_utils_create_shader_module(vk_renderer_context* context, const char* src_rel_path, VkShaderModule* out_module);

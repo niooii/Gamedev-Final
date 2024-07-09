@@ -327,7 +327,7 @@ char* GDF_ReadFileExactLen(const char* rel_path)
     }
     DWORD bytes_read = 0;
     bool w_success = ReadFile(h, (LPVOID)out_buf, size, &bytes_read, NULL);
-    if (w_success)e:
+    if (w_success)
     {
         // LOG_INFO("Read fil %s", path);
     }

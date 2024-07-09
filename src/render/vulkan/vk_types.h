@@ -40,7 +40,7 @@ typedef struct vk_physical_device {
 
 typedef struct vk_device {
     vk_physical_device* physical_info;
-    VkDevice logical;
+    VkDevice handle;
     VkQueue graphics_queue;
     VkQueue present_queue;
     VkQueue transfer_queue;
@@ -50,16 +50,22 @@ typedef struct vk_device {
 } vk_device;
 
 typedef struct vk_renderer_context {
-    u32 framebuffer_width;
-    u32 framebuffer_height;
-    bool pending_resize_event;
     VkInstance instance;
     VkAllocationCallbacks* allocator;
     VkSurfaceKHR surface;
+    VkSwapchainKHR swapchain;
+    VkPipeline graphics_full_pipeline;
+    VkPipeline graphics_wireframe_pipeline;
+    VkFormat image_format;
+    VkColorSpaceKHR image_color_space;
     // GDF_LIST of physical device info structs
     vk_physical_device* physical_device_info_list;
     vk_device device;
-    bool recreating_swapchain;
+    u32 framebuffer_width;
+    u32 framebuffer_height;
+    bool pending_resize_event;
+    bool creating_swapchain;
+    bool ready_for_use;
 
 
 #ifndef GDF_RELEASE
