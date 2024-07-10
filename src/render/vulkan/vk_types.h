@@ -44,20 +44,56 @@ typedef struct vk_device {
     VkQueue graphics_queue;
     VkQueue present_queue;
     VkQueue transfer_queue;
-    VkFormat depth_format;
 
+    VkCommandBuffer cmd_buffer;
     VkCommandPool graphics_cmd_pool;
 } vk_device;
+
+typedef struct vk_pipeline {
+    VkPipeline handle;
+    VkPipelineLayout layout;
+} vk_pipeline;
+
+typedef struct vk_pipelines {
+    vk_pipeline geometry;
+    vk_pipeline geometry_wireframe;
+    vk_pipeline lighting;
+    vk_pipeline post_processing;
+} vk_pipelines;
+
+typedef struct vk_formats {
+    VkFormat image_format;
+    VkColorSpaceKHR image_color_space;
+    VkFormat depth_format;
+} vk_formats;
+
+typedef struct vk_renderpasses {
+    VkRenderPass main_pass;
+} vk_renderpasses;
+
+typedef struct vk_shader_modules {
+    // Geometry pass
+    VkShaderModule geometry_vert;
+    VkShaderModule geometry_frag;
+    
+    // Lighting pass
+    VkShaderModule lighting_vert;
+    VkShaderModule lighting_frag;
+    
+    // Post-processing pass
+    VkShaderModule post_process_vert;
+    VkShaderModule post_process_frag;
+} vk_shader_modules;
 
 typedef struct vk_renderer_context {
     VkInstance instance;
     VkAllocationCallbacks* allocator;
     VkSurfaceKHR surface;
     VkSwapchainKHR swapchain;
-    VkPipeline graphics_full_pipeline;
-    VkPipeline graphics_wireframe_pipeline;
-    VkFormat image_format;
-    VkColorSpaceKHR image_color_space;
+    vk_pipelines pipelines;
+    vk_formats formats;
+    vk_renderpasses renderpasses;
+    vk_shader_modules shaders;
     // GDF_LIST of physical device info structs
     vk_physical_device* physical_device_info_list;
     vk_device device;

@@ -25,6 +25,6 @@ typedef struct GDF_RenderPacket {
     f32 delta_time;
 } GDF_RenderPacket;
 
-typedef struct vertex_3d {
-    vec3 position;
-} vertex_3d;
+typedef struct Vertex3d {
+    vec3 pos;
+} Vertex3d;

@@ -34,6 +34,8 @@ void* __list_insert_at(void* list, u64 index, void* value_ptr);
 #define LIST_DEFAULT_CAPACITY 1
 #define LIST_RESIZE_FACTOR 2
 
+// #define GDF_LIST_Contains
+
 #define GDF_LIST_Create(type) \
     __list_create(LIST_DEFAULT_CAPACITY, sizeof(type))
 

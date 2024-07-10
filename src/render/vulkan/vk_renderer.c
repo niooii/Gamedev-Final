@@ -92,6 +92,380 @@ void __query_swapchain_support(VkPhysicalDevice physical_device, VkSurfaceKHR su
     }
 }
 
+// TODO! initialize lighting and postprocessing pipelines
+static bool __create_renderpasses_and_pipelines(vk_renderer_context* context) 
+{
+    /* ======================================== */
+    /* ----- CREATE RENDERPASS AND SUBPASSES ----- */
+    /* ======================================== */
+    
+    // TODO! multiple subpasses
+    VkSubpassDescription subpass = {
+        .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS
+    };
+
+    u32 attachment_counts = 2;
+    VkAttachmentDescription attachments[2];
+
+    // color
+    VkAttachmentDescription color_attachment = {
+        .format = context->formats.image_format,
+        .samples = VK_SAMPLE_COUNT_1_BIT,
+        .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+        .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+        .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+        .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+        .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+        .finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR,
+        .flags = 0
+    };
+
+    attachments[0] = color_attachment;
+
+    VkAttachmentReference color_attachment_ref = {
+        // this is the index in the "attachments" array
+        .attachment = 0,
+        .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
+    };
+
+    subpass.colorAttachmentCount = 1;
+    subpass.pColorAttachments = &color_attachment_ref;
+
+    // depth
+    VkAttachmentDescription depth_attachment = {
+        .format = context->formats.depth_format,
+        .samples = VK_SAMPLE_COUNT_1_BIT,
+        .loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR,
+        .storeOp = VK_ATTACHMENT_STORE_OP_STORE,
+        .stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE,
+        .stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE,
+        .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+        .finalLayout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL,
+        .flags = 0
+    };
+
+    attachments[1] = depth_attachment;
+
+    VkAttachmentReference depth_attachment_ref = {
+        // this is the index in the "attachments" array
+        .attachment = 1,
+        .layout = VK_IMAGE_LAYOUT_DEPTH_STENCIL_ATTACHMENT_OPTIMAL
+    };
+
+    subpass.pDepthStencilAttachment = &depth_attachment_ref;
+
+    // TODO! other attachments
+
+    VkSubpassDependency dependency = {
+        .srcSubpass = VK_SUBPASS_EXTERNAL,
+        .dstSubpass = 0,
+        .srcStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+        .srcAccessMask = 0,
+        .dstStageMask = VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT,
+        .dstAccessMask = VK_ACCESS_COLOR_ATTACHMENT_READ_BIT | VK_ACCESS_COLOR_ATTACHMENT_WRITE_BIT,
+        .dependencyFlags = 0
+    };
+
+    VkRenderPassCreateInfo rp_create_info = {
+        .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
+        .subpassCount = 1,
+        .pSubpasses = &subpass,
+        .dependencyCount = 1,
+        .pDependencies = &dependency,
+        .attachmentCount = attachment_counts,
+        .pAttachments = attachments,
+    };
+
+    VK_ASSERT(
+        vkCreateRenderPass(
+            context->device.handle,
+            &rp_create_info,
+            context->allocator,
+            &context->renderpasses.main_pass
+        )
+    );
+
+    // Configure graphics pipeline
+
+    // load all (built in) shaders
+    if (!vk_utils_create_shader_module(context, "resources/shaders/geometry_base.vert.spv", &context->shaders.geometry_vert)) {
+        LOG_ERR("Failed to create geometry pass vertex shader. exiting...");
+        return false;
+    }
+    if (!vk_utils_create_shader_module(context, "resources/shaders/geometry_base.frag.spv", &context->shaders.geometry_frag)) {
+        LOG_ERR("Failed to create geometry pass fragment shader. exiting...");
+        return false;
+    }
+    if (!vk_utils_create_shader_module(context, "resources/shaders/lighting_base.vert.spv", &context->shaders.lighting_vert)) {
+        LOG_ERR("Failed to create lighting pass vertex shader. exiting...");
+        return false;
+    }
+    if (!vk_utils_create_shader_module(context, "resources/shaders/lighting_base.frag.spv", &context->shaders.lighting_frag)) {
+        LOG_ERR("Failed to create lighting pass fragment shader. exiting...");
+        return false;
+    }
+    if (!vk_utils_create_shader_module(context, "resources/shaders/post_processing_base.vert.spv", &context->shaders.post_process_vert)) {
+        LOG_ERR("Failed to create post processing pass vertex shader. exiting...");
+        return false;
+    }
+    if (!vk_utils_create_shader_module(context, "resources/shaders/post_processing_base.frag.spv", &context->shaders.post_process_frag)) {
+        LOG_ERR("Failed to create post processing pass fragment shader. exiting...");
+        return false;
+    } 
+
+    // Create shaders for geometry pass
+    VkPipelineShaderStageCreateInfo geometry_pass_vert = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+        .stage = VK_SHADER_STAGE_VERTEX_BIT,
+        .module = context->shaders.geometry_vert,
+        .pName = "main"
+    };
+    VkPipelineShaderStageCreateInfo geometry_pass_frag = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+        .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
+        .module = context->shaders.geometry_frag,
+        .pName = "main"
+    };
+
+    VkPipelineShaderStageCreateInfo geometry_pass_shaders[2] = {
+        geometry_pass_vert,
+        geometry_pass_frag
+    };
+
+    // Create shaders for lighting pass
+    VkPipelineShaderStageCreateInfo lighting_pass_vert = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+        .stage = VK_SHADER_STAGE_VERTEX_BIT,
+        .module = context->shaders.lighting_vert,
+        .pName = "main"
+    };
+    VkPipelineShaderStageCreateInfo lighting_pass_frag = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+        .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
+        .module = context->shaders.lighting_frag,
+        .pName = "main"
+    };
+
+    VkPipelineShaderStageCreateInfo lighting_pass_shaders[2] = {
+        lighting_pass_vert,
+        lighting_pass_frag
+    };
+
+    // Create shaders for post processing pass
+    VkPipelineShaderStageCreateInfo postprocessing_pass_vert = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+        .stage = VK_SHADER_STAGE_VERTEX_BIT,
+        .module = context->shaders.post_process_vert,
+        .pName = "main"
+    };
+    VkPipelineShaderStageCreateInfo postprocessing_pass_frag = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+        .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
+        .module = context->shaders.post_process_frag,
+        .pName = "main"
+    };
+
+    VkPipelineShaderStageCreateInfo postprocessing_pass_shaders[2] = {
+        postprocessing_pass_vert,
+        postprocessing_pass_frag
+    };
+
+    // Vertex input configuration
+    VkVertexInputBindingDescription bindings = {
+        .binding = 0,
+        .stride = sizeof(Vertex3d), 
+        .inputRate = VK_VERTEX_INPUT_RATE_VERTEX
+    };
+
+    VkVertexInputAttributeDescription attributes[] = {
+        {
+            .binding = 0,
+            .location = 0,
+            .format = VK_FORMAT_R32G32B32_SFLOAT,
+            .offset = offsetof(Vertex3d, pos)
+        },
+        // Add more attributes for normals, texture coordinates, etc.
+    };
+
+    VkPipelineVertexInputStateCreateInfo vertex_input_info = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+        .vertexBindingDescriptionCount = 1,
+        .pVertexBindingDescriptions = &bindings,
+        .vertexAttributeDescriptionCount = sizeof(attributes) / sizeof(attributes[0]),
+        .pVertexAttributeDescriptions = attributes
+    };
+
+    // Input assembly configuration
+    VkPipelineInputAssemblyStateCreateInfo input_assembly = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
+        .primitiveRestartEnable = VK_FALSE,
+        .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST
+    };
+
+    // Viewport and scissor configuration
+    VkViewport viewport = {
+        .x = 0.0f,
+        .y = 0.0f,
+        .width = (float) context->framebuffer_width,
+        .height = (float) context->framebuffer_height,
+        .minDepth = 0.0f,
+        .maxDepth = 1.0f
+    };
+
+    VkRect2D scissor = {
+        .offset = {0, 0},
+        .extent = {
+            .width = context->framebuffer_width,
+            .height = context->framebuffer_height
+        }
+    };
+
+    VkPipelineViewportStateCreateInfo viewport_state = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+        .viewportCount = 1,
+        .pViewports = &viewport,
+        .scissorCount = 1,
+        .pScissors = &scissor
+    };
+
+    // Rasterization configuration
+    VkPipelineRasterizationStateCreateInfo rasterizer_state = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
+        .depthClampEnable = VK_FALSE,
+        .rasterizerDiscardEnable = VK_FALSE,
+        .polygonMode = VK_POLYGON_MODE_FILL,
+        .lineWidth = 1.0f,
+        .cullMode = VK_CULL_MODE_BACK_BIT,
+        .frontFace = VK_FRONT_FACE_CLOCKWISE,
+        .depthBiasEnable = VK_FALSE
+    };
+
+    // Multisampling configuration
+    VkPipelineMultisampleStateCreateInfo multisampling_state = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
+        .sampleShadingEnable = VK_FALSE,
+        .rasterizationSamples = VK_SAMPLE_COUNT_1_BIT,
+    };
+
+    // Depths stencil configuration
+    VkPipelineDepthStencilStateCreateInfo depth_stencil_state = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
+        .depthTestEnable = VK_TRUE,
+        .depthWriteEnable = VK_TRUE,
+        .depthCompareOp = VK_COMPARE_OP_LESS,
+        .depthBoundsTestEnable = VK_FALSE,
+        .stencilTestEnable = VK_FALSE
+    };
+
+    // Color blending configuration
+    VkPipelineColorBlendAttachmentState color_blend_attachment = {
+        .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+        .blendEnable = VK_FALSE
+    };
+
+    VkPipelineColorBlendStateCreateInfo color_blend_state = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+        .logicOpEnable = VK_FALSE,
+        .attachmentCount = 1,
+        .pAttachments = &color_blend_attachment
+    };
+
+    // Pipeline layout
+    VkPipelineLayoutCreateInfo layout_info = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+    };
+    
+    VK_ASSERT(
+        vkCreatePipelineLayout(
+            context->device.handle, 
+            &layout_info,
+            context->allocator,
+            &context->pipelines.geometry.layout
+        )
+    );
+
+    // Put all configuration in graphics pipeline info struct
+    VkGraphicsPipelineCreateInfo pipeline_create_info = {
+        .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
+        .renderPass = context->renderpasses.main_pass,
+        .stageCount = sizeof(geometry_pass_shaders) / sizeof(VkPipelineShaderStageCreateInfo),
+        .pStages = geometry_pass_shaders,
+        .pVertexInputState = &vertex_input_info,
+        .pInputAssemblyState = &input_assembly,
+        .pViewportState = &viewport_state,
+        .pRasterizationState = &rasterizer_state,
+        .pMultisampleState = &multisampling_state,
+        .pDepthStencilState = &depth_stencil_state,
+        .pColorBlendState = &color_blend_state,
+        .layout = context->pipelines.geometry.layout,
+        // index of geometry subpass
+        .subpass = 0,
+    };
+
+    VK_ASSERT(
+        vkCreateGraphicsPipelines(
+            context->device.handle,
+            VK_NULL_HANDLE,
+            1,
+            &pipeline_create_info,
+            context->allocator,
+            &context->pipelines.geometry.handle
+        )
+    );
+
+    // Create wireframe pipeline
+    // TODO! this should work bc gp_create_info has pointers to these structs, but
+    // if anything happens check here
+    input_assembly.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
+    rasterizer_state.polygonMode = VK_POLYGON_MODE_LINE;
+
+    VK_ASSERT(
+        vkCreateGraphicsPipelines(
+            context->device.handle,
+            VK_NULL_HANDLE,
+            1,
+            &pipeline_create_info,
+            context->allocator,
+            &context->pipelines.geometry_wireframe.handle
+        )
+    );
+
+    // repeat pipeline creation with different shaders for other pipelines
+    // Lighting subpass pipeline
+    input_assembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
+    rasterizer_state.polygonMode = VK_POLYGON_MODE_FILL;
+    pipeline_create_info.stageCount = sizeof(lighting_pass_shaders) / sizeof(VkPipelineShaderStageCreateInfo);
+    pipeline_create_info.pStages = lighting_pass_shaders;
+
+    VK_ASSERT(
+        vkCreateGraphicsPipelines(
+            context->device.handle,
+            VK_NULL_HANDLE,
+            1,
+            &pipeline_create_info,
+            context->allocator,
+            &context->pipelines.lighting.handle
+        )
+    );
+
+    // Post-processing subpass pipeline
+    pipeline_create_info.stageCount = sizeof(postprocessing_pass_shaders) / sizeof(VkPipelineShaderStageCreateInfo);
+    pipeline_create_info.pStages = postprocessing_pass_shaders;
+
+    VK_ASSERT(
+        vkCreateGraphicsPipelines(
+            context->device.handle,
+            VK_NULL_HANDLE,
+            1,
+            &pipeline_create_info,
+            context->allocator,
+            &context->pipelines.post_processing.handle
+        )
+    );
+
+    return true;
+}
+
 // filters the context.physical_device_info list 
 static void __filter_available_devices(vk_physical_device* phys_list)
 {
@@ -215,7 +589,7 @@ static void __create_swapchain(vk_renderer_context* context)
 //     // TODO! remove VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT and use staging buffers
 //     VkMemoryPropertyFlagBits memory_property_flags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
 
-//     const u64 vertex_buffer_size = sizeof(vertex_3d) * 1024 * 1024;
+//     const u64 vertex_buffer_size = sizeof(Vertex3d) * 1024 * 1024;
 //     if (!vk_buffer_create(
 //             context,
 //             vertex_buffer_size,
@@ -469,8 +843,10 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
         queue_create_infos[i].pQueuePriorities = &queue_priority;
     }
 
-    VkPhysicalDeviceFeatures device_features = {};
-    device_features.samplerAnisotropy = VK_TRUE; 
+    VkPhysicalDeviceFeatures device_features = {
+        .samplerAnisotropy = VK_TRUE,
+        .fillModeNonSolid = VK_TRUE
+    };
 
     VkDeviceCreateInfo device_create_info = {VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO};
     device_create_info.queueCreateInfoCount = index_count;
@@ -551,11 +927,17 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     };
     sc_create_info.imageExtent = extent;
     // for now if these arent supported FUCK YOU
-    context.image_format = VK_FORMAT_B8G8R8A8_SRGB;
-    context.image_color_space = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+    // ! also initiliaze formats here 
+    context.formats.depth_format = vk_utils_find_supported_depth_format(context.device.physical_info->handle);
+    if (context.formats.depth_format == VK_FORMAT_UNDEFINED) {
+        LOG_ERR("Could not find a supported depth format. Cannot continue program.");
+        return false;
+    }
+    context.formats.image_format = VK_FORMAT_B8G8R8A8_SRGB;
+    context.formats.image_color_space = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
     sc_create_info.presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
-    sc_create_info.imageFormat = context.image_format;
-    sc_create_info.imageColorSpace = context.image_color_space;
+    sc_create_info.imageFormat = context.formats.image_format;
+    sc_create_info.imageColorSpace = context.formats.image_color_space;
     sc_create_info.minImageCount = 3;
     
     VK_ASSERT(
@@ -567,119 +949,36 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
         )
     );
 
-    /* ======================================== */
-    /* ----- CREATE RENDERPASS AND SUBPASSES ----- */
-    /* ======================================== */
-    
-    VkSubpassDescription subpass = {
-        .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS
-    };
-
-    u32 attachment_counts = 2;
-    VkAttachmentDescription attachments[2];
-
-    VkAttachmentDescription color_attachment;
-    color_attachment.format = context.image_format;
-    color_attachment.samples = VK_SAMPLE_COUNT_1_BIT;
-    color_attachment.loadOp = VK_ATTACHMENT_LOAD_OP_CLEAR;
-    color_attachment.storeOp = VK_ATTACHMENT_STORE_OP_STORE;
-    color_attachment.stencilLoadOp = VK_ATTACHMENT_LOAD_OP_DONT_CARE;
-    color_attachment.stencilStoreOp = VK_ATTACHMENT_STORE_OP_DONT_CARE;
-    color_attachment.initialLayout = VK_IMAGE_LAYOUT_UNDEFINED;      
-    color_attachment.finalLayout = VK_IMAGE_LAYOUT_PRESENT_SRC_KHR;  
-    color_attachment.flags = 0;
-
-    attachments[0] = color_attachment;
-
-    VkAttachmentReference color_attachment_ref = {
-        // this is the index in the "attachments" array
-        .attachment = 0,
-        .layout = VK_IMAGE_LAYOUT_COLOR_ATTACHMENT_OPTIMAL
-    };
-
-    subpass.colorAttachmentCount = 1;
-    subpass.pColorAttachments = &color_attachment_ref;
-
-    // TODO! other attachments
-
-    VkRenderPassCreateInfo rp_create_info = {
-        .sType = VK_STRUCTURE_TYPE_RENDER_PASS_CREATE_INFO,
-    };
-
-    VkRenderPass main_pass;
-
-    // TODO! fill info struct
-
-    VK_ASSERT(
-        vkCreateRenderPass(
-            context.device.handle,
-            &rp_create_info,
-            context.allocator,
-            &main_pass
-        )
-    );
+    LOG_DEBUG("Created swapchain.");
 
     /* ======================================== */
-    /* ----- CREATE SHADERS & GRAPHICS PIPELINE ----- */
+    /* ----- CREATE RENDERPASSES, SHADERS, & GRAPHICS PIPELINE ----- */
     /* ======================================== */
-    VkGraphicsPipelineCreateInfo gp_full_create_info = {
-        .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-        .renderPass = main_pass
-    };
 
-    // load vertex shader
-    VkShaderModule vert;
-    if (!vk_utils_create_shader_module(&context, "resources/shaders/default.vert.spv", &vert)) {
-        LOG_ERR("Failed to create default vertex shader. exiting...");
+    // vkDestroyDevice(context.device.handle, context.allocator);
+
+    if (!__create_renderpasses_and_pipelines(&context))
+    {
         return false;
     }
-    VkShaderModule frag;
-    if (!vk_utils_create_shader_module(&context, "resources/shaders/default.frag.spv", &frag)) {
-        LOG_ERR("Failed to create default fragment shader. exiting...");
-        return false;
-    }
-    VkPipelineShaderStageCreateInfo vertex_info = {
-        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-        .stage = VK_SHADER_STAGE_VERTEX_BIT,
-        .module = vert,
-        .pName = "default vert"
+
+    LOG_DEBUG("Created graphics pipelines & renderpasses");
+
+    /* ======================================== */
+    /* ----- Allocate command buffer ----- */
+    /* ======================================== */
+    VkCommandBufferAllocateInfo command_buf_info = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+        .commandPool = context.device.graphics_cmd_pool,
+        .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+        .commandBufferCount = 1
     };
-    VkPipelineShaderStageCreateInfo frag_info = {
-        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-        .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-        .module = frag,
-        .pName = "default frag"
-    };
-    VkPipelineShaderStageCreateInfo shader_stages[2] = {
-        vertex_info,
-        frag_info
-    };
-    gp_full_create_info.stageCount = 2;
-    gp_full_create_info.pStages = shader_stages;
-
-    VkPipelineInputAssemblyStateCreateInfo input_assembly = {
-        .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO
-    };
-
-    input_assembly.primitiveRestartEnable = VK_FALSE;
-    input_assembly.topology = VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
-
-    gp_full_create_info.pInputAssemblyState = &input_assembly;
-
-    VK_ASSERT(
-        vkCreateGraphicsPipelines(
-            context.device.handle,
-            VK_NULL_HANDLE,
-            1,
-            &gp_full_create_info,
-            context.allocator,
-            &context.graphics_full_pipeline
-        )
-    );
-
-    LOG_DEBUG("Created graphics pipelines");
+    vkAllocateCommandBuffers(context.device.handle, &command_buf_info, &context.device.cmd_buffer);
+    LOG_DEBUG("Allocated command buffer");
 
     LOG_INFO("Finished initialization of vulkan stuff...");
+
+    context.ready_for_use = true;
 
     return true;
 }
@@ -687,6 +986,94 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
 void vk_renderer_destroy(renderer_backend* backend) 
 {
     vkDeviceWaitIdle(context.device.handle);
+    VkDevice device = context.device.handle;
+    VkAllocationCallbacks* allocator = context.allocator;
+    // Destroy a bunch of pipelines
+    vkDestroyPipeline(
+        device, 
+        context.pipelines.geometry.handle, 
+        allocator
+    );
+    vkDestroyPipeline(
+        device, 
+        context.pipelines.geometry_wireframe.handle, 
+        allocator
+    );
+    vkDestroyPipelineLayout(
+        device,
+        context.pipelines.geometry.layout,
+        allocator
+    );
+    
+    vkDestroyPipeline(
+        device, 
+        context.pipelines.lighting.handle, 
+        allocator
+    );
+    vkDestroyPipelineLayout(
+        device,
+        context.pipelines.lighting.layout,
+        allocator
+    );
+
+    vkDestroyPipeline(
+        device, 
+        context.pipelines.post_processing.handle, 
+        allocator
+    );
+    vkDestroyPipelineLayout(
+        device,
+        context.pipelines.post_processing.layout,
+        allocator
+    );
+    vkDestroyRenderPass(
+        device, 
+        context.renderpasses.main_pass, 
+        allocator
+    );
+
+    // Destroy shader modules
+    vkDestroyShaderModule(
+        device,
+        context.shaders.geometry_vert,
+        allocator
+    );
+    vkDestroyShaderModule(
+        device,
+        context.shaders.geometry_frag,
+        allocator
+    );
+    vkDestroyShaderModule(
+        device,
+        context.shaders.lighting_vert,
+        allocator
+    );
+    vkDestroyShaderModule(
+        device,
+        context.shaders.lighting_frag,
+        allocator
+    );
+    vkDestroyShaderModule(
+        device,
+        context.shaders.post_process_vert,
+        allocator
+    );
+    vkDestroyShaderModule(
+        device,
+        context.shaders.post_process_frag,
+        allocator
+    );
+    // Destroy swapchain, device and resources
+    vkDestroySwapchainKHR(
+        device,
+        context.swapchain,
+        allocator
+    );
+    vkDestroyCommandPool(
+        device,
+        context.device.graphics_cmd_pool,
+        allocator
+    );
     // destroy in the opposite order of creation.
     // destroy buffers
     // vk_buffer_destroy(&context, &context.object_vertex_buffer);
@@ -789,14 +1176,14 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
     vk_device* device = &context.device;
 
     // Check if recreating swap chain and boot out.
-    // if (context.creating_swapchain) {
-    //     if (!vk_result_is_success(vkDeviceWaitIdle(device->handle))) {
-    //         LOG_ERR("vulkan_renderer_backend_begin_frame vkDeviceWaitIdle (1) failed");
-    //         return false;
-    //     }
-    //     LOG_DEBUG("Swapchain is being recreated rn..");
-    //     return false;
-    // }
+    if (!context.ready_for_use) {
+        if (!vk_result_is_success(vkDeviceWaitIdle(device->handle))) {
+            LOG_ERR("vulkan_renderer_backend_begin_frame vkDeviceWaitIdle (1) failed");
+            return false;
+        }
+        LOG_DEBUG("Something is happening w the renderer");
+        return false;
+    }
 
     // // Check if the framebuffer has been resized. If so, a new swapchain must be created.
     // if (context.pending_resize_event) 
@@ -818,73 +1205,23 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
     //     return false;
     // }
 
-    // // Wait for the execution of the current frame to complete. The fence being free will allow this one to move on.
-    // if (
-    //     !vk_fence_wait(
-    //         &context,
-    //         &context.in_flight_fences[context.current_frame],
-    //         UINT64_MAX
-    //         )
-    //     ) 
-    // {
-    //     LOG_WARN("In-flight fence wait failure!");
-    //     return false;
-    // }
+    // something something sync gpu cpu wait something.
+    // and then... 
+    VkCommandBuffer cmd_buffer = context.device.cmd_buffer;
+    vkResetCommandBuffer(cmd_buffer, 0);
 
-    // // Acquire the next image from the swap chain. Pass along the semaphore that should signaled when this completes.
-    // // This same semaphore will later be waited on by the queue submission to ensure this image is available.
-    // if (!vk_swapchain_acquire_next_image_index(
-    //         &context,
-    //         &context.swapchain,
-    //         UINT64_MAX,
-    //         context.image_available_semaphores[context.current_frame],
-    //         0,
-    //         &context.img_idx)) {
-    //     return false;
-    // }
+    VkCommandBufferBeginInfo begin_info = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+        .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT
+    };
+    vkBeginCommandBuffer(cmd_buffer, &begin_info);
 
-    // // Begin recording commands.
-    // vk_cmd_buf* command_buffer = &context.graphics_cmd_buf_list[context.img_idx];
-    // vk_cmd_buf_reset(command_buffer);
-    // vk_cmd_buf_begin(command_buffer, false, false, false);
+    VkRenderPassBeginInfo pass_begin_info = {
+        .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
+        , afaw // TODO!
+    };
+    vkCmdBeginRenderPass(cmd_buffer, )
 
-    // // make as similar to opengls as possible
-    // VkViewport viewport;
-    // viewport.x = 0.0f;
-    // viewport.y = (f32)context.framebuffer_height;
-    // viewport.width = (f32)context.framebuffer_width;
-    // viewport.height = -(f32)context.framebuffer_height;
-    // viewport.minDepth = 0.0f;
-    // viewport.maxDepth = 1.0f;
-
-    // // scissor
-    // VkRect2D scissor;
-    // scissor.offset.x = scissor.offset.y = 0;
-    // scissor.extent.width = context.framebuffer_width;
-    // scissor.extent.height = context.framebuffer_height;
-
-    // vkCmdSetViewport(command_buffer->handle, 0, 1, &viewport);
-    // vkCmdSetScissor(command_buffer->handle, 0, 1, &scissor);
-
-    // context.main_renderpass.w = context.framebuffer_width;
-    // context.main_renderpass.h = context.framebuffer_height;
-
-    // vk_renderpass_begin(
-    //     command_buffer,
-    //     &context.main_renderpass,
-    //     context.swapchain.framebuffers[context.img_idx].handle
-    // );
-
-    // // TODO! remove later
-    // vk_shader_use(&context, &context.default_object_shader);
-
-    // VkDeviceSize offsets[1] = {0};
-    // vkCmdBindVertexBuffers(command_buffer->handle, 0, 1, &context.object_vertex_buffer.handle, (VkDeviceSize*)offsets);
-
-    // vkCmdBindIndexBuffer(command_buffer->handle, context.object_idx_buffer.handle, 0, VK_INDEX_TYPE_UINT32);
-
-    // vkCmdDrawIndexed(command_buffer->handle, 6, 1, 0, 0, 0);
-    // ok dont remove anything else
 
     return true;
 }
@@ -892,6 +1229,14 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
 bool vk_renderer_end_frame(renderer_backend* backend, f32 delta_time) 
 {
     // vk_cmd_buf* command_buffer = &context.graphics_cmd_buf_list[context.img_idx];
+    VkCommandBuffer cmd_buffer = context.device.cmd_buffer;
+
+    vkCmdEndRenderPass(cmd_buffer);
+
+    if (vkEndCommandBuffer(cmd_buffer) != VK_SUCCESS) {
+        
+        return false;
+    }
 
     // vk_renderpass_end(command_buffer, &context.main_renderpass);
 
