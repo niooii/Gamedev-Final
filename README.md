@@ -14,7 +14,7 @@ Literally my gamedev final.
 Just use .\_build.bat
 
 # Todos:
-- Have a resources folder outside of the build directory, then copy all resources on build. I keep deleting the resources folder by accident. I will scream if it happens again.
+~~- Have a resources folder outside of the build directory, then copy all resources on build. I keep deleting the resources folder by accident. I will scream if it happens again.~~
 - Implement build profiles (builder, client, etc). 
 - Implement list shrinking
 - Cross platform maybe later
