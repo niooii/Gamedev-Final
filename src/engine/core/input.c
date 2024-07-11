@@ -19,6 +19,7 @@ typedef struct input_state {
     keyboard_state keyboard_previous;
     mouse_pos mpos_current;
     mouse_pos mpos_previous;
+    mouse_pos mouse_delta; 
     u8 mbutton_states_current[GDF_MBUTTON_MAX];
     u8 mbutton_states_previous[GDF_MBUTTON_MAX];
 } input_state;
@@ -50,7 +51,7 @@ void GDF_INPUT_Update(f64 delta_time)
     // Copy current states to previous states.
     GDF_MemCopy(&state.keyboard_previous, &state.keyboard_current, sizeof(keyboard_state));
     GDF_MemCopy(&state.mbutton_states_previous, &state.mbutton_states_current, sizeof(state.mbutton_states_current));
-
+    GDF_MemZero(&state.mouse_delta, sizeof(state.mouse_delta));
     if (cursor_lock_state == GDF_CursorLockState_Locked) 
     {
         // TODO! rename info.h to misc.h and slap a (CROSS PLATFORM) GDF_SetCursorPos in there and call that instead.
@@ -137,9 +138,12 @@ void GDF_INPUT_SetMouseLockState(GDF_CursorLockState lock_state)
 
 void GDF_INPUT_GetMouseDelta(i32* dx, i32* dy) 
 {
-    LOG_DEBUG("curr: %d, %d | %d, %d: prev", state.mpos_current.x, state.mpos_current.y, state.mpos_previous.x, state.mpos_previous.y);
-    *dx = state.mpos_current.x - state.mpos_previous.x;
-    *dy = state.mpos_current.y - state.mpos_previous.y;
+    *dx = state.mouse_delta.x;
+    *dy = state.mouse_delta.y;
+    
+    // reset the accumulated delta... maybe
+    // state.mouse_delta_x = 0;
+    // state.mouse_delta_y = 0;
 }
 
 void __input_process_key(GDF_KEYCODE key, bool pressed) 
@@ -180,6 +184,17 @@ void __input_process_mouse_move(i16 x, i16 y)
         context.data.u16[1] = y;
         GDF_EVENT_Fire(GDF_EVENT_INTERNAL_MOUSE_MOVED, NULL, context);
     }
+}
+
+void __input_process_raw_mouse_move(i32 dx, i32 dy) 
+{
+    state.mouse_delta.x += dx;
+    state.mouse_delta.y += dy;
+
+    GDF_EventCtx context;
+    context.data.i16[0] = dx;
+    context.data.i16[1] = dy;
+    GDF_EVENT_Fire(GDF_EVENT_INTERNAL_MOUSE_RAW_MOVE, NULL, context);
 }
 
 void __input_process_mouse_wheel(i8 z_delta) 

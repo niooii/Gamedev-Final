@@ -7,6 +7,7 @@
 #include <windowsx.h>
 #include <vulkan/vulkan_win32.h>
 #include "engine/core/event.h"
+#include <hidusage.h>
 
 const char win_class_name[] = "gdf_window";
 static u16 current_window_id = 0;
@@ -143,7 +144,24 @@ LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
                 __input_process_button(mouse_button, pressed);
             }
             break;
-        } 
+        }
+        case WM_INPUT:
+        {
+            UINT dwSize = sizeof(RAWINPUT);
+            static BYTE lpb[sizeof(RAWINPUT)];
+
+            GetRawInputData((HRAWINPUT)l_param, RID_INPUT, lpb, &dwSize, sizeof(RAWINPUTHEADER));
+            
+            RAWINPUT* raw = (RAWINPUT*)lpb;
+            
+            if (raw->header.dwType == RIM_TYPEMOUSE) 
+            {
+                i32 dx = raw->data.mouse.lLastX;
+                i32 dy = raw->data.mouse.lLastY;
+                __input_process_raw_mouse_move(dx, dy);
+            }
+            break;
+        }
     }
 
     return DefWindowProc(hwnd, msg, w_param, l_param);
@@ -249,6 +267,14 @@ GDF_Window* GDF_CreateWindow(i16 x_, i16 y_, i16 w, i16 h, const char* title)
         return NULL;
     } 
     internals->hwnd = handle;
+
+    RAWINPUTDEVICE rid[1];
+    rid[0].usUsagePage = HID_USAGE_PAGE_GENERIC; 
+    rid[0].usUsage = HID_USAGE_GENERIC_MOUSE;
+    rid[0].dwFlags = RIDEV_INPUTSINK;
+    rid[0].hwndTarget = handle;
+
+    RegisterRawInputDevices(rid, 1, sizeof(rid[0]));
 
     // Show the window
     bool should_activate = true;  // TODO: if the window should not accept input, this should be false.

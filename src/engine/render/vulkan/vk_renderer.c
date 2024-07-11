@@ -449,7 +449,6 @@ static bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
     // Create wireframe pipeline
     // TODO! this should work bc gp_create_info has pointers to these structs, but
     // if anything happens check here
-    input_assembly.topology = VK_PRIMITIVE_TOPOLOGY_LINE_LIST;
     rasterizer_state.polygonMode = VK_POLYGON_MODE_LINE;
 
     VK_ASSERT(
@@ -1710,8 +1709,8 @@ bool vk_renderer_begin_frame(f32 delta_time)
     Camera* active_camera = context.active_camera;
     // TODO! remove and extract updating ubo into another function
     UniformBuffer ubo = {
-        // .proj = mat4_perspective(PI/4.f, 1.777, 0.1, 100.0),
-        .proj = mat4_identity(),
+        .proj = mat4_perspective(PI/4.f, 1.777, 0.1, 100.0),
+        // .proj = mat4_identity(),
         .view = mat4_view(active_camera->pos, active_camera->yaw, active_camera->pitch),
     };
     // actualyl update view and projection matrices later
@@ -1931,7 +1930,4 @@ bool vk_renderer_end_frame(f32 delta_time)
 void vk_renderer_set_camera(Camera* camera) 
 {
     context.active_camera = camera;
-    camera->pos.x = 1;
-    camera->pos.y = 1;
-    camera->pos.z = 1;
 }

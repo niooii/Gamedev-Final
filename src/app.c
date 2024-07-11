@@ -1,6 +1,7 @@
 #include "app.h"
 #include "engine/core/containers/list.h"
 #include "engine/core/input.h"
+#include "engine/math/math.h"
 
 typedef struct AppState {
     bool is_running;
@@ -121,6 +122,7 @@ bool GDF_InitApp()
         LOG_ERR("Couldn't initialize renderer unlucky.");
         return false;
     }
+    camera.pos = vec3_new(-2, 0, 0);
     GDF_Renderer_SetCamera(&camera);
 
     APP_STATE.stopwatch = GDF_Stopwatch_Create();
@@ -154,7 +156,7 @@ f64 GDF_RunApp()
 
     GDF_Stopwatch* running_timer = GDF_Stopwatch_Create();
     u8 frame_count = 0;
-    u32 fps = 144;
+    u32 fps = 2222;
     f64 secs_per_frame = 1.0/fps;
     GDF_Stopwatch* frame_timer = GDF_Stopwatch_Create();
 
@@ -190,12 +192,12 @@ f64 GDF_RunApp()
         // TODO! remove
         if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_W))
         {
-            camera.pos.x -= dt;
+            camera.pos.x += dt;
             LOG_DEBUG("MOVING CAMERA forward %f", camera.pos.x);
         }
         if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_S))
         {
-            camera.pos.x += dt;
+            camera.pos.x -= dt;
             LOG_DEBUG("MOVING CAMERA YES %f", camera.pos.x);
         }
         if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_A))
@@ -241,7 +243,8 @@ f64 GDF_RunApp()
         i32 dx;
         i32 dy;
         GDF_INPUT_GetMouseDelta(&dx, &dy);
-        camera.yaw -= dx / 180.f;
+        camera.yaw += dx / 180.f;
+        camera.pitch -= dy / 180.f;
         // LOG_DEBUG("curr: %d | prev: %d", mouse_x, prev_mouse_x);
 
         GDF_INPUT_Update(dt);

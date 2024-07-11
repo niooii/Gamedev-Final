@@ -72,6 +72,12 @@ typedef enum GDF_EVENT_INTERNAL {
     u16 h = ctx.data.u16[1]
     */
     GDF_EVENT_INTERNAL_WINDOW_RESIZE = 0x08,
+    /*
+    Usage:
+    u16 dx = ctx.data.i16[0]
+    u16 dy = ctx.data.i16[1]
+    */
+    GDF_EVENT_INTERNAL_MOUSE_RAW_MOVE = 0x09,
 
     // Not actaully an event.
     GDF_EVENT_INTERNAL_MAX = 0xFF
