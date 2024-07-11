@@ -141,6 +141,12 @@ typedef enum GDF_KEYCODE {
     GDF_KEYCODE_MAX
 } GDF_KEYCODE;
 
+// TODO! what in the inconsistent naming
+typedef enum GDF_CursorLockState {
+    GDF_CursorLockState_Free,
+    GDF_CursorLockState_Locked,
+} GDF_CursorLockState;
+
 void GDF_InitInput();
 void GDF_ShutdownInput();
 void GDF_INPUT_Update(f64 delta_time);
@@ -155,6 +161,8 @@ bool GDF_INPUT_WasButtonDown(GDF_MBUTTON button);
 // TODO! replace with some point or vec2 struct idk
 void GDF_INPUT_GetMousePos(i32* x, i32* y);
 void GDF_INPUT_GetPrevMousePos(i32* x, i32* y);
+void GDF_INPUT_SetMouseLockState(GDF_CursorLockState lock_state);
+void GDF_INPUT_GetMouseDelta(i32* dx, i32* dy);
 
 void __input_process_key(GDF_KEYCODE key, bool pressed);
 void __input_process_button(GDF_MBUTTON button, bool pressed);

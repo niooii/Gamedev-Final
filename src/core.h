@@ -1,7 +1,7 @@
 #pragma once
 
 #include "def.h"
-#include "core/logging.h"
-#include "core/asserts.h"
-#include "core/mem.h"
-#include "core/time/stopwatch.h"
+#include "engine/core/logging.h"
+#include "engine/core/asserts.h"
+#include "engine/core/mem.h"
+#include "engine/core/time/stopwatch.h"

@@ -54,3 +54,5 @@ inline bool vk_result_is_success(VkResult result)
 VkFormat vk_utils_find_supported_depth_format(VkPhysicalDevice physical_device);
 
 bool vk_utils_create_shader_module(vk_renderer_context* context, const char* src_rel_path, VkShaderModule* out_module);
+
+i32 vk_utils_find_memory_type_idx(vk_renderer_context* context, u32 type_filter, u32 property_flags);

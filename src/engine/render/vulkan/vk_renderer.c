@@ -1,6 +1,6 @@
 #include "vk_renderer.h"
 #include "vk_types.h"
-#include "core/containers/list.h"
+#include "engine/core/containers/list.h"
 #include "vk_os.h"
 
 static vk_renderer_context context;
@@ -312,20 +312,26 @@ static bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
         .maxDepth = 1.0f
     };
 
-    VkRect2D scissor = {
-        .offset = {0, 0},
-        .extent = {
-            .width = context->framebuffer_width,
-            .height = context->framebuffer_height
-        }
-    };
+    // VkRect2D scissor = {
+    //     .offset = {0, 0},
+    //     .extent = {
+    //         .width = context->framebuffer_width,
+    //         .height = context->framebuffer_height
+    //     }
+    // };
+
+    // VkPipelineViewportStateCreateInfo viewport_state = {
+    //     .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+    //     .viewportCount = 1,
+    //     .pViewports = &viewport,
+    //     .scissorCount = 1,
+    //     .pScissors = &scissor
+    // };
 
     VkPipelineViewportStateCreateInfo viewport_state = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
         .viewportCount = 1,
-        .pViewports = &viewport,
         .scissorCount = 1,
-        .pScissors = &scissor
     };
 
     // Rasterization configuration
@@ -370,19 +376,44 @@ static bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
         .pAttachments = &color_blend_attachment
     };
 
+    VkPushConstantRange push_constant_range = {
+        .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+        .offset = 0,
+        .size = sizeof(mat4)
+    };
+
     // Pipeline layout
     VkPipelineLayoutCreateInfo layout_info = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+        .pSetLayouts = context->descriptor_set_layouts,
+        .setLayoutCount = context->swapchain.image_count,
+        .pPushConstantRanges = &push_constant_range,
+        .pushConstantRangeCount = 1
     };
+
+    VkPipelineLayout layout;
     
     VK_ASSERT(
         vkCreatePipelineLayout(
             context->device.handle, 
             &layout_info,
             context->allocator,
-            &context->pipelines.geometry.layout
+            &layout
         )
     );
+
+    // Create dynamic state for pipeline (viewport & scissor)
+    // TODO! eventually if the game is fixed size remove these and bake states
+    // into pipelines
+    VkDynamicState d_states[2] = {
+        VK_DYNAMIC_STATE_VIEWPORT,
+        VK_DYNAMIC_STATE_SCISSOR
+    };
+    VkPipelineDynamicStateCreateInfo dynamic_states = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+        .dynamicStateCount = 2,
+        .pDynamicStates = d_states
+    };
 
     // Put all configuration in graphics pipeline info struct
     VkGraphicsPipelineCreateInfo pipeline_create_info = {
@@ -397,9 +428,10 @@ static bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
         .pMultisampleState = &multisampling_state,
         .pDepthStencilState = &depth_stencil_state,
         .pColorBlendState = &color_blend_state,
-        .layout = context->pipelines.geometry.layout,
+        .layout = layout,
         // index of geometry subpass
         .subpass = 0,
+        .pDynamicState = &dynamic_states,
     };
 
     VK_ASSERT(
@@ -412,6 +444,7 @@ static bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
             &context->pipelines.geometry.handle
         )
     );
+    context->pipelines.geometry.layout = layout;
 
     // Create wireframe pipeline
     // TODO! this should work bc gp_create_info has pointers to these structs, but
@@ -429,6 +462,7 @@ static bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
             &context->pipelines.geometry_wireframe.handle
         )
     );
+    context->pipelines.geometry_wireframe.layout = layout;
 
     // repeat pipeline creation with different shaders for other pipelines
     // Lighting subpass pipeline
@@ -447,6 +481,7 @@ static bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
             &context->pipelines.lighting.handle
         )
     );
+    context->pipelines.lighting.layout = layout;
 
     // Post-processing subpass pipeline
     pipeline_create_info.stageCount = sizeof(postprocessing_pass_shaders) / sizeof(VkPipelineShaderStageCreateInfo);
@@ -462,6 +497,7 @@ static bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
             &context->pipelines.post_processing.handle
         )
     );
+    context->pipelines.post_processing.layout = layout;
 
     return true;
 }
@@ -660,21 +696,84 @@ void __get_queue_indices(vk_renderer_context* context, VkPhysicalDevice physical
     LOG_DEBUG("%d", queues->transfer_family_index);
 }
 
-i32 __find_memory_index(u32 type_filter, u32 property_flags) {
-    VkPhysicalDeviceMemoryProperties memory_properties;
-    vkGetPhysicalDeviceMemoryProperties(context.device.physical_info->handle, &memory_properties);
+// TODO! example cube for now...
+// Cube vertices
+static const Vertex3d vertices[] = {
+    {{-0.5f, -0.5f, -0.5f}},
+    {{0.5f, -0.5f, -0.5f}},
+    {{0.5f, 0.5f, -0.5f}},
+    {{-0.5f, 0.5f, -0.5f}},
+    {{-0.5f, -0.5f, 0.5f}},
+    {{0.5f, -0.5f, 0.5f}},
+    {{0.5f, 0.5f, 0.5f}},
+    {{-0.5f, 0.5f, 0.5f}}
+};
 
-    for (u32 i = 0; i < memory_properties.memoryTypeCount; i++) 
-    {
-        // check each memory type to see if its bit is set to 1.
-        if (type_filter & (1 << i) && (memory_properties.memoryTypes[i].propertyFlags & property_flags) == property_flags) 
-        {
-            return i;
-        }
-    }
+// Cube indices
+static const u16 indices[] = {
+    0, 1, 3, 3, 1, 2,  // Front face
+    1, 5, 2, 2, 5, 6,  // Right face
+    5, 4, 6, 6, 4, 7,  // Back face
+    4, 0, 7, 7, 0, 3,  // Left face
+    3, 2, 7, 7, 2, 6,  // Top face
+    4, 5, 0, 0, 5, 1   // Bottom face
+};
 
-    LOG_WARN("Unable to find suitable memory type!");
-    return -1;
+static VkBuffer vertex_buffer;
+static VkBuffer index_buffer;
+static VkDeviceMemory vertex_buffer_memory;
+static VkDeviceMemory index_buffer_memory;
+
+static void __create_example_cube_buffers(vk_renderer_context* context) 
+{
+    vk_device* device = &context->device;
+    VkBufferCreateInfo vertex_buffer_info = {
+        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+        .size = sizeof(vertices),
+        .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
+        .sharingMode = VK_SHARING_MODE_EXCLUSIVE
+    };
+    vkCreateBuffer(device->handle, &vertex_buffer_info, NULL, &vertex_buffer);
+
+    VkMemoryRequirements vertex_mem_requirements;
+    vkGetBufferMemoryRequirements(device->handle, vertex_buffer, &vertex_mem_requirements);
+
+    VkMemoryAllocateInfo vertex_alloc_info = {
+        .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+        .allocationSize = vertex_mem_requirements.size,
+        .memoryTypeIndex = vk_utils_find_memory_type_idx(context, vertex_mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+    };
+    vkAllocateMemory(device->handle, &vertex_alloc_info, NULL, &vertex_buffer_memory);
+    vkBindBufferMemory(device->handle, vertex_buffer, vertex_buffer_memory, 0);
+
+    void* data;
+    vkMapMemory(device->handle, vertex_buffer_memory, 0, sizeof(vertices), 0, &data);
+    memcpy(data, vertices, sizeof(vertices));
+    vkUnmapMemory(device->handle, vertex_buffer_memory);
+
+    // Similar process for index buffer
+    VkBufferCreateInfo index_buffer_info = {
+        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+        .size = sizeof(indices),
+        .usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
+        .sharingMode = VK_SHARING_MODE_EXCLUSIVE
+    };
+    vkCreateBuffer(device->handle, &index_buffer_info, NULL, &index_buffer);
+
+    VkMemoryRequirements index_mem_requirements;
+    vkGetBufferMemoryRequirements(device->handle, index_buffer, &index_mem_requirements);
+
+    VkMemoryAllocateInfo index_alloc_info = {
+        .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+        .allocationSize = index_mem_requirements.size,
+        .memoryTypeIndex = vk_utils_find_memory_type_idx(context, index_mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+    };
+    vkAllocateMemory(device->handle, &index_alloc_info, NULL, &index_buffer_memory);
+    vkBindBufferMemory(device->handle, index_buffer, index_buffer_memory, 0);
+
+    vkMapMemory(device->handle, index_buffer_memory, 0, sizeof(indices), 0, &data);
+    memcpy(data, indices, sizeof(indices));
+    vkUnmapMemory(device->handle, index_buffer_memory);
 }
 
 // ===== FORWARD DECLARATIONS END =====
@@ -682,7 +781,6 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
 {
     // TODO! custom allocator.
     context.allocator = 0;
-    context.find_memory_idx = __find_memory_index;
     
     GDF_GetWindowSize(&context.framebuffer_width, &context.framebuffer_height);
     LOG_INFO("Framebuffer size %d, %d", context.framebuffer_width, context.framebuffer_height);
@@ -910,7 +1008,7 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     LOG_DEBUG("graphics command pool created.");
 
     /* ======================================== */
-    /* ----- CREATE SWAPCHAIN ----- */
+    /* ----- CREATE SWAPCHAIN, IMAGES AND FRAMEBUFFERS ----- */
     /* ======================================== */
     // TODO! add a lot more checks during swapchain creation
     VkSwapchainCreateInfoKHR sc_create_info = {
@@ -918,14 +1016,16 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
         .preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
         .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
         .surface = context.surface,
-        .imageArrayLayers = 1
+        .imageArrayLayers = 1,
+        .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
+                        | VK_IMAGE_USAGE_TRANSFER_DST_BIT
     };
     sc_create_info.clipped = VK_TRUE;
-    VkExtent2D extent = {
-        .width = context.framebuffer_width,
-        .height = context.framebuffer_height
-    };
-    sc_create_info.imageExtent = extent;
+
+    // Set extent
+    context.swapchain.extent.width = context.framebuffer_width;
+    context.swapchain.extent.height = context.framebuffer_height;
+    sc_create_info.imageExtent = context.swapchain.extent;
     // for now if these arent supported FUCK YOU
     // ! also initiliaze formats here 
     context.formats.depth_format = vk_utils_find_supported_depth_format(context.device.physical_info->handle);
@@ -945,11 +1045,307 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
             context.device.handle,
             &sc_create_info,
             context.allocator,
-            &context.swapchain
+            &context.swapchain.handle
         )
     );
 
+    // Allow triple buffering
+    context.max_concurrent_frames = 3;
+    VK_ASSERT(
+        vkGetSwapchainImagesKHR(
+            context.device.handle,
+            context.swapchain.handle,
+            &context.swapchain.image_count,
+            NULL
+        )
+    )
+
+    u32 image_count = context.swapchain.image_count;
+    // grab images into an intermediate buffer then transfer to my own structs
+    VkImage images[image_count];
+
+    VK_ASSERT(
+        vkGetSwapchainImagesKHR(
+            context.device.handle,
+            context.swapchain.handle,
+            &image_count,
+            images
+        )
+    );
+
+    context.swapchain.images = GDF_LIST_Reserve(vk_image, image_count);
+
+    // Create corresponding image views
+    for (u32 i = 0; i < image_count; i++)
+    {
+        vk_image img = {
+            .handle = images[i],
+        };
+        VkImageViewCreateInfo image_view_info = {
+            .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+            .format = context.formats.image_format,
+            .image = img.handle,
+            .viewType = VK_IMAGE_VIEW_TYPE_2D,
+            // i dont have to initialize these but why not
+            .components.r = VK_COMPONENT_SWIZZLE_IDENTITY,
+            .components.g = VK_COMPONENT_SWIZZLE_IDENTITY,
+            .components.b = VK_COMPONENT_SWIZZLE_IDENTITY,
+            .components.a = VK_COMPONENT_SWIZZLE_IDENTITY,
+            // some swapchains can have multiple layers, for example
+            // in 3d (the blue red glasses stuff)
+            // i will NOT be having 3d chat
+            .subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+            .subresourceRange.baseMipLevel = 0,
+            .subresourceRange.levelCount = 1,
+            .subresourceRange.baseArrayLayer = 0,
+            .subresourceRange.layerCount = 1,
+        };
+
+        VK_ASSERT(
+            vkCreateImageView(
+                context.device.handle,
+                &image_view_info,
+                context.allocator,
+                &img.view
+            )
+        );
+
+        GDF_LIST_Push(context.swapchain.images, img);
+    }
+    
+    // Create the global depth image
+    VkImageCreateInfo depth_image_info = {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+        .imageType = VK_IMAGE_TYPE_2D,
+        .extent.width = context.swapchain.extent.width,
+        .extent.height = context.swapchain.extent.height,
+        .extent.depth = 1,
+        .mipLevels = 1,
+        .arrayLayers = 1,
+        .format = context.formats.depth_format,
+        .tiling = VK_IMAGE_TILING_OPTIMAL,
+        .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+        .usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+        .samples = VK_SAMPLE_COUNT_1_BIT,
+        .sharingMode = VK_SHARING_MODE_EXCLUSIVE
+    };
+
+    VK_ASSERT(
+        vkCreateImage(
+            context.device.handle, 
+            &depth_image_info, 
+            context.allocator, 
+            &context.depth_image
+        )
+    );
+
+    // Allocate memory for depth image
+    VkMemoryRequirements mem_requirements;
+    vkGetImageMemoryRequirements(context.device.handle, context.depth_image, &mem_requirements);
+
+    i32 mem_idx = vk_utils_find_memory_type_idx(&context, mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+    if (mem_idx == -1) 
+    {
+        LOG_FATAL("Failed to find memory suitable for depth image. Exiting...");
+    }
+
+    VkMemoryAllocateInfo alloc_info = {
+        .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+        .allocationSize = mem_requirements.size,
+        .memoryTypeIndex = mem_idx
+    };
+
+    VK_ASSERT(
+        vkAllocateMemory(
+            context.device.handle, 
+            &alloc_info, 
+            context.allocator, 
+            &context.depth_image_memory
+        )
+    );
+
+    vkBindImageMemory(
+        context.device.handle, 
+        context.depth_image, 
+        context.depth_image_memory, 
+        0
+    );
+
+    // Create depth image view
+    VkImageViewCreateInfo depth_view_info = {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+        .image = context.depth_image,
+        .viewType = VK_IMAGE_VIEW_TYPE_2D,
+        .format = context.formats.depth_format,
+        .subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT,
+        .subresourceRange.baseMipLevel = 0,
+        .subresourceRange.levelCount = 1,
+        .subresourceRange.baseArrayLayer = 0,
+        .subresourceRange.layerCount = 1
+    };
+
+    VK_ASSERT(
+        vkCreateImageView(
+            context.device.handle, 
+            &depth_view_info, 
+            context.allocator, 
+            &context.depth_image_view
+        )
+    );
+
+    LOG_DEBUG("Fetched %d images from swapchain...", GDF_LIST_GetLength(context.swapchain.images));
+
     LOG_DEBUG("Created swapchain.");
+
+    /* ======================================== */
+    /* ----- Create and allocate ubos & descriptor things ----- */
+    /* ======================================== */
+    VkDeviceSize buffer_size = sizeof(UniformBuffer);
+    context.uniform_buffers = GDF_LIST_Reserve(vk_uniform_buffer, image_count);
+    // Create separate ubo for each swapchain image
+    for (u32 i = 0; i < image_count; i++) 
+    {
+        VkBufferCreateInfo buffer_info = {
+            .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
+            .size = buffer_size,
+            .usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
+            .sharingMode = VK_SHARING_MODE_EXCLUSIVE
+        };
+
+        VK_ASSERT(
+            vkCreateBuffer(
+                context.device.handle,
+                &buffer_info,
+                context.allocator,
+                &context.uniform_buffers[i].handle
+            )
+        );
+
+        VkMemoryRequirements mem_requirements;
+        vkGetBufferMemoryRequirements(
+            context.device.handle,
+            context.uniform_buffers[i].handle,
+            &mem_requirements
+        );
+
+        VkMemoryAllocateInfo alloc_info = {
+            .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+            .allocationSize = mem_requirements.size,
+            .memoryTypeIndex = vk_utils_find_memory_type_idx(&context, mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
+        };
+
+        VK_ASSERT(
+            vkAllocateMemory(
+                context.device.handle, 
+                &alloc_info, 
+                NULL, 
+                &context.uniform_buffers[i].memory
+            )
+        );
+        VK_ASSERT(
+            vkBindBufferMemory(
+                context.device.handle, 
+                context.uniform_buffers[i].handle, 
+                context.uniform_buffers[i].memory, 
+                0
+            )
+        );
+        VK_ASSERT(
+            vkMapMemory(
+                context.device.handle, 
+                context.uniform_buffers[i].memory, 
+                0, 
+                buffer_size, 
+                0, 
+                &context.uniform_buffers[i].mapped_data
+            )
+        );
+    }
+
+    // Create descriptor pool and allocate sets
+    context.descriptor_sets = GDF_LIST_Reserve(VkDescriptorSet, image_count);
+    context.descriptor_set_layouts = GDF_LIST_Reserve(VkDescriptorSet, image_count);
+    VkDescriptorPoolSize pool_size = {
+        .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+        .descriptorCount = image_count
+    };
+
+    VkDescriptorPoolCreateInfo pool_info = {
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+        .poolSizeCount = 1,
+        .pPoolSizes = &pool_size,
+        .maxSets = image_count
+    };
+
+    VK_ASSERT(
+        vkCreateDescriptorPool(
+            context.device.handle, 
+            &pool_info, 
+            NULL, 
+            &context.descriptor_pool
+        )
+    );
+    
+    VkDescriptorSetLayoutBinding layout_binding = {
+        .binding = 0,
+        .descriptorCount = 1,
+        .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+        .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+    };
+
+    for (u32 i = 0; i < image_count; i++)
+    {
+        VkDescriptorSetLayoutCreateInfo layout_create_info = {
+            .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+            .bindingCount = 1,
+            .pBindings = &layout_binding,
+        };
+        
+        VK_ASSERT(
+            vkCreateDescriptorSetLayout(
+                context.device.handle,
+                &layout_create_info,
+                context.allocator,
+                &context.descriptor_set_layouts[i]
+            )
+        );
+    }
+
+    VkDescriptorSetAllocateInfo descriptor_sets_alloc_info = {
+        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+        .descriptorPool = context.descriptor_pool,
+        .descriptorSetCount = image_count,
+        .pSetLayouts = context.descriptor_set_layouts
+    };
+
+    vkAllocateDescriptorSets(
+        context.device.handle,
+        &descriptor_sets_alloc_info,
+        context.descriptor_sets
+    );
+
+    for (u32 i = 0; i < image_count; i++)
+    {
+        VkDescriptorBufferInfo buffer_info = {
+            .buffer = context.uniform_buffers[i].handle,
+            .offset = 0,
+            .range = sizeof(UniformBuffer)
+        };
+
+        VkWriteDescriptorSet descriptor_write = {
+            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+            .dstSet = context.descriptor_sets[i],
+            .dstBinding = 0,
+            .dstArrayElement = 0,
+            .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            .descriptorCount = 1,
+            .pBufferInfo = &buffer_info
+        };
+
+        vkUpdateDescriptorSets(context.device.handle, 1, &descriptor_write, 0, NULL);
+    }
+    LOG_DEBUG("Created descriptor pool and allocated descriptor sets.");
 
     /* ======================================== */
     /* ----- CREATE RENDERPASSES, SHADERS, & GRAPHICS PIPELINE ----- */
@@ -964,6 +1360,37 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
 
     LOG_DEBUG("Created graphics pipelines & renderpasses");
 
+    // Create framebuffers
+    context.swapchain.framebuffers = GDF_LIST_Reserve(VkFramebuffer, image_count);
+    for (u32 i = 0; i < image_count; i++) 
+    {
+        vk_image* img = &context.swapchain.images[i];
+
+        VkImageView image_views[2] = {
+            img->view,
+            context.depth_image_view
+        };
+
+        VkFramebufferCreateInfo framebuffer_info = {
+            .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+            .attachmentCount = 2,
+            .pAttachments = image_views,
+            .renderPass = context.renderpasses.main_pass,
+            .width = context.swapchain.extent.width,
+            .height = context.swapchain.extent.height,
+            .layers = 1
+        };
+
+        VK_ASSERT(
+            vkCreateFramebuffer(
+                context.device.handle,
+                &framebuffer_info,
+                context.allocator,
+                &context.swapchain.framebuffers[i]
+            )
+        );
+    }
+
     /* ======================================== */
     /* ----- Allocate command buffer ----- */
     /* ======================================== */
@@ -973,12 +1400,61 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
         .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
         .commandBufferCount = 1
     };
+    u32 max_concurrent_frames = context.max_concurrent_frames;
     vkAllocateCommandBuffers(context.device.handle, &command_buf_info, &context.device.cmd_buffer);
-    LOG_DEBUG("Allocated command buffer");
+           
+    context.image_available_semaphores = GDF_LIST_Reserve(VkSemaphore, max_concurrent_frames);
+    context.render_finished_semaphores = GDF_LIST_Reserve(VkSemaphore, max_concurrent_frames);
+    context.in_flight_fences = GDF_LIST_Reserve(VkFence, max_concurrent_frames);
+    context.images_in_flight = GDF_LIST_Reserve(VkFence, max_concurrent_frames);
+
+    VkSemaphoreCreateInfo semaphore_info = {
+        .sType = VK_STRUCTURE_TYPE_SEMAPHORE_CREATE_INFO
+    };
+
+    VkFenceCreateInfo fence_info = {
+        .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+        .flags = VK_FENCE_CREATE_SIGNALED_BIT
+    };
+    
+    for (u32 i = 0; i < max_concurrent_frames; i++)
+    {
+        VK_ASSERT(
+            vkCreateSemaphore(
+                context.device.handle,
+                &semaphore_info,
+                context.allocator,
+                &context.image_available_semaphores[i]
+            )
+        );
+        VK_ASSERT(
+            vkCreateSemaphore(
+                context.device.handle,
+                &semaphore_info,
+                context.allocator,
+                &context.render_finished_semaphores[i]
+            )
+        );
+        VK_ASSERT(
+            vkCreateFence(
+                context.device.handle,
+                &fence_info,
+                context.allocator,
+                &context.in_flight_fences[i]
+            )
+        );
+    }
+
+    LOG_DEBUG("Created sync objects");
+
+    // TODO! remove later
+    __create_example_cube_buffers(&context);
+    LOG_DEBUG("Created example cube buffers (remove later)")
 
     LOG_INFO("Finished initialization of vulkan stuff...");
 
     context.ready_for_use = true;
+
 
     return true;
 }
@@ -1066,7 +1542,7 @@ void vk_renderer_destroy(renderer_backend* backend)
     // Destroy swapchain, device and resources
     vkDestroySwapchainKHR(
         device,
-        context.swapchain,
+        context.swapchain.handle,
         allocator
     );
     vkDestroyCommandPool(
@@ -1164,14 +1640,14 @@ void vk_renderer_destroy(renderer_backend* backend)
     vkDestroyInstance(context.instance, context.allocator);
 }
 
-void vk_renderer_resize(renderer_backend* backend, u16 width, u16 height) 
+void vk_renderer_resize(u16 width, u16 height) 
 {
     new_framebuf_w = width;
     new_framebuf_h = height;
     context.pending_resize_event = true;
 }
 
-bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time) 
+bool vk_renderer_begin_frame(f32 delta_time) 
 {
     vk_device* device = &context.device;
 
@@ -1205,8 +1681,54 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
     //     return false;
     // }
 
-    // something something sync gpu cpu wait something.
-    // and then... 
+    // Wait for the previous frame to finish
+    vkWaitForFences(
+        device->handle, 
+        1,
+        &context.in_flight_fences[context.swapchain.current_img_idx],
+        VK_TRUE,
+        UINT64_MAX
+    );
+
+    // because there are separate resources for each frame in flight.
+    u32 resource_idx = context.current_frame % context.max_concurrent_frames;
+
+    // Acquire the next image from the swapchain
+    vkAcquireNextImageKHR(
+        context.device.handle, 
+        context.swapchain.handle, 
+        UINT64_MAX, 
+        context.image_available_semaphores[resource_idx], 
+        VK_NULL_HANDLE, 
+        &context.swapchain.current_img_idx
+    );
+    // TODO! handle VK_ERROR_OUT_OF_DATE_KHR and resizing stuff etc etc
+
+    // shorthand i guess i aint typing all that 
+    u32 current_img_idx = context.swapchain.current_img_idx;
+
+    Camera* active_camera = context.active_camera;
+    // TODO! remove and extract updating ubo into another function
+    UniformBuffer ubo = {
+        // .proj = mat4_perspective(PI/4.f, 1.777, 0.1, 100.0),
+        .proj = mat4_identity(),
+        .view = mat4_view(active_camera->pos, active_camera->yaw, active_camera->pitch),
+    };
+    // actualyl update view and projection matrices later
+    // ubo.view = calculate_view_matrix(context->camera);
+    // ubo.proj = calculate_projection_matrix(context->aspect_ratio);
+
+    memcpy(context.uniform_buffers[current_img_idx].mapped_data, &ubo, sizeof(ubo));
+
+    // Check if a previous frame is using this image (i.e. there is its fence to wait on)
+    // if (context.images_in_flight[current_img_idx] != VK_NULL_HANDLE) 
+    // {
+    //     vkWaitForFences(device->handle, 1, &context.images_in_flight[current_img_idx], VK_TRUE, UINT64_MAX);
+    //     // basically mark image as free
+    //     context.images_in_flight[current_img_idx] = VK_NULL_HANDLE;
+    // }
+    vkResetFences(device->handle, 1, &context.in_flight_fences[resource_idx]);
+
     VkCommandBuffer cmd_buffer = context.device.cmd_buffer;
     vkResetCommandBuffer(cmd_buffer, 0);
 
@@ -1216,20 +1738,86 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
     };
     vkBeginCommandBuffer(cmd_buffer, &begin_info);
 
-    VkRenderPassBeginInfo pass_begin_info = {
+    VkRenderPassBeginInfo render_pass_info = {
         .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-        , afaw // TODO!
+        .renderPass = context.renderpasses.main_pass,
+        .framebuffer = context.swapchain.framebuffers[current_img_idx],
+        .renderArea.offset = {0, 0},
+        .renderArea.extent = context.swapchain.extent
     };
-    vkCmdBeginRenderPass(cmd_buffer, )
 
+    VkClearValue clear_values[2] = {
+        // {.color = {0.529f, 0.808f, 0.922f, 1.0f}}, // Sky blue color
+        {.color = {0.529f, 0.808f, 0.922f, 1.0f}}, // Sky blue color
+        {.depthStencil = {1.0f, 0}}
+    };
+    render_pass_info.clearValueCount = 2;
+    render_pass_info.pClearValues = clear_values;
+
+    vkCmdBeginRenderPass(cmd_buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
+
+    // Bind the geometry pass pipeline
+    vk_pipeline* bound_pipeline = &context.pipelines.geometry_wireframe;
+    vkCmdBindPipeline(cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, bound_pipeline->handle);
+    
+    vkCmdBindDescriptorSets(
+        cmd_buffer,
+        VK_PIPELINE_BIND_POINT_GRAPHICS,
+        bound_pipeline->layout,
+        0,
+        1,
+        &context.descriptor_sets[resource_idx], 
+        0, 
+        NULL
+    );
+
+    mat4 test_model_matrix = mat4_identity();
+    vkCmdPushConstants(
+        cmd_buffer,
+        bound_pipeline->layout,
+        VK_SHADER_STAGE_VERTEX_BIT,
+        0,
+        sizeof(mat4),
+        &test_model_matrix
+    );
+
+    // make as similar to opengls as possible
+    VkViewport viewport;
+    viewport.x = 0.0f;
+    viewport.y = (f32)context.framebuffer_height;
+    viewport.width = (f32)context.framebuffer_width;
+    viewport.height = -(f32)context.framebuffer_height;
+    viewport.minDepth = 0.0f;
+    viewport.maxDepth = 1.0f;
+    vkCmdSetViewport(cmd_buffer, 0, 1, &viewport);
+
+    VkRect2D scissor = {
+        .offset = {0, 0},
+        .extent = context.swapchain.extent
+    };
+    vkCmdSetScissor(cmd_buffer, 0, 1, &scissor);
+    // Bind example cube's vertex and index buffers
+    VkBuffer vertex_buffers[] = {vertex_buffer};
+    VkDeviceSize offsets[] = {0};
+    vkCmdBindVertexBuffers(cmd_buffer, 0, 1, vertex_buffers, offsets);
+    vkCmdBindIndexBuffer(cmd_buffer, index_buffer, 0, VK_INDEX_TYPE_UINT16);
+
+    // Draw example cube
+    vkCmdDrawIndexed(cmd_buffer, sizeof(indices) / sizeof(indices[0]), 1, 0, 0, 0);
+
+    // draw test triangle 
+    vkCmdDraw(cmd_buffer, 3, 1, 0, 0);
 
     return true;
 }
 
-bool vk_renderer_end_frame(renderer_backend* backend, f32 delta_time) 
+bool vk_renderer_end_frame(f32 delta_time) 
 {
+    vk_device* device = &context.device;
     // vk_cmd_buf* command_buffer = &context.graphics_cmd_buf_list[context.img_idx];
     VkCommandBuffer cmd_buffer = context.device.cmd_buffer;
+    u32 current_img_idx = context.swapchain.current_img_idx;
+    u32 sync_object_idx = context.current_frame % context.max_concurrent_frames;
 
     vkCmdEndRenderPass(cmd_buffer);
 
@@ -1237,6 +1825,39 @@ bool vk_renderer_end_frame(renderer_backend* backend, f32 delta_time)
         
         return false;
     }
+
+    // Submit the command buffer
+    VkSubmitInfo submit_info = {
+        .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+        .waitSemaphoreCount = 1,
+        .pWaitSemaphores = &context.image_available_semaphores[sync_object_idx],
+        .pWaitDstStageMask = (VkPipelineStageFlags[]) {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT},
+        .commandBufferCount = 1,
+        .pCommandBuffers = &context.device.cmd_buffer,
+        .signalSemaphoreCount = 1,
+        .pSignalSemaphores = &context.render_finished_semaphores[sync_object_idx]
+    };
+    vkQueueSubmit(
+        device->graphics_queue,
+        1,
+        &submit_info,
+        context.in_flight_fences[sync_object_idx]
+    );
+
+    VkPresentInfoKHR present_info = {
+        .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
+        .pImageIndices = &current_img_idx,
+        .waitSemaphoreCount = 1,
+        .pWaitSemaphores = &context.render_finished_semaphores[sync_object_idx],
+        .swapchainCount = 1,
+        .pSwapchains = &context.swapchain.handle,
+        .pResults = NULL,
+    };
+
+    vkQueuePresentKHR(
+        context.device.present_queue, 
+        &present_info
+    );
 
     // vk_renderpass_end(command_buffer, &context.main_renderpass);
 
@@ -1302,5 +1923,15 @@ bool vk_renderer_end_frame(renderer_backend* backend, f32 delta_time)
     //     context.img_idx
     // );
 
+    context.current_frame++;
+
     return true;
+}
+
+void vk_renderer_set_camera(Camera* camera) 
+{
+    context.active_camera = camera;
+    camera->pos.x = 1;
+    camera->pos.y = 1;
+    camera->pos.z = 1;
 }

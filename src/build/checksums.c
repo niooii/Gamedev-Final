@@ -1,7 +1,7 @@
 #ifdef COMPILE_BUILDER
 #include "checksums.h"
 #include "core.h"
-#include "core/os/io.h"
+#include "engine/core/os/io.h"
 #include <stdio.h>
 
 static char* get_checksum_ptr(const char* checksums_str, const char* cfile_rel_path)

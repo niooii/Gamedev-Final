@@ -3,6 +3,8 @@
 #include "core.h"
 #include <vulkan/vulkan.h>
 #include <vulkan/vk_enum_string_helper.h>
+#include "engine/camera.h"
+#include "engine/render/render_types.h"
 
 #define VK_ASSERT(expr) \
 { \
@@ -85,18 +87,74 @@ typedef struct vk_shader_modules {
     VkShaderModule post_process_frag;
 } vk_shader_modules;
 
-typedef struct vk_renderer_context {
+typedef struct vk_image {
+    VkImage handle;
+    VkImageView view;
+} vk_image;
+
+typedef struct vk_swapchain {
+    VkSwapchainKHR handle;
+
+    // GDF_LIST structure
+    vk_image* images; 
+    // GDF_LIST structure
+    VkFramebuffer* framebuffers;
+    u32 current_img_idx;
+    VkExtent2D extent;
+    u32 image_count;
+} vk_swapchain;
+
+typedef struct vk_uniform_buffer {
+    VkBuffer handle;
+    VkDeviceMemory memory;
+    void* mapped_data;
+} vk_uniform_buffer;
+
+typedef struct vk_renderer_context { 
     VkInstance instance;
     VkAllocationCallbacks* allocator;
     VkSurfaceKHR surface;
-    VkSwapchainKHR swapchain;
+    vk_swapchain swapchain;
+
+    // Depth image resources
+    VkImage depth_image;
+    VkDeviceMemory depth_image_memory;
+    VkImageView depth_image_view;
+
     vk_pipelines pipelines;
     vk_formats formats;
     vk_renderpasses renderpasses;
+
+    // Shader resources
     vk_shader_modules shaders;
+    // GDF_LIST
+    vk_uniform_buffer* uniform_buffers;
+    // This field is modified then copied over to vk_uniform_buffer[n].mapped_Data
+    UniformBuffer uniform_buffer_data;
+    VkDescriptorPool descriptor_pool;
+    // GDF_LIST
+    VkDescriptorSet* descriptor_sets;
+    // GDF_LIST
+    VkDescriptorSetLayout* descriptor_set_layouts;
+
     // GDF_LIST of physical device info structs
     vk_physical_device* physical_device_info_list;
     vk_device device;
+
+    u32 current_frame;
+    u32 max_concurrent_frames;
+    // Sync objects
+    // GDF_LIST
+    VkSemaphore* image_available_semaphores;
+    // GDF_LIST
+    VkSemaphore* render_finished_semaphores;
+    // GDF_LIST
+    VkFence* in_flight_fences;
+    // GDF_LIST
+    VkFence* images_in_flight;
+
+    Camera* active_camera;
+
     u32 framebuffer_width;
     u32 framebuffer_height;
     bool pending_resize_event;
@@ -107,6 +165,4 @@ typedef struct vk_renderer_context {
 #ifndef GDF_RELEASE
     VkDebugUtilsMessengerEXT debug_messenger;
 #endif
-    // function ptrs
-    i32 (*find_memory_idx)(u32 type_filter, u32 property_flags);
 } vk_renderer_context;

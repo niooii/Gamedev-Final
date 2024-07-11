@@ -7,11 +7,11 @@
 #include <sys/stat.h>
 #include <direct.h>
 #include "io.h"
-#include "core/subsystems.h"
+#include "engine/core/subsystems.h"
 #include "md5.h"
 #include "build_options.h"
 #include "checksums.h"
-#include "core/serde/serde.h"
+#include "engine/core/serde/serde.h"
 
 #define NUM_CFILES 500
 #define CFILES_STR_LEN NUM_CFILES * MAX_PATH_LEN
@@ -288,6 +288,7 @@ int main(int argc, char *argv[]) {
             {
                 LOG_ERR("Failed to compile \"%s\". Stopping...", rel_path);
                 GDF_WriteFile(CHECKSUM_FILE, c_file_checksums);
+                GDF_MakeFile(BUILT_WITH_OPTIONS_FILE);
                 save_build_options(BUILT_WITH_OPTIONS_FILE, build_options);
                 GDF_WriteFile(LAST_BUILD_STATUS_PATH, BUILD_STATUS_COMPILE_FAIL);
                 GDF_Free(compile_command);

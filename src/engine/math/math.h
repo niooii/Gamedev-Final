@@ -1,7 +1,7 @@
 #pragma once
 
 #include "def.h"
-#include "core/mem.h"
+#include "engine/core/mem.h"
 #include "math_types.h"
 
 #define PI 3.14159265358979323846f
@@ -697,6 +697,31 @@ FORCEINLINE mat4 mat4_inverse(mat4 matrix)
     }
 
     return out_matrix;
+}
+
+/**
+ * NOTE: this may not work as intended ...
+ * @brief Returns the view matrix for the specified camera parameters.
+ * 
+ * @param pos The position the camera is in.
+ * @param yaw The yaw of the camera.
+ * @param pitch The pitch of the camera.
+ * @return A view matrix.
+ * 
+ */
+FORCEINLINE mat4 mat4_view(vec3 pos, f32 yaw, f32 pitch) 
+{
+    vec3 front;
+    front.x = gcos(yaw) * gcos(pitch);
+    front.y = gsin(pitch);
+    front.z = gsin(yaw) * gcos(pitch);
+    vec3_normalize(&front);
+
+    vec3 up = { 0.0f, 1.0f, 0.0f };
+    vec3 right = vec3_normalized(vec3_cross(up, front));
+    up = vec3_cross(front, right);
+
+    return mat4_look_at(pos, vec3_add(pos, front), up);
 }
 
 /**

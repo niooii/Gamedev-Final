@@ -9,7 +9,7 @@ bool renderer_backend_create(GDF_RENDER_BACKEND_TYPE type, renderer_backend* out
         out_renderer_backend->begin_frame = vk_renderer_begin_frame;
         out_renderer_backend->end_frame = vk_renderer_end_frame;
         out_renderer_backend->resized = vk_renderer_resize;
-
+        out_renderer_backend->set_camera = vk_renderer_set_camera;
         return true;
     }
 
@@ -22,4 +22,5 @@ void renderer_backend_destroy(renderer_backend* renderer_backend) {
     renderer_backend->begin_frame = 0;
     renderer_backend->end_frame = 0;
     renderer_backend->resized = 0;
+    renderer_backend->set_camera = 0;
 }

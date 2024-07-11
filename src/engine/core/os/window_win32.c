@@ -1,12 +1,12 @@
 #include "window.h"
 
 #ifdef OS_WINDOWS
-#include "core/logging.h"
-#include "core/mem.h"
+#include "engine/core/logging.h"
+#include "engine/core/mem.h"
 #include <windows.h>
 #include <windowsx.h>
 #include <vulkan/vulkan_win32.h>
-#include "core/event.h"
+#include "engine/core/event.h"
 
 const char win_class_name[] = "gdf_window";
 static u16 current_window_id = 0;
@@ -18,6 +18,10 @@ typedef struct {
     HWND hwnd;
     u32 client_w;
     u32 client_h;
+    // top left corner
+    u32 x;
+    // top left corner
+    u32 y;
 } InternalWindowState;
 
 LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
@@ -39,8 +43,13 @@ LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
             PostQuitMessage(0);
             return 0;
         }
+        case WM_MOVE: 
+        {
+            // TODO! UPDATE WINDOW INTERNALS
+        }
         case WM_SIZE: 
         {
+            // TODO! UPDATE WINDOW INTERNALS
             RECT r;
             GetClientRect(hwnd, &r);
             u32 width = r.right - r.left;
@@ -201,6 +210,8 @@ GDF_Window* GDF_CreateWindow(i16 x_, i16 y_, i16 w, i16 h, const char* title)
 
     internals->client_w = client_width;
     internals->client_h = client_height;
+    internals->x = client_x;
+    internals->y = client_y;
 
     u32 window_x = client_x;
     u32 window_y = client_y;
@@ -254,11 +265,20 @@ GDF_Window* GDF_CreateWindow(i16 x_, i16 y_, i16 w, i16 h, const char* title)
     return window;
 }
 
+// TODO! this is DEFINITELY INCOMPLETE.
 bool GDF_SetWindowPos(i16 dest_x, i16 dest_y)
 {
     return false;
 }
 
+void GDF_GetWindowPos(i16* x, i16* y)
+{
+    InternalWindowState* internals = (InternalWindowState*) MAIN_WINDOW->internals;
+    *x = internals->x;
+    *y = internals->y;
+}
+
+// TODO! this seems to be incomplete..
 bool GDF_SetWindowSizeInternal(i16 w, i16 h)
 {
     InternalWindowState* internals = (InternalWindowState*) MAIN_WINDOW->internals;

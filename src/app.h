@@ -1,13 +1,13 @@
 #pragma once
 #include "core.h"
-#include "core/logging.h"
-#include "core/os/window.h"
-#include "core/os/info.h"
-#include "core/os/io.h"
-#include "core/subsystems.h"
-#include "core/serde/serde.h"
+#include "engine/core/logging.h"
+#include "engine/core/os/window.h"
+#include "engine/core/os/info.h"
+#include "engine/core/os/io.h"
+#include "engine/core/subsystems.h"
+#include "engine/core/serde/serde.h"
 #include "client/client_settings.h"
-#include "render/renderer.h"
+#include "engine/render/renderer.h"
 
 // TODO! this file and app.c are quite useless put these into main.c
 

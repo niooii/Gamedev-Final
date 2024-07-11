@@ -1,6 +1,6 @@
 #include "app.h"
-#include "core/containers/list.h"
-#include "core/input.h"
+#include "engine/core/containers/list.h"
+#include "engine/core/input.h"
 
 typedef struct AppState {
     bool is_running;
@@ -14,6 +14,7 @@ typedef struct AppState {
 static bool INITIALIZED = false;
 static AppState APP_STATE;
 static GDF_Window* MAIN_WINDOW;
+static bool mouse_lock_toggle = false;
 
 // is gonna be registered for a bunch of events
 bool app_on_event(u16 event_code, void *sender, void *listener_instance, GDF_EventCtx ctx)
@@ -28,6 +29,15 @@ bool app_on_event(u16 event_code, void *sender, void *listener_instance, GDF_Eve
                 GDF_EventCtx tmp_ctx = {.data = 0};
                 GDF_EVENT_Fire(GDF_EVENT_INTERNAL_APP_QUIT, NULL, tmp_ctx);
                 return true;
+            }
+            switch (key_code) {
+                case GDF_KEYCODE_GRAVE:
+                {
+                    mouse_lock_toggle = !mouse_lock_toggle;
+                    GDF_CursorLockState state = mouse_lock_toggle ? GDF_CursorLockState_Locked : GDF_CursorLockState_Free;
+                    GDF_INPUT_SetMouseLockState(state);
+                    LOG_DEBUG("TOGGLE MOUSE LOCK");
+                }
             }
             break;
         }
@@ -68,6 +78,8 @@ bool app_on_event(u16 event_code, void *sender, void *listener_instance, GDF_Eve
     return false;
 }
 
+#include "engine/camera.h"
+static Camera camera;
 bool GDF_InitApp() 
 {
     if (INITIALIZED) 
@@ -109,6 +121,7 @@ bool GDF_InitApp()
         LOG_ERR("Couldn't initialize renderer unlucky.");
         return false;
     }
+    GDF_Renderer_SetCamera(&camera);
 
     APP_STATE.stopwatch = GDF_Stopwatch_Create();
 
@@ -141,7 +154,7 @@ f64 GDF_RunApp()
 
     GDF_Stopwatch* running_timer = GDF_Stopwatch_Create();
     u8 frame_count = 0;
-    u32 fps = 12441244;
+    u32 fps = 144;
     f64 secs_per_frame = 1.0/fps;
     GDF_Stopwatch* frame_timer = GDF_Stopwatch_Create();
 
@@ -173,7 +186,66 @@ f64 GDF_RunApp()
             GDF_Sleep((u64)(wait_secs * 1000));
         }
 
+        // quick camera input test stuff 
+        // TODO! remove
+        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_W))
+        {
+            camera.pos.x -= dt;
+            LOG_DEBUG("MOVING CAMERA forward %f", camera.pos.x);
+        }
+        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_S))
+        {
+            camera.pos.x += dt;
+            LOG_DEBUG("MOVING CAMERA YES %f", camera.pos.x);
+        }
+        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_A))
+        {
+            camera.pos.z -= dt;
+            LOG_DEBUG("MOVING CAMERA YES %f", camera.pos.z);
+        }
+        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_D))
+        {
+            camera.pos.z += dt;
+            LOG_DEBUG("MOVING CAMERA YES %f", camera.pos.z);
+        }
+        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_SPACE))
+        {
+            camera.pos.y += dt;
+            LOG_DEBUG("MOVING CAMERA YES %f", camera.pos.y);
+        }
+        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_LSHIFT))
+        {
+            camera.pos.y -= dt;
+            LOG_DEBUG("MOVING CAMERA YES %f", camera.pos.y);
+        }
+        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_UP))
+        {
+            camera.pitch -= dt;
+            LOG_DEBUG("TURNING CAMERA YES %f", camera.pitch);
+        }
+        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_DOWN))
+        {
+            camera.pitch += dt;
+            LOG_DEBUG("TURNING CAMERA YES %f", camera.pitch);
+        }
+        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_LEFT))
+        {
+            camera.yaw += dt;
+            LOG_DEBUG("TURNING CAMERA YES %f", camera.yaw);
+        }
+        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_RIGHT))
+        {
+            camera.yaw -= dt;
+            LOG_DEBUG("TURNING CAMERA YES %f", camera.yaw);
+        }
+        i32 dx;
+        i32 dy;
+        GDF_INPUT_GetMouseDelta(&dx, &dy);
+        camera.yaw -= dx / 180.f;
+        // LOG_DEBUG("curr: %d | prev: %d", mouse_x, prev_mouse_x);
+
         GDF_INPUT_Update(dt);
+
         // only thing that should produce innacuracies is if pumpmessages takes a bit of time
         APP_STATE.last_time = current_time;
     }

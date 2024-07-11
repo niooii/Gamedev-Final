@@ -130,6 +130,7 @@
         "direct.h": "c",
         "checksums.h": "c",
         "build_options.h": "c",
-        "math_types.h": "c"
+        "math_types.h": "c",
+        "camera.h": "c"
     },
 }

@@ -1,10 +1,10 @@
 #ifndef COMPILE_BUILDER
 
 #include "game/game.h"
-#include "core/os/info.h"
+#include "engine/core/os/info.h"
 #include "app.h"
-#include "core/asserts.h"
-#include "core/subsystems.h"
+#include "engine/core/asserts.h"
+#include "engine/core/subsystems.h"
 
 int main()
 {
