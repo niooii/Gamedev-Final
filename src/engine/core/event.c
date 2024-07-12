@@ -97,7 +97,7 @@ bool GDF_EVENT_Unregister(u16 e_code, void* listener, GDF_EventHandlerFP callbac
     return false;
 }
 
-bool GDF_EVENT_Fire(u16 e_code, void* sender, GDF_EventCtx ctx)
+bool GDF_EVENT_Fire(u16 e_code, void* sender, GDF_EventContext ctx)
 {
     if (!INITIALIZED)
         return false;

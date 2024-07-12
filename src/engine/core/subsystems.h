@@ -40,6 +40,12 @@ static bool GDF_InitSubsystems(u32 flags)
     }
     if ((flags & GDF_SUBSYSTEM_INPUT) == GDF_SUBSYSTEM_INPUT)
     {
+        // if the events subsystem wasn't initialized return false w an error
+        if ((flags & GDF_SUBSYSTEM_EVENTS) != GDF_SUBSYSTEM_EVENTS)
+        {
+            LOG_ERR("Input subsystem depends on events subsystem.");
+            return false;
+        }
         GDF_InitInput();
     }
     if ((flags & GDF_SUBSYSTEM_NET) == GDF_SUBSYSTEM_NET)

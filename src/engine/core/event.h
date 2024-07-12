@@ -2,7 +2,7 @@
 
 #include "core.h"
 
-typedef struct GDF_EventCtx {
+typedef struct GDF_EventContext {
     // 128 bytes
     union {
         i64 i64[2];
@@ -19,18 +19,20 @@ typedef struct GDF_EventCtx {
         i16 i8[16];
         u16 u8[16];
 
+        bool b;
+
         char c[16];
     } data;
-} GDF_EventCtx;
+} GDF_EventContext;
 
-typedef bool (*GDF_EventHandlerFP)(u16 event_code, void* sender, void* listener_instance, GDF_EventCtx ctx);
+typedef bool (*GDF_EventHandlerFP)(u16 event_code, void* sender, void* listener_instance, GDF_EventContext ctx);
 
 bool GDF_InitEvents();
 void GDF_ShutdownEvents();
 
 bool GDF_EVENT_Register(u16 event_code, void* listener, GDF_EventHandlerFP callback);
 bool GDF_EVENT_Unregister(u16 event_code, void* listener, GDF_EventHandlerFP callback);
-bool GDF_EVENT_Fire(u16 event_code, void* sender, GDF_EventCtx ctx);
+bool GDF_EVENT_Fire(u16 event_code, void* sender, GDF_EventContext ctx);
 
 typedef enum GDF_EVENT_INTERNAL {
     
@@ -68,16 +70,22 @@ typedef enum GDF_EVENT_INTERNAL {
     GDF_EVENT_INTERNAL_MOUSE_WHEEL = 0x07,
     /*
     Usage:
-    u16 w = ctx.data.u16[0]
-    u16 h = ctx.data.u16[1]
-    */
-    GDF_EVENT_INTERNAL_WINDOW_RESIZE = 0x08,
-    /*
-    Usage:
     u16 dx = ctx.data.i16[0]
     u16 dy = ctx.data.i16[1]
     */
-    GDF_EVENT_INTERNAL_MOUSE_RAW_MOVE = 0x09,
+    GDF_EVENT_INTERNAL_MOUSE_RAW_MOVE = 0x08,
+    /*
+    Usage:
+    u16 w = ctx.data.u16[0]
+    u16 h = ctx.data.u16[1]
+    */
+    GDF_EVENT_INTERNAL_WINDOW_RESIZE = 0x09,
+    /*
+    Usage:
+    bool focus_gained = ctx.data.b;
+    bool focus_lost = !ctx.data.b;
+    */
+    GDF_EVENT_INTERNAL_WINDOW_FOCUS_CHANGE = 0x0A,
 
     // Not actaully an event.
     GDF_EVENT_INTERNAL_MAX = 0xFF

@@ -1646,6 +1646,8 @@ void vk_renderer_resize(u16 width, u16 height)
     context.pending_resize_event = true;
 }
 
+//TODO! remove later
+static f32 accumulated_time;
 bool vk_renderer_begin_frame(f32 delta_time) 
 {
     vk_device* device = &context.device;
@@ -1710,8 +1712,8 @@ bool vk_renderer_begin_frame(f32 delta_time)
     // TODO! remove and extract updating ubo into another function
     UniformBuffer ubo = {
         .proj = mat4_perspective(PI/4.f, 1.777, 0.1, 100.0),
+        .view = mat4_view(active_camera->pos, active_camera->yaw * DEG_TO_RAD, active_camera->pitch * DEG_TO_RAD),
         // .proj = mat4_identity(),
-        .view = mat4_view(active_camera->pos, active_camera->yaw, active_camera->pitch),
     };
     // actualyl update view and projection matrices later
     // ubo.view = calculate_view_matrix(context->camera);
@@ -1746,9 +1748,8 @@ bool vk_renderer_begin_frame(f32 delta_time)
     };
 
     VkClearValue clear_values[2] = {
-        // {.color = {0.529f, 0.808f, 0.922f, 1.0f}}, // Sky blue color
-        {.color = {0.529f, 0.808f, 0.922f, 1.0f}}, // Sky blue color
-        {.depthStencil = {1.0f, 0}}
+        {.color = {0, 0, 0, 1}},
+        {.depthStencil = {1, 0}}
     };
     render_pass_info.clearValueCount = 2;
     render_pass_info.pClearValues = clear_values;
@@ -1770,7 +1771,24 @@ bool vk_renderer_begin_frame(f32 delta_time)
         NULL
     );
 
-    mat4 test_model_matrix = mat4_identity();
+    mat4 test_model_matrix = {
+        .data = {
+            1, 0, 0, 0,
+            0, 1, 0, 0,
+            0, 0, 1, 0,
+            0, 0, 0, 1
+        }
+    };
+    // funny test pulsing cube
+    accumulated_time += delta_time;
+    mat4 translation_matrix = mat4_translation(vec3_new(1, 0, 0));
+    mat4 scale_matrix = mat4_scale(vec3_new(1 + gsin(accumulated_time)/2.f, 1 + gsin(accumulated_time)/2.f, 1 + gsin(accumulated_time)/2.f));
+    mat4 rot_matrix = mat4_rotation(vec3_new(accumulated_time * 35 * DEG_TO_RAD, accumulated_time * 27 * DEG_TO_RAD, accumulated_time * 45 * DEG_TO_RAD));
+    // mat4 rot_matrix = mat4_identity();
+    mat4 transform_matrix = mat4_mul(scale_matrix, rot_matrix);
+    transform_matrix = mat4_mul(transform_matrix, translation_matrix);
+
+    test_model_matrix = mat4_mul(test_model_matrix, transform_matrix);
     vkCmdPushConstants(
         cmd_buffer,
         bound_pipeline->layout,
@@ -1857,70 +1875,6 @@ bool vk_renderer_end_frame(f32 delta_time)
         context.device.present_queue, 
         &present_info
     );
-
-    // vk_renderpass_end(command_buffer, &context.main_renderpass);
-
-    // // end recording
-    // vk_cmd_buf_end(command_buffer);
-
-    // // Make sure the previous frame is not using this image (i.e. its fence is being waited on)
-    // if (context.images_in_flight[context.img_idx] != VK_NULL_HANDLE) {  // was frame
-    //     vk_fence_wait(
-    //         &context,
-    //         context.images_in_flight[context.img_idx],
-    //         UINT64_MAX
-    //     );
-    // }
-
-    // // Mark the image fence as in-use by this frame.
-    // context.images_in_flight[context.img_idx] = &context.in_flight_fences[context.current_frame];
-
-    // // Reset the fence for use on the next frame
-    // vk_fence_reset(&context, &context.in_flight_fences[context.current_frame]);
-
-    // // Submit the queue and wait for the operation to complete.
-    // // Begin queue submission
-    // VkSubmitInfo submit_info = {VK_STRUCTURE_TYPE_SUBMIT_INFO};
-
-    // // Command buffer(s) to be executed.
-    // submit_info.commandBufferCount = 1;
-    // submit_info.pCommandBuffers = &command_buffer->handle;
-
-    // // The semaphore(s) to be signaled when the queue is complete.
-    // submit_info.signalSemaphoreCount = 1;
-    // submit_info.pSignalSemaphores = &context.queue_complete_semaphores[context.current_frame];
-
-    // // Wait semaphore ensures that the operation cannot begin until the image is available.
-    // submit_info.waitSemaphoreCount = 1;
-    // submit_info.pWaitSemaphores = &context.image_available_semaphores[context.current_frame];
-
-    // // Each semaphore waits on the corresponding pipeline stage to complete. 1:1 ratio.
-    // // VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT prevents subsequent colour attachment
-    // // writes from executing until the semaphore signals (i.e. one frame is presented at a time)
-    // VkPipelineStageFlags flags[1] = {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT};
-    // submit_info.pWaitDstStageMask = flags;
-
-    // VK_ASSERT(
-    //     vkQueueSubmit(
-    //         context.device.graphics_queue,
-    //         1,
-    //         &submit_info,
-    //         context.in_flight_fences[context.current_frame].handle
-    //     )
-    // );
-
-    // vk_cmd_buf_set_submitted(command_buffer);
-    // // End queue submission
-
-    // // Give the image back to the swapchain.
-    // vk_swapchain_present(
-    //     &context,
-    //     &context.swapchain,
-    //     context.device.graphics_queue,
-    //     context.device.present_queue,
-    //     context.queue_complete_semaphores[context.current_frame],
-    //     context.img_idx
-    // );
 
     context.current_frame++;
 

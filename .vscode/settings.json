@@ -131,6 +131,8 @@
         "checksums.h": "c",
         "build_options.h": "c",
         "math_types.h": "c",
-        "camera.h": "c"
+        "camera.h": "c",
+        "ios": "c",
+        "xiosbase": "c"
     },
 }

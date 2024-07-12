@@ -35,7 +35,7 @@ LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
         }
         case WM_CLOSE:
         {
-            GDF_EventCtx ctx = {};
+            GDF_EventContext ctx = {};
             GDF_EVENT_Fire(GDF_EVENT_INTERNAL_APP_QUIT, NULL, ctx);
             return true;
         }
@@ -47,6 +47,21 @@ LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
         case WM_MOVE: 
         {
             // TODO! UPDATE WINDOW INTERNALS
+            break;
+        }
+        case WM_KILLFOCUS:
+        {
+            GDF_EventContext ctx;
+            ctx.data.b = false;
+            GDF_EVENT_Fire(GDF_EVENT_INTERNAL_WINDOW_FOCUS_CHANGE, NULL, ctx);
+            break;
+        }
+        case WM_SETFOCUS:
+        {
+            GDF_EventContext ctx;
+            ctx.data.b = true;
+            GDF_EVENT_Fire(GDF_EVENT_INTERNAL_WINDOW_FOCUS_CHANGE, NULL, ctx);
+            break;
         }
         case WM_SIZE: 
         {
@@ -56,7 +71,7 @@ LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
             u32 width = r.right - r.left;
             u32 height = r.bottom - r.top;
             
-            GDF_EventCtx ctx;
+            GDF_EventContext ctx;
             ctx.data.u16[0] = width;
             ctx.data.u16[1] = height;
             GDF_EVENT_Fire(GDF_EVENT_INTERNAL_WINDOW_RESIZE, NULL, ctx);

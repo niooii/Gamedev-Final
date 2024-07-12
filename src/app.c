@@ -18,7 +18,7 @@ static GDF_Window* MAIN_WINDOW;
 static bool mouse_lock_toggle = false;
 
 // is gonna be registered for a bunch of events
-bool app_on_event(u16 event_code, void *sender, void *listener_instance, GDF_EventCtx ctx)
+bool app_on_event(u16 event_code, void *sender, void *listener_instance, GDF_EventContext ctx)
 {
     switch (event_code)
     {
@@ -27,7 +27,7 @@ bool app_on_event(u16 event_code, void *sender, void *listener_instance, GDF_Eve
             u16 key_code = ctx.data.u16[0];
             if (key_code == GDF_KEYCODE_ESCAPE)
             {
-                GDF_EventCtx tmp_ctx = {.data = 0};
+                GDF_EventContext tmp_ctx = {.data = 0};
                 GDF_EVENT_Fire(GDF_EVENT_INTERNAL_APP_QUIT, NULL, tmp_ctx);
                 return true;
             }
@@ -35,7 +35,7 @@ bool app_on_event(u16 event_code, void *sender, void *listener_instance, GDF_Eve
                 case GDF_KEYCODE_GRAVE:
                 {
                     mouse_lock_toggle = !mouse_lock_toggle;
-                    GDF_CursorLockState state = mouse_lock_toggle ? GDF_CursorLockState_Locked : GDF_CursorLockState_Free;
+                    GDF_CURSOR_LOCK_STATE state = mouse_lock_toggle ? GDF_CURSOR_LOCK_STATE_Locked : GDF_CURSOR_LOCK_STATE_Free;
                     GDF_INPUT_SetMouseLockState(state);
                     LOG_DEBUG("TOGGLE MOUSE LOCK");
                 }
@@ -122,7 +122,7 @@ bool GDF_InitApp()
         LOG_ERR("Couldn't initialize renderer unlucky.");
         return false;
     }
-    camera.pos = vec3_new(-2, 0, 0);
+    camera.pos = vec3_new(0, 0, -2);
     GDF_Renderer_SetCamera(&camera);
 
     APP_STATE.stopwatch = GDF_Stopwatch_Create();
@@ -190,35 +190,36 @@ f64 GDF_RunApp()
 
         // quick camera input test stuff 
         // TODO! remove
+        vec3 camera_forward = vec3_forward(camera.yaw * DEG_TO_RAD, camera.pitch * DEG_TO_RAD);
+        vec3 camera_right = vec3_right_from_forward(camera_forward);
+        vec3 camera_up = vec3_cross(camera_forward, camera_right);
+
+        camera_forward = vec3_mul_scalar(camera_forward, 2 * dt);
+        camera_right = vec3_mul_scalar(camera_right, 2 * dt);
+        camera_up = vec3_mul_scalar(camera_up, 2 * dt);
         if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_W))
         {
-            camera.pos.x += dt;
-            LOG_DEBUG("MOVING CAMERA forward %f", camera.pos.x);
+            vec3_add_to(&camera.pos, camera_forward);
         }
         if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_S))
         {
-            camera.pos.x -= dt;
-            LOG_DEBUG("MOVING CAMERA YES %f", camera.pos.x);
+            vec3_add_to(&camera.pos, vec3_negated(camera_forward));
         }
         if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_A))
         {
-            camera.pos.z -= dt;
-            LOG_DEBUG("MOVING CAMERA YES %f", camera.pos.z);
+            vec3_add_to(&camera.pos, vec3_negated(camera_right));
         }
         if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_D))
         {
-            camera.pos.z += dt;
-            LOG_DEBUG("MOVING CAMERA YES %f", camera.pos.z);
+            vec3_add_to(&camera.pos, camera_right);
         }
         if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_SPACE))
         {
             camera.pos.y += dt;
-            LOG_DEBUG("MOVING CAMERA YES %f", camera.pos.y);
         }
         if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_LSHIFT))
         {
             camera.pos.y -= dt;
-            LOG_DEBUG("MOVING CAMERA YES %f", camera.pos.y);
         }
         if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_UP))
         {
@@ -243,8 +244,10 @@ f64 GDF_RunApp()
         i32 dx;
         i32 dy;
         GDF_INPUT_GetMouseDelta(&dx, &dy);
-        camera.yaw += dx / 180.f;
-        camera.pitch -= dy / 180.f;
+        camera.yaw -= dx * 0.4;
+        camera.pitch -= dy * 0.4;
+        // TODO! weird behavior when not clamped: when pitch passes -90 or 90, scene flips??
+        camera.pitch = CLAMP(camera.pitch, -89, 89);
         // LOG_DEBUG("curr: %d | prev: %d", mouse_x, prev_mouse_x);
 
         GDF_INPUT_Update(dt);

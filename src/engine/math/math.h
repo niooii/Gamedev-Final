@@ -67,24 +67,35 @@ FORCEINLINE vec2 vec2_one()
     return (vec2) { 1.0f, 1.0f };
 }
 
-FORCEINLINE vec2 vec2_up() 
+// FORCEINLINE vec2 vec2_up() 
+// {
+//     return (vec2) { 0.0f, 1.0f };
+// }
+
+// FORCEINLINE vec2 vec2_down() 
+// {
+//     return (vec2) { 0.0f, -1.0f };
+// }
+
+// FORCEINLINE vec2 vec2_left() 
+// {
+//     return (vec2) { -1.0f, 0.0f };
+// }
+
+// FORCEINLINE vec2 vec2_right() 
+// {
+//     return (vec2) { 1.0f, 0.0f };
+// }
+
+FORCEINLINE vec2 vec2_negated(vec2 vector)
 {
-    return (vec2) { 0.0f, 1.0f };
+    return (vec2) {-vector.x, -vector.y};
 }
 
-FORCEINLINE vec2 vec2_down() 
+FORCEINLINE void vec2_negate(vec2* vector)
 {
-    return (vec2) { 0.0f, -1.0f };
-}
-
-FORCEINLINE vec2 vec2_left() 
-{
-    return (vec2) { -1.0f, 0.0f };
-}
-
-FORCEINLINE vec2 vec2_right() 
-{
-    return (vec2) { 1.0f, 0.0f };
+    vector->x = -vector->x;
+    vector->y = -vector->y;
 }
 
 FORCEINLINE vec2 vec2_add(vec2 vector_0, vec2 vector_1) 
@@ -200,34 +211,46 @@ FORCEINLINE vec3 vec3_one()
     return (vec3) { 1.0f, 1.0f, 1.0f };
 }
 
-FORCEINLINE vec3 vec3_up() 
+// FORCEINLINE vec3 vec3_up() 
+// {
+//     return (vec3) { 0.0f, 1.0f, 0.0f };
+// }
+
+// FORCEINLINE vec3 vec3_down() 
+// {
+//     return (vec3) { 0.0f, -1.0f, 0.0f };
+// }
+
+// FORCEINLINE vec3 vec3_left() 
+// {
+//     return (vec3) { -1.0f, 0.0f, 0.0f };
+// }
+
+// FORCEINLINE vec3 vec3_right() 
+// {
+//     return (vec3) { 1.0f, 0.0f, 0.0f };
+// }
+
+// FORCEINLINE vec3 vec3_world_forward() 
+// {
+//     return (vec3) { 0.0f, 0.0f, -1.0f };
+// }
+
+// FORCEINLINE vec3 vec3_back() 
+// {
+//     return (vec3) { 0.0f, 0.0f, 1.0f };
+// }
+
+FORCEINLINE vec3 vec3_negated(vec3 vector)
 {
-    return (vec3) { 0.0f, 1.0f, 0.0f };
+    return (vec3) {-vector.x, -vector.y, -vector.z};
 }
 
-FORCEINLINE vec3 vec3_down() 
+FORCEINLINE void vec3_negate(vec3* vector)
 {
-    return (vec3) { 0.0f, -1.0f, 0.0f };
-}
-
-FORCEINLINE vec3 vec3_left() 
-{
-    return (vec3) { -1.0f, 0.0f, 0.0f };
-}
-
-FORCEINLINE vec3 vec3_right() 
-{
-    return (vec3) { 1.0f, 0.0f, 0.0f };
-}
-
-FORCEINLINE vec3 vec3_forward() 
-{
-    return (vec3) { 0.0f, 0.0f, -1.0f };
-}
-
-FORCEINLINE vec3 vec3_back() 
-{
-    return (vec3) { 0.0f, 0.0f, 1.0f };
+    vector->x = -vector->x;
+    vector->y = -vector->y;
+    vector->z = -vector->z;
 }
 
 FORCEINLINE vec3 vec3_add(vec3 vector_0, vec3 vector_1) 
@@ -331,6 +354,41 @@ FORCEINLINE bool vec3_cmp(vec3 vector_0, vec3 vector_1, f32 tolerance)
     return true;
 }
 
+FORCEINLINE vec3 vec3_forward(float yaw, float pitch) {
+    vec3 forward;
+    forward.x = gsin(yaw) * gcos(pitch);
+    forward.y = gsin(pitch);
+    forward.z = gcos(yaw) * gcos(pitch);
+    vec3_normalize(&forward);
+    return forward;
+}
+
+FORCEINLINE vec3 vec3_right(float yaw, float pitch) {
+    vec3 right;
+    right.x = -gcos(yaw);
+    right.y = 0;
+    right.z = gsin(yaw);
+    vec3_normalize(&right);
+    return right;
+}
+
+// Faster than calling vec3_right, maybe.
+FORCEINLINE vec3 vec3_right_from_forward(vec3 forward) {
+    vec3 world_up = {0.0f, 1.0f, 0.0f};
+
+    vec3 right = vec3_cross(forward, world_up);
+    vec3_normalize(&right);
+    return right;
+}
+
+// Slightly faster than calling vec3_forward, maybe.
+FORCEINLINE vec3 vec3_forward_from_right(vec3 right) {
+    vec3 world_up = {0.0f, 1.0f, 0.0f};
+    vec3 forward = vec3_cross(world_up, right);
+    vec3_normalize(&forward);
+    return forward;
+}
+
 FORCEINLINE f32 vec3_distance(vec3 vector_0, vec3 vector_1) 
 {
     vec3 d = (vec3) { vector_0.x - vector_1.x, vector_0.y - vector_1.y, vector_0.z - vector_1.z };
@@ -364,6 +422,19 @@ FORCEINLINE vec4 vec4_zero()
 FORCEINLINE vec4 vec4_one() 
 {
     return (vec4) { 1.0f, 1.0f, 1.0f, 1.0f };
+}
+
+FORCEINLINE vec4 vec4_negated(vec4 vector)
+{
+    return (vec4) {-vector.x, -vector.y, -vector.z, -vector.w};
+}
+
+FORCEINLINE void vec4_negate(vec4* vector)
+{
+    vector->x = -vector->x;
+    vector->y = -vector->y;
+    vector->z = -vector->z;
+    vector->w = -vector->w;
 }
 
 FORCEINLINE vec4 vec4_add(vec4 vector_0, vec4 vector_1) 
@@ -712,9 +783,9 @@ FORCEINLINE mat4 mat4_inverse(mat4 matrix)
 FORCEINLINE mat4 mat4_view(vec3 pos, f32 yaw, f32 pitch) 
 {
     vec3 front;
-    front.x = gcos(yaw) * gcos(pitch);
+    front.x = gsin(yaw) * gcos(pitch);
     front.y = gsin(pitch);
-    front.z = gsin(yaw) * gcos(pitch);
+    front.z = gcos(yaw) * gcos(pitch);
     vec3_normalize(&front);
 
     vec3 up = { 0.0f, 1.0f, 0.0f };
@@ -722,6 +793,84 @@ FORCEINLINE mat4 mat4_view(vec3 pos, f32 yaw, f32 pitch)
     up = vec3_cross(front, right);
 
     return mat4_look_at(pos, vec3_add(pos, front), up);
+}
+
+/**
+ * @brief Returns a translation matrix. 
+ * 
+ * @param translations The translations to use (x, y, z).
+ * @return A translation matrix.
+ * 
+ */
+FORCEINLINE mat4 mat4_translation(vec3 translations) 
+{
+    mat4 mat = mat4_identity();
+    mat.data[12] = translations.x;
+    mat.data[13] = translations.y;
+    mat.data[14] = translations.z;
+    return mat;
+}
+
+/**
+ * @brief Returns a scaling matrix. 
+ * 
+ * @param scale The scale values to use (x, y, z).
+ * @return A scaling matrix.
+ * 
+ */
+FORCEINLINE mat4 mat4_scale(vec3 scale) 
+{
+    mat4 mat = mat4_identity();
+    mat.data[0] = scale.x;
+    mat.data[5] = scale.y;
+    mat.data[10] = scale.z;
+    return mat;
+}
+
+/**
+ * @brief Returns a rotation matrix. 
+ * 
+ * @param scale The rotation values to use (radians) (x, y, z).
+ * @return A rotation matrix.
+ * 
+ */
+FORCEINLINE mat4 mat4_rotation(vec3 rotations_rad) 
+{
+    f32 cx = gcos(rotations_rad.x);
+    f32 sx = gsin(rotations_rad.x);
+    f32 cy = gcos(rotations_rad.y);
+    f32 sy = gsin(rotations_rad.y);
+    f32 cz = gcos(rotations_rad.z);
+    f32 sz = gsin(rotations_rad.z);
+
+    mat4 mat = mat4_identity();
+    mat.data[0] = cy * cz;
+    mat.data[1] = cy * sz;
+    mat.data[2] = -sy;
+
+    mat.data[4] = sx * sy * cz - cx * sz;
+    mat.data[5] = sx * sy * sz + cx * cz;
+    mat.data[6] = sx * cy;
+
+    mat.data[8] = cx * sy * cz + sx * sz;
+    mat.data[9] = cx * sy * sz - sx * cz;
+    mat.data[10] = cx * cy;
+
+    return mat;
+}
+/**
+ * @brief Returns a forward vector relative to the provided matrix.
+ *
+ * @param matrix The matrix from which to base the vector.
+ * @return A 3-component directional vector.
+ */
+FORCEINLINE vec3 mat4_forward(mat4 matrix) {
+    vec3 forward;
+    forward.x = -matrix.data[2];
+    forward.y = -matrix.data[6];
+    forward.z = -matrix.data[10];
+    vec3_normalize(&forward);
+    return forward;
 }
 
 /**
