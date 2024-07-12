@@ -28,27 +28,27 @@ void GDF_DestroyRenderer()
 
 bool renderer_begin_frame(f32 delta_time) 
 {
-    return backend->begin_frame(delta_time);
+    return backend->begin_frame(backend, delta_time);
 }
 
 bool renderer_end_frame(f32 delta_time) 
 {
-    bool result = backend->end_frame(delta_time);
+    bool result = backend->end_frame(backend, delta_time);
     backend->frame_number++;
     return result;
 }
 
-void GDF_Renderer_Resize(u16 width, u16 height)
+void GDF_RENDERER_Resize(u16 width, u16 height)
 {
-    backend->resized(width, height);
+    backend->resized(backend, width, height);
 }
 
-void GDF_Renderer_SetCamera(Camera* camera)
+void GDF_RENDERER_SetCamera(Camera* camera)
 {
-    backend->set_camera(camera);
+    backend->active_camera = camera;
 }
 
-bool GDF_Renderer_DrawFrame(GDF_RenderPacket* packet) 
+bool GDF_RENDERER_DrawFrame(GDF_RenderPacket* packet) 
 {
     if (renderer_begin_frame(packet->delta_time)) {
 

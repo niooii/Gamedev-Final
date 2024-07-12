@@ -153,8 +153,6 @@ typedef struct vk_renderer_context {
     // GDF_LIST
     VkFence* images_in_flight;
 
-    Camera* active_camera;
-
     u32 framebuffer_width;
     u32 framebuffer_height;
     bool pending_resize_event;

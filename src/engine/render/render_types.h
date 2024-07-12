@@ -12,15 +12,17 @@ typedef enum GDF_RENDER_BACKEND_TYPE {
 typedef struct renderer_backend {
     u64 frame_number;
 
+    // Camera (and view and projection) stuff
+    Camera* active_camera;
+
     bool (*initialize)(struct renderer_backend* backend, const char* application_name);
 
     void (*destroy)(struct renderer_backend* backend);
 
-    void (*resized)(u16 width, u16 height);
+    void (*resized)(struct renderer_backend* backend, u16 width, u16 height);
 
-    bool (*begin_frame)(f32 delta_time);
-    bool (*end_frame)(f32 delta_time);    
-    void (*set_camera)(Camera* camera);    
+    bool (*begin_frame)(struct renderer_backend* backend, f32 delta_time);
+    bool (*end_frame)(struct renderer_backend* backend, f32 delta_time);
 } renderer_backend;
 
 typedef struct GDF_RenderPacket {
@@ -32,6 +34,5 @@ typedef struct Vertex3d {
 } Vertex3d;
 
 typedef struct UniformBuffer {
-    mat4 view;
-    mat4 proj;
+    mat4 view_projection;
 } UniformBuffer;

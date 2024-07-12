@@ -1,8 +1,7 @@
 #version 450
 
 layout(binding = 0) uniform UniformBufferObject {
-    mat4 view;
-    mat4 proj;
+    mat4 view_projection;
 } ubo;
 
 layout(push_constant) uniform PushConstants {
@@ -21,5 +20,5 @@ layout(location = 0) out vec3 out_position;
 
 void main() {
     // TODO! precompute this mvp matrix on the cpu
-    gl_Position = ubo.proj * ubo.view * push_constants.model * vec4(in_position, 1.0);
+    gl_Position = ubo.view_projection * push_constants.model * vec4(in_position, 1.0);
 }

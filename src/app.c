@@ -62,7 +62,7 @@ bool app_on_event(u16 event_code, void *sender, void *listener_instance, GDF_Eve
                 {
                     LOG_INFO("Window is minimized kinda.");
                 }
-                GDF_Renderer_Resize(width, height);
+                GDF_RENDERER_Resize(width, height);
             }
             return false;
         }
@@ -123,7 +123,8 @@ bool GDF_InitApp()
         return false;
     }
     camera.pos = vec3_new(0, 0, -2);
-    GDF_Renderer_SetCamera(&camera);
+    GDF_CAMERA_InitDefault(&camera);
+    GDF_RENDERER_SetCamera(&camera);
 
     APP_STATE.stopwatch = GDF_Stopwatch_Create();
 
@@ -176,7 +177,7 @@ f64 GDF_RunApp()
 
         GDF_RenderPacket packet;
         packet.delta_time = dt;
-        GDF_Renderer_DrawFrame(&packet);
+        GDF_RENDERER_DrawFrame(&packet);
 
         f64 frame_time = GDF_Stopwatch_TimeElasped(frame_timer);
         
@@ -248,6 +249,7 @@ f64 GDF_RunApp()
         camera.pitch -= dy * 0.4;
         // TODO! weird behavior when not clamped: when pitch passes -90 or 90, scene flips??
         camera.pitch = CLAMP(camera.pitch, -89, 89);
+        GDF_CAMERA_RecalculateViewMatrix(&camera);
         // LOG_DEBUG("curr: %d | prev: %d", mouse_x, prev_mouse_x);
 
         GDF_INPUT_Update(dt);

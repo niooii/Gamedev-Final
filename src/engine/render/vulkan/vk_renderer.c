@@ -2,6 +2,7 @@
 #include "vk_types.h"
 #include "engine/core/containers/list.h"
 #include "vk_os.h"
+#include "engine/engine_core.h"
 
 static vk_renderer_context context;
 static u16 new_framebuf_w;
@@ -775,9 +776,21 @@ static void __create_example_cube_buffers(vk_renderer_context* context)
     vkUnmapMemory(device->handle, index_buffer_memory);
 }
 
+// TODO! Remove later
+static u32 cube_transform_count = 50;
+static GDF_Transform* cube_transforms;
 // ===== FORWARD DECLARATIONS END =====
 bool vk_renderer_init(renderer_backend* backend, const char* application_name) 
 {
+    cube_transforms = GDF_LIST_Reserve(GDF_Transform, cube_transform_count);
+    for (u32 i = 0; i < cube_transform_count; i++)
+    {
+        GDF_Transform* cube_transform = cube_transforms + i;
+        GDF_TRANSFORM_InitDefault(cube_transform);
+        cube_transform->pos.x = -((f32)cube_transform_count) + 2 * i;
+        LOG_INFO("pos: %f", cube_transform->pos.x);
+        GDF_TRANSFORM_RecalculateModelMatrix(cube_transform);
+    }
     // TODO! custom allocator.
     context.allocator = 0;
     
@@ -1639,16 +1652,14 @@ void vk_renderer_destroy(renderer_backend* backend)
     vkDestroyInstance(context.instance, context.allocator);
 }
 
-void vk_renderer_resize(u16 width, u16 height) 
+void vk_renderer_resize(renderer_backend* backend, u16 width, u16 height) 
 {
     new_framebuf_w = width;
     new_framebuf_h = height;
     context.pending_resize_event = true;
 }
 
-//TODO! remove later
-static f32 accumulated_time;
-bool vk_renderer_begin_frame(f32 delta_time) 
+bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time) 
 {
     vk_device* device = &context.device;
 
@@ -1708,17 +1719,12 @@ bool vk_renderer_begin_frame(f32 delta_time)
     // shorthand i guess i aint typing all that 
     u32 current_img_idx = context.swapchain.current_img_idx;
 
-    Camera* active_camera = context.active_camera;
+    Camera* active_camera = backend->active_camera;
     // TODO! remove and extract updating ubo into another function
     UniformBuffer ubo = {
-        .proj = mat4_perspective(PI/4.f, 1.777, 0.1, 100.0),
-        .view = mat4_view(active_camera->pos, active_camera->yaw * DEG_TO_RAD, active_camera->pitch * DEG_TO_RAD),
+        .view_projection = active_camera->view_perspective
         // .proj = mat4_identity(),
     };
-    // actualyl update view and projection matrices later
-    // ubo.view = calculate_view_matrix(context->camera);
-    // ubo.proj = calculate_projection_matrix(context->aspect_ratio);
-
     memcpy(context.uniform_buffers[current_img_idx].mapped_data, &ubo, sizeof(ubo));
 
     // Check if a previous frame is using this image (i.e. there is its fence to wait on)
@@ -1771,33 +1777,6 @@ bool vk_renderer_begin_frame(f32 delta_time)
         NULL
     );
 
-    mat4 test_model_matrix = {
-        .data = {
-            1, 0, 0, 0,
-            0, 1, 0, 0,
-            0, 0, 1, 0,
-            0, 0, 0, 1
-        }
-    };
-    // funny test pulsing cube
-    accumulated_time += delta_time;
-    mat4 translation_matrix = mat4_translation(vec3_new(1, 0, 0));
-    mat4 scale_matrix = mat4_scale(vec3_new(1 + gsin(accumulated_time)/2.f, 1 + gsin(accumulated_time)/2.f, 1 + gsin(accumulated_time)/2.f));
-    mat4 rot_matrix = mat4_rotation(vec3_new(accumulated_time * 35 * DEG_TO_RAD, accumulated_time * 27 * DEG_TO_RAD, accumulated_time * 45 * DEG_TO_RAD));
-    // mat4 rot_matrix = mat4_identity();
-    mat4 transform_matrix = mat4_mul(scale_matrix, rot_matrix);
-    transform_matrix = mat4_mul(transform_matrix, translation_matrix);
-
-    test_model_matrix = mat4_mul(test_model_matrix, transform_matrix);
-    vkCmdPushConstants(
-        cmd_buffer,
-        bound_pipeline->layout,
-        VK_SHADER_STAGE_VERTEX_BIT,
-        0,
-        sizeof(mat4),
-        &test_model_matrix
-    );
-
     // make as similar to opengls as possible
     VkViewport viewport;
     viewport.x = 0.0f;
@@ -1819,8 +1798,24 @@ bool vk_renderer_begin_frame(f32 delta_time)
     vkCmdBindVertexBuffers(cmd_buffer, 0, 1, vertex_buffers, offsets);
     vkCmdBindIndexBuffer(cmd_buffer, index_buffer, 0, VK_INDEX_TYPE_UINT16);
 
-    // Draw example cube
-    vkCmdDrawIndexed(cmd_buffer, sizeof(indices) / sizeof(indices[0]), 1, 0, 0, 0);
+    // funny test pulsing cube(s)
+    for (u32 i = 0; i < cube_transform_count; i++)
+    {
+        GDF_Transform* cube_transform = cube_transforms + i;
+        GDF_TRANSFORM_InitDefault(cube_transforms + i);
+        cube_transform->rot.x += delta_time * 35 * DEG_TO_RAD;
+        GDF_TRANSFORM_RecalculateModelMatrix(&cube_transform);
+
+        vkCmdPushConstants(
+            cmd_buffer,
+            bound_pipeline->layout,
+            VK_SHADER_STAGE_VERTEX_BIT,
+            0,
+            sizeof(mat4),
+            &cube_transform->model_matrix
+        );
+        vkCmdDrawIndexed(cmd_buffer, sizeof(indices) / sizeof(indices[0]), 1, 0, 0, 0);
+    }
 
     // draw test triangle 
     vkCmdDraw(cmd_buffer, 3, 1, 0, 0);
@@ -1828,7 +1823,7 @@ bool vk_renderer_begin_frame(f32 delta_time)
     return true;
 }
 
-bool vk_renderer_end_frame(f32 delta_time) 
+bool vk_renderer_end_frame(renderer_backend* backend, f32 delta_time) 
 {
     vk_device* device = &context.device;
     // vk_cmd_buf* command_buffer = &context.graphics_cmd_buf_list[context.img_idx];
@@ -1879,9 +1874,4 @@ bool vk_renderer_end_frame(f32 delta_time)
     context.current_frame++;
 
     return true;
-}
-
-void vk_renderer_set_camera(Camera* camera) 
-{
-    context.active_camera = camera;
 }
