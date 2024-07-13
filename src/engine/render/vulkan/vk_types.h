@@ -15,6 +15,41 @@
     } \
 } \
 
+
+// Enumeration types to access resources from context
+typedef enum GDF_VK_RENDERER_PIPELINE_INDEX {
+    GDF_VK_RENDERER_PIPELINE_INDEX_GEOMETRY,
+    GDF_VK_RENDERER_PIPELINE_INDEX_GEOMETRY_WIREFRAME,
+    GDF_VK_RENDERER_PIPELINE_INDEX_LIGHTING,
+    GDF_VK_RENDERER_PIPELINE_INDEX_POST_PROCESSING,
+    GDF_VK_RENDERER_PIPELINE_INDEX_GRID,
+
+    GDF_VK_RENDERER_PIPELINE_INDEX_MAX,
+} GDF_VK_RENDERER_PIPELINE_INDEX;
+
+typedef enum GDF_VK_RENDERER_SHADER_MODULE_INDEX {
+    GDF_VK_RENDERER_SHADER_MODULE_INDEX_GEOMETRY_VERT,
+    GDF_VK_RENDERER_SHADER_MODULE_INDEX_GEOMETRY_FRAG,
+    GDF_VK_RENDERER_SHADER_MODULE_INDEX_LIGHTING_VERT,
+    GDF_VK_RENDERER_SHADER_MODULE_INDEX_LIGHTING_FRAG,
+    GDF_VK_RENDERER_SHADER_MODULE_INDEX_POST_PROCESS_VERT,
+    GDF_VK_RENDERER_SHADER_MODULE_INDEX_POST_PROCESS_FRAG,
+
+    GDF_VK_RENDERER_SHADER_MODULE_INDEX_MAX,
+} GDF_VK_RENDERER_SHADER_MODULE_INDEX;
+
+typedef enum GDF_VK_RENDERER_RENDERPASS_INDEX {
+    GDF_VK_RENDERER_RENDERPASS_INDEX_MAIN,
+
+    GDF_VK_RENDERER_RENDERPASS_INDEX_MAX,
+} GDF_VK_RENDERER_RENDERPASS_INDEX;
+
+typedef enum GDF_VK_RENDERER_PIPELINE_LAYOUT_INDEX {
+    GDF_VK_RENDERER_PIPELINE_LAYOUT_INDEX_WORLD,
+
+    GDF_VK_RENDERER_PIPELINE_LAYOUT_INDEX_MAX,
+} GDF_VK_RENDERER_PIPELINE_LAYOUT_INDEX;
+
 typedef struct vk_pdevice_swapchain_support {
     VkSurfaceCapabilitiesKHR capabilities;
     u32 format_count;
@@ -53,39 +88,14 @@ typedef struct vk_device {
 
 typedef struct vk_pipeline {
     VkPipeline handle;
-    VkPipelineLayout layout;
+    GDF_VK_RENDERER_PIPELINE_LAYOUT_INDEX layout_index;
 } vk_pipeline;
-
-typedef struct vk_pipelines {
-    vk_pipeline geometry;
-    vk_pipeline geometry_wireframe;
-    vk_pipeline lighting;
-    vk_pipeline post_processing;
-} vk_pipelines;
 
 typedef struct vk_formats {
     VkFormat image_format;
     VkColorSpaceKHR image_color_space;
     VkFormat depth_format;
 } vk_formats;
-
-typedef struct vk_renderpasses {
-    VkRenderPass main_pass;
-} vk_renderpasses;
-
-typedef struct vk_shader_modules {
-    // Geometry pass
-    VkShaderModule geometry_vert;
-    VkShaderModule geometry_frag;
-    
-    // Lighting pass
-    VkShaderModule lighting_vert;
-    VkShaderModule lighting_frag;
-    
-    // Post-processing pass
-    VkShaderModule post_process_vert;
-    VkShaderModule post_process_frag;
-} vk_shader_modules;
 
 typedef struct vk_image {
     VkImage handle;
@@ -121,12 +131,13 @@ typedef struct vk_renderer_context {
     VkDeviceMemory depth_image_memory;
     VkImageView depth_image_view;
 
-    vk_pipelines pipelines;
+    vk_pipeline pipelines[GDF_VK_RENDERER_PIPELINE_INDEX_MAX];
+    VkPipelineLayout pipeline_layouts[GDF_VK_RENDERER_PIPELINE_LAYOUT_INDEX_MAX];
     vk_formats formats;
-    vk_renderpasses renderpasses;
+    VkRenderPass renderpasses[GDF_VK_RENDERER_RENDERPASS_INDEX_MAX];
 
     // Shader resources
-    vk_shader_modules shaders;
+    VkShaderModule builtin_shaders[GDF_VK_RENDERER_SHADER_MODULE_INDEX_MAX];
     // GDF_LIST
     vk_uniform_buffer* uniform_buffers;
     // This field is modified then copied over to vk_uniform_buffer[n].mapped_Data
@@ -152,9 +163,7 @@ typedef struct vk_renderer_context {
     VkFence* in_flight_fences;
     // GDF_LIST
     VkFence* images_in_flight;
-
-    u32 framebuffer_width;
-    u32 framebuffer_height;
+    
     bool pending_resize_event;
     bool creating_swapchain;
     bool ready_for_use;

@@ -5,8 +5,6 @@
 #include "engine/engine_core.h"
 
 static vk_renderer_context context;
-static u16 new_framebuf_w;
-static u16 new_framebuf_h;
 
 VKAPI_ATTR VkBool32 VKAPI_CALL __vk_dbg_callback(
     VkDebugUtilsMessageSeverityFlagBitsEXT message_severity,
@@ -93,13 +91,92 @@ void __query_swapchain_support(VkPhysicalDevice physical_device, VkSurfaceKHR su
     }
 }
 
+bool __create_shader_modules(vk_renderer_context* context)
+{
+    // load all (built in) shaders
+    VkShaderModule geometry_base_vert;
+    if (
+        !vk_utils_create_shader_module(
+            context, 
+            "resources/shaders/geometry_base.vert.spv", 
+            &context->builtin_shaders[GDF_VK_RENDERER_SHADER_MODULE_INDEX_GEOMETRY_VERT]
+        )
+    ) 
+    {
+        LOG_ERR("Failed to create geometry pass vertex shader. exiting...");
+        return false;
+    }
+
+    if (
+        !vk_utils_create_shader_module(
+            context, 
+            "resources/shaders/geometry_base.frag.spv", 
+            &context->builtin_shaders[GDF_VK_RENDERER_SHADER_MODULE_INDEX_GEOMETRY_FRAG]
+        )
+    ) 
+    {
+        LOG_ERR("Failed to create geometry pass fragment shader. exiting...");
+        return false;
+    }
+
+    if (
+        !vk_utils_create_shader_module(
+            context, 
+            "resources/shaders/lighting_base.vert.spv", 
+            &context->builtin_shaders[GDF_VK_RENDERER_SHADER_MODULE_INDEX_LIGHTING_VERT]
+        )
+    ) 
+    {
+        LOG_ERR("Failed to create lighting pass vertex shader. exiting...");
+        return false;
+    }
+
+    if (
+        !vk_utils_create_shader_module(
+            context, 
+            "resources/shaders/lighting_base.frag.spv", 
+            &context->builtin_shaders[GDF_VK_RENDERER_SHADER_MODULE_INDEX_LIGHTING_FRAG]
+        )
+    ) 
+    {
+        LOG_ERR("Failed to create lighting pass fragment shader. exiting...");
+        return false;
+    }
+
+    if (
+        !vk_utils_create_shader_module(
+            context, 
+            "resources/shaders/post_processing_base.vert.spv", 
+            &context->builtin_shaders[GDF_VK_RENDERER_SHADER_MODULE_INDEX_POST_PROCESS_VERT]
+        )
+    ) 
+    {
+        LOG_ERR("Failed to create post processing pass vertex shader. exiting...");
+        return false;
+    }
+
+    if (
+        !vk_utils_create_shader_module(
+            context, 
+            "resources/shaders/post_processing_base.frag.spv", 
+            &context->builtin_shaders[GDF_VK_RENDERER_SHADER_MODULE_INDEX_POST_PROCESS_FRAG]
+        )
+    ) 
+    {
+        LOG_ERR("Failed to create post processing pass fragment shader. exiting...");
+        return false;
+    }
+
+    return true;
+}
+
 // TODO! initialize lighting and postprocessing pipelines
-static bool __create_renderpasses_and_pipelines(vk_renderer_context* context) 
+bool __create_renderpasses_and_pipelines(vk_renderer_context* context) 
 {
     /* ======================================== */
     /* ----- CREATE RENDERPASS AND SUBPASSES ----- */
     /* ======================================== */
-    
+
     // TODO! multiple subpasses
     VkSubpassDescription subpass = {
         .pipelineBindPoint = VK_PIPELINE_BIND_POINT_GRAPHICS
@@ -182,49 +259,30 @@ static bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
             context->device.handle,
             &rp_create_info,
             context->allocator,
-            &context->renderpasses.main_pass
+            &context->renderpasses[GDF_VK_RENDERER_RENDERPASS_INDEX_MAIN]
         )
     );
 
     // Configure graphics pipeline
 
-    // load all (built in) shaders
-    if (!vk_utils_create_shader_module(context, "resources/shaders/geometry_base.vert.spv", &context->shaders.geometry_vert)) {
-        LOG_ERR("Failed to create geometry pass vertex shader. exiting...");
+    if (!__create_shader_modules(context))
+    {
+        LOG_ERR("Failed to create shaders gg");
         return false;
     }
-    if (!vk_utils_create_shader_module(context, "resources/shaders/geometry_base.frag.spv", &context->shaders.geometry_frag)) {
-        LOG_ERR("Failed to create geometry pass fragment shader. exiting...");
-        return false;
-    }
-    if (!vk_utils_create_shader_module(context, "resources/shaders/lighting_base.vert.spv", &context->shaders.lighting_vert)) {
-        LOG_ERR("Failed to create lighting pass vertex shader. exiting...");
-        return false;
-    }
-    if (!vk_utils_create_shader_module(context, "resources/shaders/lighting_base.frag.spv", &context->shaders.lighting_frag)) {
-        LOG_ERR("Failed to create lighting pass fragment shader. exiting...");
-        return false;
-    }
-    if (!vk_utils_create_shader_module(context, "resources/shaders/post_processing_base.vert.spv", &context->shaders.post_process_vert)) {
-        LOG_ERR("Failed to create post processing pass vertex shader. exiting...");
-        return false;
-    }
-    if (!vk_utils_create_shader_module(context, "resources/shaders/post_processing_base.frag.spv", &context->shaders.post_process_frag)) {
-        LOG_ERR("Failed to create post processing pass fragment shader. exiting...");
-        return false;
-    } 
 
     // Create shaders for geometry pass
+    
     VkPipelineShaderStageCreateInfo geometry_pass_vert = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
         .stage = VK_SHADER_STAGE_VERTEX_BIT,
-        .module = context->shaders.geometry_vert,
+        .module = context->builtin_shaders[GDF_VK_RENDERER_SHADER_MODULE_INDEX_GEOMETRY_VERT],
         .pName = "main"
     };
     VkPipelineShaderStageCreateInfo geometry_pass_frag = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
         .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-        .module = context->shaders.geometry_frag,
+        .module = context->builtin_shaders[GDF_VK_RENDERER_SHADER_MODULE_INDEX_GEOMETRY_FRAG],
         .pName = "main"
     };
 
@@ -237,13 +295,13 @@ static bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
     VkPipelineShaderStageCreateInfo lighting_pass_vert = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
         .stage = VK_SHADER_STAGE_VERTEX_BIT,
-        .module = context->shaders.lighting_vert,
+        .module = context->builtin_shaders[GDF_VK_RENDERER_SHADER_MODULE_INDEX_LIGHTING_VERT],
         .pName = "main"
     };
     VkPipelineShaderStageCreateInfo lighting_pass_frag = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
         .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-        .module = context->shaders.lighting_frag,
+        .module = context->builtin_shaders[GDF_VK_RENDERER_SHADER_MODULE_INDEX_LIGHTING_FRAG],
         .pName = "main"
     };
 
@@ -256,13 +314,13 @@ static bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
     VkPipelineShaderStageCreateInfo postprocessing_pass_vert = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
         .stage = VK_SHADER_STAGE_VERTEX_BIT,
-        .module = context->shaders.post_process_vert,
+        .module = context->builtin_shaders[GDF_VK_RENDERER_SHADER_MODULE_INDEX_POST_PROCESS_VERT],
         .pName = "main"
     };
     VkPipelineShaderStageCreateInfo postprocessing_pass_frag = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
         .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-        .module = context->shaders.post_process_frag,
+        .module = context->builtin_shaders[GDF_VK_RENDERER_SHADER_MODULE_INDEX_POST_PROCESS_FRAG],
         .pName = "main"
     };
 
@@ -304,14 +362,6 @@ static bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
     };
 
     // Viewport and scissor configuration
-    VkViewport viewport = {
-        .x = 0.0f,
-        .y = 0.0f,
-        .width = (float) context->framebuffer_width,
-        .height = (float) context->framebuffer_height,
-        .minDepth = 0.0f,
-        .maxDepth = 1.0f
-    };
 
     // VkRect2D scissor = {
     //     .offset = {0, 0},
@@ -391,17 +441,19 @@ static bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
         .pPushConstantRanges = &push_constant_range,
         .pushConstantRangeCount = 1
     };
-
-    VkPipelineLayout layout;
+    
     
     VK_ASSERT(
         vkCreatePipelineLayout(
             context->device.handle, 
             &layout_info,
             context->allocator,
-            &layout
+            &context->pipeline_layouts[GDF_VK_RENDERER_PIPELINE_LAYOUT_INDEX_WORLD]
         )
     );
+
+    GDF_VK_RENDERER_PIPELINE_LAYOUT_INDEX main_layout_index = GDF_VK_RENDERER_PIPELINE_LAYOUT_INDEX_WORLD;
+    VkPipelineLayout main_layout = context->pipeline_layouts[main_layout_index];
 
     // Create dynamic state for pipeline (viewport & scissor)
     // TODO! eventually if the game is fixed size remove these and bake states
@@ -419,7 +471,7 @@ static bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
     // Put all configuration in graphics pipeline info struct
     VkGraphicsPipelineCreateInfo pipeline_create_info = {
         .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-        .renderPass = context->renderpasses.main_pass,
+        .renderPass = context->renderpasses[GDF_VK_RENDERER_RENDERPASS_INDEX_MAIN],
         .stageCount = sizeof(geometry_pass_shaders) / sizeof(VkPipelineShaderStageCreateInfo),
         .pStages = geometry_pass_shaders,
         .pVertexInputState = &vertex_input_info,
@@ -429,7 +481,7 @@ static bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
         .pMultisampleState = &multisampling_state,
         .pDepthStencilState = &depth_stencil_state,
         .pColorBlendState = &color_blend_state,
-        .layout = layout,
+        .layout = main_layout,
         // index of geometry subpass
         .subpass = 0,
         .pDynamicState = &dynamic_states,
@@ -442,10 +494,10 @@ static bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
             1,
             &pipeline_create_info,
             context->allocator,
-            &context->pipelines.geometry.handle
+            &context->pipelines[GDF_VK_RENDERER_PIPELINE_INDEX_GEOMETRY]
         )
     );
-    context->pipelines.geometry.layout = layout;
+    context->pipelines[GDF_VK_RENDERER_PIPELINE_INDEX_GEOMETRY].layout_index = main_layout_index;
 
     // Create wireframe pipeline
     // TODO! this should work bc gp_create_info has pointers to these structs, but
@@ -459,10 +511,10 @@ static bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
             1,
             &pipeline_create_info,
             context->allocator,
-            &context->pipelines.geometry_wireframe.handle
+            &context->pipelines[GDF_VK_RENDERER_PIPELINE_INDEX_GEOMETRY_WIREFRAME]
         )
     );
-    context->pipelines.geometry_wireframe.layout = layout;
+    context->pipelines[GDF_VK_RENDERER_PIPELINE_INDEX_GEOMETRY_WIREFRAME].layout_index = main_layout_index;
 
     // repeat pipeline creation with different shaders for other pipelines
     // Lighting subpass pipeline
@@ -478,10 +530,10 @@ static bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
             1,
             &pipeline_create_info,
             context->allocator,
-            &context->pipelines.lighting.handle
+            &context->pipelines[GDF_VK_RENDERER_PIPELINE_INDEX_LIGHTING]
         )
     );
-    context->pipelines.lighting.layout = layout;
+    context->pipelines[GDF_VK_RENDERER_PIPELINE_INDEX_LIGHTING].layout_index = main_layout_index;
 
     // Post-processing subpass pipeline
     pipeline_create_info.stageCount = sizeof(postprocessing_pass_shaders) / sizeof(VkPipelineShaderStageCreateInfo);
@@ -494,16 +546,16 @@ static bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
             1,
             &pipeline_create_info,
             context->allocator,
-            &context->pipelines.post_processing.handle
+            &context->pipelines[GDF_VK_RENDERER_PIPELINE_INDEX_POST_PROCESSING]
         )
     );
-    context->pipelines.post_processing.layout = layout;
+    context->pipelines[GDF_VK_RENDERER_PIPELINE_INDEX_POST_PROCESSING].layout_index = main_layout_index;
 
     return true;
 }
 
 // filters the context.physical_device_info list 
-static void __filter_available_devices(vk_physical_device* phys_list)
+void __filter_available_devices(vk_physical_device* phys_list)
 {
     u32 list_len = GDF_LIST_GetLength(phys_list);
     for (u32 i = list_len; i > 0; i--)
@@ -548,111 +600,231 @@ static void __filter_available_devices(vk_physical_device* phys_list)
     }
 }
 
-static void __create_swapchain(vk_renderer_context* context) 
+bool __create_swapchain_and_images(renderer_backend* backend, vk_renderer_context* context) 
 {
+    // TODO! add a lot more checks during swapchain creation
+    VkSwapchainCreateInfoKHR sc_create_info = {
+        .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
+        .preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
+        .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
+        .surface = context->surface,
+        .imageArrayLayers = 1,
+        .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
+                        | VK_IMAGE_USAGE_TRANSFER_DST_BIT
+    };
+    sc_create_info.clipped = VK_TRUE;
 
+    // Set extent
+    context->swapchain.extent.width = backend->framebuffer_width;
+    context->swapchain.extent.height = backend->framebuffer_height;
+    sc_create_info.imageExtent = context->swapchain.extent;
+    // for now if these arent supported FUCK YOU
+    // ! also initiliaze formats here 
+    context->formats.depth_format = vk_utils_find_supported_depth_format(context->device.physical_info->handle);
+    if (context->formats.depth_format == VK_FORMAT_UNDEFINED) {
+        LOG_ERR("Could not find a supported depth format. Cannot continue program.");
+        return false;
+    }
+    context->formats.image_format = VK_FORMAT_B8G8R8A8_SRGB;
+    context->formats.image_color_space = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
+    sc_create_info.presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
+    sc_create_info.imageFormat = context->formats.image_format;
+    sc_create_info.imageColorSpace = context->formats.image_color_space;
+    sc_create_info.minImageCount = 3;
+    
+    VK_ASSERT(
+        vkCreateSwapchainKHR(
+            context->device.handle,
+            &sc_create_info,
+            context->allocator,
+            &context->swapchain.handle
+        )
+    );
+
+    // Allow triple buffering
+    context->max_concurrent_frames = 3;
+    VK_ASSERT(
+        vkGetSwapchainImagesKHR(
+            context->device.handle,
+            context->swapchain.handle,
+            &context->swapchain.image_count,
+            NULL
+        )
+    )
+
+    u32 image_count = context->swapchain.image_count;
+    // grab images into an intermediate buffer then transfer to my own structs
+    VkImage images[image_count];
+
+    VK_ASSERT(
+        vkGetSwapchainImagesKHR(
+            context->device.handle,
+            context->swapchain.handle,
+            &image_count,
+            images
+        )
+    );
+
+    context->swapchain.images = GDF_LIST_Reserve(vk_image, image_count);
+
+    // Create corresponding image views
+    for (u32 i = 0; i < image_count; i++)
+    {
+        context->swapchain.images[i].handle = images[i];
+        VkImageViewCreateInfo image_view_info = {
+            .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+            .format = context->formats.image_format,
+            .image = context->swapchain.images[i].handle,
+            .viewType = VK_IMAGE_VIEW_TYPE_2D,
+            // i dont have to initialize these but why not
+            .components.r = VK_COMPONENT_SWIZZLE_IDENTITY,
+            .components.g = VK_COMPONENT_SWIZZLE_IDENTITY,
+            .components.b = VK_COMPONENT_SWIZZLE_IDENTITY,
+            .components.a = VK_COMPONENT_SWIZZLE_IDENTITY,
+            // some swapchains can have multiple layers, for example
+            // in 3d (the blue red glasses stuff)
+            // i will NOT be having 3d chat
+            .subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+            .subresourceRange.baseMipLevel = 0,
+            .subresourceRange.levelCount = 1,
+            .subresourceRange.baseArrayLayer = 0,
+            .subresourceRange.layerCount = 1,
+        };
+
+        VK_ASSERT(
+            vkCreateImageView(
+                context->device.handle,
+                &image_view_info,
+                context->allocator,
+                &context->swapchain.images[i].view
+            )
+        );
+    }
+
+    GDF_LIST_SetLength(context->swapchain.images, image_count);
+    
+    LOG_DEBUG("Fetched %d images from swapchain...", GDF_LIST_GetLength(context->swapchain.images));
+
+    // Create the global depth image
+    VkImageCreateInfo depth_image_info = {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
+        .imageType = VK_IMAGE_TYPE_2D,
+        .extent.width = context->swapchain.extent.width,
+        .extent.height = context->swapchain.extent.height,
+        .extent.depth = 1,
+        .mipLevels = 1,
+        .arrayLayers = 1,
+        .format = context->formats.depth_format,
+        .tiling = VK_IMAGE_TILING_OPTIMAL,
+        .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+        .usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
+        .samples = VK_SAMPLE_COUNT_1_BIT,
+        .sharingMode = VK_SHARING_MODE_EXCLUSIVE
+    };
+
+    VK_ASSERT(
+        vkCreateImage(
+            context->device.handle, 
+            &depth_image_info, 
+            context->allocator, 
+            &context->depth_image
+        )
+    );
+
+    // Allocate memory for depth image
+    VkMemoryRequirements mem_requirements;
+    vkGetImageMemoryRequirements(context->device.handle, context->depth_image, &mem_requirements);
+
+    i32 mem_idx = vk_utils_find_memory_type_idx(context, mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
+
+    if (mem_idx == -1) 
+    {
+        LOG_FATAL("Failed to find memory suitable for depth image. Exiting...");
+    }
+
+    VkMemoryAllocateInfo alloc_info = {
+        .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
+        .allocationSize = mem_requirements.size,
+        .memoryTypeIndex = mem_idx
+    };
+
+    VK_ASSERT(
+        vkAllocateMemory(
+            context->device.handle, 
+            &alloc_info, 
+            context->allocator, 
+            &context->depth_image_memory
+        )
+    );
+
+    vkBindImageMemory(
+        context->device.handle, 
+        context->depth_image, 
+        context->depth_image_memory, 
+        0
+    );
+
+    // Create depth image view
+    VkImageViewCreateInfo depth_view_info = {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
+        .image = context->depth_image,
+        .viewType = VK_IMAGE_VIEW_TYPE_2D,
+        .format = context->formats.depth_format,
+        .subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT,
+        .subresourceRange.baseMipLevel = 0,
+        .subresourceRange.levelCount = 1,
+        .subresourceRange.baseArrayLayer = 0,
+        .subresourceRange.layerCount = 1
+    };
+
+    VK_ASSERT(
+        vkCreateImageView(
+            context->device.handle, 
+            &depth_view_info, 
+            context->allocator, 
+            &context->depth_image_view
+        )
+    );
+
+    // TODO! image for multisampling
+    return true;
 }
 
-// bool __recreate_swapchain(vk_renderer_context* context) 
-// {
-//     if (context->creating_swapchain) {
-//         LOG_WARN("Already recreating swapchain calm down there");
-//         return false;
-//     }
+bool __create_framebuffers(renderer_backend* backend, vk_renderer_context* context)
+{
+    // Create framebuffers
+    u32 image_count = context->swapchain.image_count;
+    context->swapchain.framebuffers = GDF_LIST_Reserve(VkFramebuffer, image_count);
+    for (u32 i = 0; i < image_count; i++) 
+    {
+        vk_image* img = &context->swapchain.images[i];
 
-//     // if the window is 0 w or h dont do anything
-//     if (cached_framebuf_w == 0 || cached_framebuf_h == 0) 
-//     {
-//         return false;
-//     }
+        VkImageView image_views[2] = {
+            img->view,
+            context->depth_image_view
+        };
 
-//     context->creating_swapchain = true;
+        VkFramebufferCreateInfo framebuffer_info = {
+            .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
+            .attachmentCount = 2,
+            .pAttachments = image_views,
+            .renderPass = context->renderpasses[GDF_VK_RENDERER_RENDERPASS_INDEX_MAIN],
+            .width = context->swapchain.extent.width,
+            .height = context->swapchain.extent.height,
+            .layers = 1
+        };
 
-//     // in case theres any operations going on rn
-//     vkDeviceWaitIdle(context->device.handle);
-
-//     // requery details 
-//     vk_device_query_swapchain_support(
-//         context->device.physical_info->handle,
-//         context->surface,
-//         &context->device.physical_info->sc_support_info
-//     );
-//     vk_device_find_depth_format(&context.device);
-
-//     vk_swapchain_recreate(
-//         &context,
-//         cached_framebuf_w,
-//         cached_framebuf_h,
-//         &context.swapchain
-//     );
-
-//     // update the sizes with cached values
-//     context.framebuffer_width = cached_framebuf_w;
-//     context.framebuffer_height = cached_framebuf_h;
-//     context.main_renderpass.w = context.framebuffer_width;
-//     context.main_renderpass.h = context.framebuffer_height;
-//     cached_framebuf_w = 0;
-//     cached_framebuf_h = 0;
-
-//     // cleanup swapchain
-//     for (u32 i = 0; i < context.swapchain.image_count; i++) 
-//     {
-//         vk_cmd_buf_free(&context, context.device.graphics_cmd_pool, &context.graphics_cmd_buf_list[i]);
-//     }
-
-//     // framebuffers
-//     for (u32 i = 0; i < context.swapchain.image_count; i++) 
-//     {
-//         vk_framebuffer_destroy(&context, &context.swapchain.framebuffers[i]);
-//     }
-
-//     context.main_renderpass.x = 0;
-//     context.main_renderpass.y = 0;
-//     context.main_renderpass.w = context.framebuffer_width;
-//     context.main_renderpass.h = context.framebuffer_height;
-
-//     __regenerate_framebuffers(backend, &context.swapchain, &context.main_renderpass);
-
-//     __create_cmd_bufs(backend);
-
-//     // done recreating
-//     context.recreating_swapchain = false;
-
-//     return true;
-// }
-
-// bool __create_buffers(vk_renderer_context* context) {
-//     // TODO! remove VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT and use staging buffers
-//     VkMemoryPropertyFlagBits memory_property_flags = VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT;
-
-//     const u64 vertex_buffer_size = sizeof(Vertex3d) * 1024 * 1024;
-//     if (!vk_buffer_create(
-//             context,
-//             vertex_buffer_size,
-//             VK_BUFFER_USAGE_VERTEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
-//             memory_property_flags,
-//             true,
-//             &context->object_vertex_buffer)) {
-//         LOG_ERR("Error creating vertex buffer.");
-//         return false;
-//     }
-//     context->vertex_offset = 0;
-
-//     const u64 index_buffer_size = sizeof(u32) * 1024 * 1024;
-//     if (!vk_buffer_create(
-//             context,
-//             index_buffer_size,
-//             VK_BUFFER_USAGE_INDEX_BUFFER_BIT | VK_BUFFER_USAGE_TRANSFER_DST_BIT | VK_BUFFER_USAGE_TRANSFER_SRC_BIT | VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT,
-//             memory_property_flags,
-//             true,
-//             &context->object_idx_buffer)) {
-//         LOG_ERR("Error creating vertex buffer.");
-//         return false;
-//     }
-//     context->idx_offset = 0;
-
-//     return true;
-// }
+        VK_ASSERT(
+            vkCreateFramebuffer(
+                context->device.handle,
+                &framebuffer_info,
+                context->allocator,
+                &context->swapchain.framebuffers[i]
+            )
+        );
+    }
+    return true;
+}
 
 void __get_queue_indices(vk_renderer_context* context, VkPhysicalDevice physical_device, vk_pdevice_queues* queues)
 {
@@ -793,10 +965,6 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     }
     // TODO! custom allocator.
     context.allocator = 0;
-    
-    GDF_GetWindowSize(&context.framebuffer_width, &context.framebuffer_height);
-    LOG_INFO("Framebuffer size %d, %d", context.framebuffer_width, context.framebuffer_height);
-
 
     VkApplicationInfo app_info = {VK_STRUCTURE_TYPE_APPLICATION_INFO};
     app_info.apiVersion = VK_API_VERSION_1_2;
@@ -1020,195 +1188,12 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     LOG_DEBUG("graphics command pool created.");
 
     /* ======================================== */
-    /* ----- CREATE SWAPCHAIN, IMAGES AND FRAMEBUFFERS ----- */
+    /* ----- CREATE SWAPCHAIN, IMAGES ----- */
     /* ======================================== */
-    // TODO! add a lot more checks during swapchain creation
-    VkSwapchainCreateInfoKHR sc_create_info = {
-        .sType = VK_STRUCTURE_TYPE_SWAPCHAIN_CREATE_INFO_KHR,
-        .preTransform = VK_SURFACE_TRANSFORM_IDENTITY_BIT_KHR,
-        .compositeAlpha = VK_COMPOSITE_ALPHA_OPAQUE_BIT_KHR,
-        .surface = context.surface,
-        .imageArrayLayers = 1,
-        .imageUsage = VK_IMAGE_USAGE_COLOR_ATTACHMENT_BIT
-                        | VK_IMAGE_USAGE_TRANSFER_DST_BIT
-    };
-    sc_create_info.clipped = VK_TRUE;
-
-    // Set extent
-    context.swapchain.extent.width = context.framebuffer_width;
-    context.swapchain.extent.height = context.framebuffer_height;
-    sc_create_info.imageExtent = context.swapchain.extent;
-    // for now if these arent supported FUCK YOU
-    // ! also initiliaze formats here 
-    context.formats.depth_format = vk_utils_find_supported_depth_format(context.device.physical_info->handle);
-    if (context.formats.depth_format == VK_FORMAT_UNDEFINED) {
-        LOG_ERR("Could not find a supported depth format. Cannot continue program.");
-        return false;
-    }
-    context.formats.image_format = VK_FORMAT_B8G8R8A8_SRGB;
-    context.formats.image_color_space = VK_COLOR_SPACE_SRGB_NONLINEAR_KHR;
-    sc_create_info.presentMode = VK_PRESENT_MODE_MAILBOX_KHR;
-    sc_create_info.imageFormat = context.formats.image_format;
-    sc_create_info.imageColorSpace = context.formats.image_color_space;
-    sc_create_info.minImageCount = 3;
-    
-    VK_ASSERT(
-        vkCreateSwapchainKHR(
-            context.device.handle,
-            &sc_create_info,
-            context.allocator,
-            &context.swapchain.handle
-        )
-    );
-
-    // Allow triple buffering
-    context.max_concurrent_frames = 3;
-    VK_ASSERT(
-        vkGetSwapchainImagesKHR(
-            context.device.handle,
-            context.swapchain.handle,
-            &context.swapchain.image_count,
-            NULL
-        )
-    )
-
+    __create_swapchain_and_images(backend, &context);
     u32 image_count = context.swapchain.image_count;
-    // grab images into an intermediate buffer then transfer to my own structs
-    VkImage images[image_count];
 
-    VK_ASSERT(
-        vkGetSwapchainImagesKHR(
-            context.device.handle,
-            context.swapchain.handle,
-            &image_count,
-            images
-        )
-    );
-
-    context.swapchain.images = GDF_LIST_Reserve(vk_image, image_count);
-
-    // Create corresponding image views
-    for (u32 i = 0; i < image_count; i++)
-    {
-        vk_image img = {
-            .handle = images[i],
-        };
-        VkImageViewCreateInfo image_view_info = {
-            .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-            .format = context.formats.image_format,
-            .image = img.handle,
-            .viewType = VK_IMAGE_VIEW_TYPE_2D,
-            // i dont have to initialize these but why not
-            .components.r = VK_COMPONENT_SWIZZLE_IDENTITY,
-            .components.g = VK_COMPONENT_SWIZZLE_IDENTITY,
-            .components.b = VK_COMPONENT_SWIZZLE_IDENTITY,
-            .components.a = VK_COMPONENT_SWIZZLE_IDENTITY,
-            // some swapchains can have multiple layers, for example
-            // in 3d (the blue red glasses stuff)
-            // i will NOT be having 3d chat
-            .subresourceRange.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-            .subresourceRange.baseMipLevel = 0,
-            .subresourceRange.levelCount = 1,
-            .subresourceRange.baseArrayLayer = 0,
-            .subresourceRange.layerCount = 1,
-        };
-
-        VK_ASSERT(
-            vkCreateImageView(
-                context.device.handle,
-                &image_view_info,
-                context.allocator,
-                &img.view
-            )
-        );
-
-        GDF_LIST_Push(context.swapchain.images, img);
-    }
-    
-    // Create the global depth image
-    VkImageCreateInfo depth_image_info = {
-        .sType = VK_STRUCTURE_TYPE_IMAGE_CREATE_INFO,
-        .imageType = VK_IMAGE_TYPE_2D,
-        .extent.width = context.swapchain.extent.width,
-        .extent.height = context.swapchain.extent.height,
-        .extent.depth = 1,
-        .mipLevels = 1,
-        .arrayLayers = 1,
-        .format = context.formats.depth_format,
-        .tiling = VK_IMAGE_TILING_OPTIMAL,
-        .initialLayout = VK_IMAGE_LAYOUT_UNDEFINED,
-        .usage = VK_IMAGE_USAGE_DEPTH_STENCIL_ATTACHMENT_BIT,
-        .samples = VK_SAMPLE_COUNT_1_BIT,
-        .sharingMode = VK_SHARING_MODE_EXCLUSIVE
-    };
-
-    VK_ASSERT(
-        vkCreateImage(
-            context.device.handle, 
-            &depth_image_info, 
-            context.allocator, 
-            &context.depth_image
-        )
-    );
-
-    // Allocate memory for depth image
-    VkMemoryRequirements mem_requirements;
-    vkGetImageMemoryRequirements(context.device.handle, context.depth_image, &mem_requirements);
-
-    i32 mem_idx = vk_utils_find_memory_type_idx(&context, mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_DEVICE_LOCAL_BIT);
-
-    if (mem_idx == -1) 
-    {
-        LOG_FATAL("Failed to find memory suitable for depth image. Exiting...");
-    }
-
-    VkMemoryAllocateInfo alloc_info = {
-        .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-        .allocationSize = mem_requirements.size,
-        .memoryTypeIndex = mem_idx
-    };
-
-    VK_ASSERT(
-        vkAllocateMemory(
-            context.device.handle, 
-            &alloc_info, 
-            context.allocator, 
-            &context.depth_image_memory
-        )
-    );
-
-    vkBindImageMemory(
-        context.device.handle, 
-        context.depth_image, 
-        context.depth_image_memory, 
-        0
-    );
-
-    // Create depth image view
-    VkImageViewCreateInfo depth_view_info = {
-        .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
-        .image = context.depth_image,
-        .viewType = VK_IMAGE_VIEW_TYPE_2D,
-        .format = context.formats.depth_format,
-        .subresourceRange.aspectMask = VK_IMAGE_ASPECT_DEPTH_BIT,
-        .subresourceRange.baseMipLevel = 0,
-        .subresourceRange.levelCount = 1,
-        .subresourceRange.baseArrayLayer = 0,
-        .subresourceRange.layerCount = 1
-    };
-
-    VK_ASSERT(
-        vkCreateImageView(
-            context.device.handle, 
-            &depth_view_info, 
-            context.allocator, 
-            &context.depth_image_view
-        )
-    );
-
-    LOG_DEBUG("Fetched %d images from swapchain...", GDF_LIST_GetLength(context.swapchain.images));
-
-    LOG_DEBUG("Created swapchain.");
+    LOG_DEBUG("Created swapchain and images.");
 
     /* ======================================== */
     /* ----- Create and allocate ubos & descriptor things ----- */
@@ -1360,7 +1345,7 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     LOG_DEBUG("Created descriptor pool and allocated descriptor sets.");
 
     /* ======================================== */
-    /* ----- CREATE RENDERPASSES, SHADERS, & GRAPHICS PIPELINE ----- */
+    /* ----- CREATE RENDERPASSES, SHADERS, GRAPHICS PIPELINE, FRAMEBUFFERS ----- */
     /* ======================================== */
 
     // vkDestroyDevice(context.device.handle, context.allocator);
@@ -1372,36 +1357,12 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
 
     LOG_DEBUG("Created graphics pipelines & renderpasses");
 
-    // Create framebuffers
-    context.swapchain.framebuffers = GDF_LIST_Reserve(VkFramebuffer, image_count);
-    for (u32 i = 0; i < image_count; i++) 
+    if (!__create_framebuffers(backend, &context))
     {
-        vk_image* img = &context.swapchain.images[i];
-
-        VkImageView image_views[2] = {
-            img->view,
-            context.depth_image_view
-        };
-
-        VkFramebufferCreateInfo framebuffer_info = {
-            .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
-            .attachmentCount = 2,
-            .pAttachments = image_views,
-            .renderPass = context.renderpasses.main_pass,
-            .width = context.swapchain.extent.width,
-            .height = context.swapchain.extent.height,
-            .layers = 1
-        };
-
-        VK_ASSERT(
-            vkCreateFramebuffer(
-                context.device.handle,
-                &framebuffer_info,
-                context.allocator,
-                &context.swapchain.framebuffers[i]
-            )
-        );
+        return false;
     }
+
+    LOG_DEBUG("Created framebuffers");
 
     /* ======================================== */
     /* ----- Allocate command buffer ----- */
@@ -1477,160 +1438,144 @@ void vk_renderer_destroy(renderer_backend* backend)
     VkDevice device = context.device.handle;
     VkAllocationCallbacks* allocator = context.allocator;
     // Destroy a bunch of pipelines
-    vkDestroyPipeline(
-        device, 
-        context.pipelines.geometry.handle, 
-        allocator
-    );
-    vkDestroyPipeline(
-        device, 
-        context.pipelines.geometry_wireframe.handle, 
-        allocator
-    );
-    vkDestroyPipelineLayout(
+    for (u32 i = 0; i < GDF_VK_RENDERER_PIPELINE_INDEX_MAX; i++)
+    {
+        vkDestroyPipeline(
+            device,
+            context.pipelines[i].handle,
+            allocator
+        );
+    }
+    
+    for (u32 i = 0; i < GDF_VK_RENDERER_PIPELINE_LAYOUT_INDEX_MAX; i++)
+    {
+        vkDestroyPipelineLayout(
+            device,
+            context.pipeline_layouts[i],
+            allocator
+        );
+    }
+    
+    for (u32 i = 0; i < GDF_VK_RENDERER_RENDERPASS_INDEX_MAX; i++)
+    {
+        vkDestroyRenderPass(
+            device,
+            context.renderpasses[i],
+            allocator
+        );
+    }
+
+    // Destroy shader modules
+    for (u32 i = 0; i < GDF_VK_RENDERER_SHADER_MODULE_INDEX_MAX; i++)
+    {
+        vkDestroyShaderModule(
+            device,
+            context.builtin_shaders[i],
+            allocator
+        );
+    }
+
+    u32 swapchain_image_count = context.swapchain.image_count;
+    for (u32 i = 0; i < swapchain_image_count; i++)
+    {
+        
+    }
+    // Destroy descriptor layouts ubos and sync stuff
+    for (u32 i = 0; i < swapchain_image_count; i++)
+    {
+        vkDestroyDescriptorSetLayout(
+            device,
+            context.descriptor_set_layouts[i],
+            allocator
+        );
+        vkDestroyFence(
+            device,
+            context.images_in_flight[i],
+            allocator
+        );
+        vkDestroySemaphore(
+            device,
+            context.image_available_semaphores[i],
+            allocator
+        );
+        vkDestroySemaphore(
+            device,
+            context.render_finished_semaphores[i],
+            allocator
+        );
+        vkUnmapMemory(
+            device,
+            context.uniform_buffers[i].memory
+        );
+        vkFreeMemory(
+            device,
+            context.uniform_buffers[i].memory,
+            allocator
+        );
+        vkDestroyBuffer(
+            device,
+            context.uniform_buffers[i].handle,
+            allocator
+        );
+        // swapchain images destroyed automatically i think
+        vkDestroyImageView(
+            device,
+            context.swapchain.images->view,
+            allocator
+        );
+        vkDestroyFramebuffer(
+            device,
+            context.swapchain.framebuffers[i],
+            allocator
+        );
+    }
+
+    // destroy depth image resources
+    vkDestroyImageView(
         device,
-        context.pipelines.geometry.layout,
+        context.depth_image_view,
+        allocator
+    );
+    vkFreeMemory(
+        device,
+        context.depth_image_memory,
+        allocator
+    );
+    vkDestroyImage(
+        device,
+        context.depth_image,
         allocator
     );
     
-    vkDestroyPipeline(
-        device, 
-        context.pipelines.lighting.handle, 
-        allocator
-    );
-    vkDestroyPipelineLayout(
+    // done automatically i guess
+    // vkFreeDescriptorSets(
+    //     device,
+    //     context.descriptor_pool,
+    //     swapchain_image_count,
+    //     context.descriptor_sets
+    // );
+    vkDestroyDescriptorPool(
         device,
-        context.pipelines.lighting.layout,
+        context.descriptor_pool,
         allocator
     );
-
-    vkDestroyPipeline(
-        device, 
-        context.pipelines.post_processing.handle, 
-        allocator
-    );
-    vkDestroyPipelineLayout(
+    vkFreeCommandBuffers(
         device,
-        context.pipelines.post_processing.layout,
-        allocator
-    );
-    vkDestroyRenderPass(
-        device, 
-        context.renderpasses.main_pass, 
-        allocator
-    );
-
-    // Destroy shader modules
-    vkDestroyShaderModule(
-        device,
-        context.shaders.geometry_vert,
-        allocator
-    );
-    vkDestroyShaderModule(
-        device,
-        context.shaders.geometry_frag,
-        allocator
-    );
-    vkDestroyShaderModule(
-        device,
-        context.shaders.lighting_vert,
-        allocator
-    );
-    vkDestroyShaderModule(
-        device,
-        context.shaders.lighting_frag,
-        allocator
-    );
-    vkDestroyShaderModule(
-        device,
-        context.shaders.post_process_vert,
-        allocator
-    );
-    vkDestroyShaderModule(
-        device,
-        context.shaders.post_process_frag,
-        allocator
-    );
-    // Destroy swapchain, device and resources
-    vkDestroySwapchainKHR(
-        device,
-        context.swapchain.handle,
-        allocator
+        context.device.graphics_cmd_pool,
+        1,
+        &context.device.cmd_buffer
     );
     vkDestroyCommandPool(
         device,
         context.device.graphics_cmd_pool,
         allocator
     );
-    // destroy in the opposite order of creation.
-    // destroy buffers
-    // vk_buffer_destroy(&context, &context.object_vertex_buffer);
-    // vk_buffer_destroy(&context, &context.object_idx_buffer);
-    // LOG_DEBUG("Destroying shader and pipelines.,.,.");
-    // vk_shader_destroy(&context, &context.default_object_shader);
+    vkDestroySwapchainKHR(
+        device,
+        context.swapchain.handle,
+        allocator
+    );
 
-    // // sync objects
-    // for (u8 i = 0; i < context.swapchain.max_frames_in_flight; i++) 
-    // {
-    //     if (context.image_available_semaphores[i]) 
-    //     {
-    //         vkDestroySemaphore(
-    //             context.device.handle,
-    //             context.image_available_semaphores[i],
-    //             context.allocator);
-    //         context.image_available_semaphores[i] = NULL;
-    //     }
-    //     if (context.queue_complete_semaphores[i]) 
-    //     {
-    //         vkDestroySemaphore(
-    //             context.device.handle,
-    //             context.queue_complete_semaphores[i],
-    //             context.allocator);
-    //         context.queue_complete_semaphores[i] = NULL;
-    //     }
-    //     vk_fence_destroy(&context, &context.in_flight_fences[i]);
-    // }
-    // GDF_LIST_Destroy(context.image_available_semaphores);
-    // context.image_available_semaphores = NULL;
-
-    // GDF_LIST_Destroy(context.queue_complete_semaphores);
-    // context.queue_complete_semaphores = NULL;
-
-    // GDF_LIST_Destroy(context.in_flight_fences);
-    // context.in_flight_fences = NULL;
-
-    // GDF_LIST_Destroy(context.images_in_flight);
-    // context.images_in_flight = NULL;
-
-    // // command bufs
-    // for (u32 i = 0; i < context.swapchain.image_count; i++) 
-    // {
-    //     if (context.graphics_cmd_buf_list[i].handle) 
-    //     {
-    //         vk_cmd_buf_free(
-    //             &context,
-    //             context.device.graphics_cmd_pool,
-    //             &context.graphics_cmd_buf_list[i]
-    //         );
-    //         context.graphics_cmd_buf_list[i].handle = NULL;
-    //     }
-    // }
-    // GDF_LIST_Destroy(context.graphics_cmd_buf_list);
-    // context.graphics_cmd_buf_list = NULL;
-
-    // // framebuffers
-    // for (u32 i = 0; i < context.swapchain.image_count; i++) 
-    // {
-    //     vk_framebuffer_destroy(&context, &context.swapchain.framebuffers[i]);
-    // }
-
-    // // renderpass
-    // vk_renderpass_destroy(&context, &context.main_renderpass);
-
-    // // swapchain
-    // vk_swapchain_destroy(&context, &context.swapchain);
-
-    // // device
     LOG_DEBUG("Destroying Vulkan device...");
     vkDestroyDevice(context.device.handle, context.allocator);
 
@@ -1654,8 +1599,6 @@ void vk_renderer_destroy(renderer_backend* backend)
 
 void vk_renderer_resize(renderer_backend* backend, u16 width, u16 height) 
 {
-    new_framebuf_w = width;
-    new_framebuf_h = height;
     context.pending_resize_event = true;
 }
 
@@ -1674,24 +1617,27 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
     }
 
     // // Check if the framebuffer has been resized. If so, a new swapchain must be created.
-    // if (context.pending_resize_event) 
-    // {
-    //     if (!vk_result_is_success(vkDeviceWaitIdle(device->handle)))
-    //     {
-    //         LOG_ERR("vulkan_renderer_backend_begin_frame vkDeviceWaitIdle (2) failed");
-    //         return false;
-    //     }
+    if (context.pending_resize_event) 
+    {
+        if (!vk_result_is_success(vkDeviceWaitIdle(device->handle)))
+        {
+            LOG_ERR("vulkan_renderer_backend_begin_frame vkDeviceWaitIdle (2) failed");
+            return false;
+        }
 
-    //     // If the swapchain recreation failed (because, for example, the window was minimized),
-    //     // boot out before unsetting the flag.
-    //     if (!__create_swapchain(backend)) {
-    //         return false;
-    //     }
+        if (backend->framebuffer_height == 0 || backend->framebuffer_width == 0)
+        {
+            return false;
+        }
 
-    //     LOG_INFO("Resized successfully.");
-    //     context.pending_resize_event = false;
-    //     return false;
-    // }
+        if (!__create_swapchain_and_images(backend, &context)) {
+            return false;
+        }
+
+        LOG_INFO("Resized successfully.");
+        context.pending_resize_event = false;
+        return false;
+    }
 
     // Wait for the previous frame to finish
     vkWaitForFences(
@@ -1747,7 +1693,7 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
 
     VkRenderPassBeginInfo render_pass_info = {
         .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-        .renderPass = context.renderpasses.main_pass,
+        .renderPass = context.renderpasses[GDF_VK_RENDERER_RENDERPASS_INDEX_MAIN],
         .framebuffer = context.swapchain.framebuffers[current_img_idx],
         .renderArea.offset = {0, 0},
         .renderArea.extent = context.swapchain.extent
@@ -1761,15 +1707,15 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
     render_pass_info.pClearValues = clear_values;
 
     vkCmdBeginRenderPass(cmd_buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
-
+    VkPipelineLayout* pipeline_layouts = context.pipeline_layouts;
     // Bind the geometry pass pipeline
-    vk_pipeline* bound_pipeline = &context.pipelines.geometry_wireframe;
+    vk_pipeline* bound_pipeline = &context.pipelines[GDF_VK_RENDERER_PIPELINE_INDEX_GEOMETRY_WIREFRAME];
     vkCmdBindPipeline(cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, bound_pipeline->handle);
     
     vkCmdBindDescriptorSets(
         cmd_buffer,
         VK_PIPELINE_BIND_POINT_GRAPHICS,
-        bound_pipeline->layout,
+        pipeline_layouts[bound_pipeline->layout_index],
         0,
         1,
         &context.descriptor_sets[resource_idx], 
@@ -1780,9 +1726,9 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
     // make as similar to opengls as possible
     VkViewport viewport;
     viewport.x = 0.0f;
-    viewport.y = (f32)context.framebuffer_height;
-    viewport.width = (f32)context.framebuffer_width;
-    viewport.height = -(f32)context.framebuffer_height;
+    viewport.y = (f32)backend->framebuffer_height;
+    viewport.width = (f32)backend->framebuffer_width;
+    viewport.height = -(f32)backend->framebuffer_height;
     viewport.minDepth = 0.0f;
     viewport.maxDepth = 1.0f;
     vkCmdSetViewport(cmd_buffer, 0, 1, &viewport);
@@ -1808,7 +1754,7 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
 
         vkCmdPushConstants(
             cmd_buffer,
-            bound_pipeline->layout,
+            pipeline_layouts[bound_pipeline->layout_index],
             VK_SHADER_STAGE_VERTEX_BIT,
             0,
             sizeof(mat4),

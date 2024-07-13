@@ -2,6 +2,7 @@
 #include "renderer_backend.h"
 
 #include "core.h"
+#include "engine/core/os/window.h"
 
 // Backend render context.
 static renderer_backend* backend = NULL;
@@ -12,6 +13,7 @@ bool GDF_InitRenderer(GDF_RENDER_BACKEND_TYPE render_backend_type)
 
     renderer_backend_create(render_backend_type, backend);
     backend->frame_number = 0;
+    GDF_GetWindowSize(&backend->framebuffer_width, &backend->framebuffer_height);
 
     if (!backend->initialize(backend, "TODO! temp app name")) {
         return false;
@@ -40,6 +42,8 @@ bool renderer_end_frame(f32 delta_time)
 
 void GDF_RENDERER_Resize(u16 width, u16 height)
 {
+    backend->framebuffer_width = width;
+    backend->framebuffer_height = height;
     backend->resized(backend, width, height);
 }
 

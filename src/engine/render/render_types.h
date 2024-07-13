@@ -14,6 +14,8 @@ typedef struct renderer_backend {
 
     // Camera (and view and projection) stuff
     Camera* active_camera;
+    u32 framebuffer_width;
+    u32 framebuffer_height;
 
     bool (*initialize)(struct renderer_backend* backend, const char* application_name);
 
