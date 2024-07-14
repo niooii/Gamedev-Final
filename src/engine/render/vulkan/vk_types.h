@@ -15,41 +15,65 @@
     } \
 } \
 
+#define VK_RETURN_FALSE_ASSERT(expr) \
+{ \
+    if ((expr) != VK_SUCCESS) \
+    { \
+        LOG_FATAL("%s returned: %s, in file: %s, line: %d. Returning false..\n", #expr, string_VkResult((expr)), __FILE__, __LINE__) \
+        return false; \
+    } \
+} \
 
 // Enumeration types to access resources from context
-typedef enum GDF_VK_RENDERER_PIPELINE_INDEX {
-    GDF_VK_RENDERER_PIPELINE_INDEX_GEOMETRY,
-    GDF_VK_RENDERER_PIPELINE_INDEX_GEOMETRY_WIREFRAME,
-    GDF_VK_RENDERER_PIPELINE_INDEX_LIGHTING,
-    GDF_VK_RENDERER_PIPELINE_INDEX_POST_PROCESSING,
-    GDF_VK_RENDERER_PIPELINE_INDEX_GRID,
+typedef enum GDF_VK_PIPELINE_INDEX {
+    GDF_VK_PIPELINE_INDEX_GEOMETRY,
+    GDF_VK_PIPELINE_INDEX_GEOMETRY_WIREFRAME,
+    GDF_VK_PIPELINE_INDEX_LIGHTING,
+    GDF_VK_PIPELINE_INDEX_POST_PROCESSING,
+    GDF_VK_PIPELINE_INDEX_GRID,
 
-    GDF_VK_RENDERER_PIPELINE_INDEX_MAX,
-} GDF_VK_RENDERER_PIPELINE_INDEX;
+    GDF_VK_PIPELINE_INDEX_MAX,
+} GDF_VK_PIPELINE_INDEX;
 
-typedef enum GDF_VK_RENDERER_SHADER_MODULE_INDEX {
-    GDF_VK_RENDERER_SHADER_MODULE_INDEX_GEOMETRY_VERT,
-    GDF_VK_RENDERER_SHADER_MODULE_INDEX_GEOMETRY_FRAG,
-    GDF_VK_RENDERER_SHADER_MODULE_INDEX_LIGHTING_VERT,
-    GDF_VK_RENDERER_SHADER_MODULE_INDEX_LIGHTING_FRAG,
-    GDF_VK_RENDERER_SHADER_MODULE_INDEX_POST_PROCESS_VERT,
-    GDF_VK_RENDERER_SHADER_MODULE_INDEX_POST_PROCESS_FRAG,
+typedef enum GDF_VK_SHADER_MODULE_INDEX {
+    GDF_VK_SHADER_MODULE_INDEX_GEOMETRY_VERT,
+    GDF_VK_SHADER_MODULE_INDEX_GEOMETRY_FRAG,
+    GDF_VK_SHADER_MODULE_INDEX_LIGHTING_VERT,
+    GDF_VK_SHADER_MODULE_INDEX_LIGHTING_FRAG,
+    GDF_VK_SHADER_MODULE_INDEX_POST_PROCESS_VERT,
+    GDF_VK_SHADER_MODULE_INDEX_POST_PROCESS_FRAG,
+    GDF_VK_SHADER_MODULE_INDEX_GRID_VERT,
+    GDF_VK_SHADER_MODULE_INDEX_GRID_FRAG,
 
-    GDF_VK_RENDERER_SHADER_MODULE_INDEX_MAX,
-} GDF_VK_RENDERER_SHADER_MODULE_INDEX;
+    GDF_VK_SHADER_MODULE_INDEX_MAX,
+} GDF_VK_SHADER_MODULE_INDEX;
 
-typedef enum GDF_VK_RENDERER_RENDERPASS_INDEX {
-    GDF_VK_RENDERER_RENDERPASS_INDEX_MAIN,
+typedef enum GDF_VK_RENDERPASS_INDEX {
+    GDF_VK_RENDERPASS_INDEX_MAIN,
 
-    GDF_VK_RENDERER_RENDERPASS_INDEX_MAX,
-} GDF_VK_RENDERER_RENDERPASS_INDEX;
+    GDF_VK_RENDERPASS_INDEX_MAX,
+} GDF_VK_RENDERPASS_INDEX;
 
-typedef enum GDF_VK_RENDERER_PIPELINE_LAYOUT_INDEX {
-    GDF_VK_RENDERER_PIPELINE_LAYOUT_INDEX_WORLD,
+typedef enum GDF_VK_PIPELINE_LAYOUT_INDEX {
+    GDF_VK_PIPELINE_LAYOUT_INDEX_WORLD,
+    GDF_VK_PIPELINE_LAYOUT_INDEX_GRID,
 
-    GDF_VK_RENDERER_PIPELINE_LAYOUT_INDEX_MAX,
-} GDF_VK_RENDERER_PIPELINE_LAYOUT_INDEX;
+    GDF_VK_PIPELINE_LAYOUT_INDEX_MAX,
+} GDF_VK_PIPELINE_LAYOUT_INDEX;
 
+/* ===== BUFFER TYPES ===== */
+typedef struct vk_buffer {
+    u32 mem_property_flags;
+    VkBuffer handle;
+    VkDeviceMemory memory;
+} vk_buffer;
+
+typedef struct vk_uniform_buffer {
+    vk_buffer buffer;
+    void* mapped_data;
+} vk_uniform_buffer;
+
+/* ===== BLAH BLAH blah ===== */
 typedef struct vk_pdevice_swapchain_support {
     VkSurfaceCapabilitiesKHR capabilities;
     u32 format_count;
@@ -81,14 +105,11 @@ typedef struct vk_device {
     VkQueue graphics_queue;
     VkQueue present_queue;
     VkQueue transfer_queue;
-
-    VkCommandBuffer cmd_buffer;
-    VkCommandPool graphics_cmd_pool;
 } vk_device;
 
 typedef struct vk_pipeline {
     VkPipeline handle;
-    GDF_VK_RENDERER_PIPELINE_LAYOUT_INDEX layout_index;
+    GDF_VK_PIPELINE_LAYOUT_INDEX layout_index;
 } vk_pipeline;
 
 typedef struct vk_formats {
@@ -114,12 +135,6 @@ typedef struct vk_swapchain {
     u32 image_count;
 } vk_swapchain;
 
-typedef struct vk_uniform_buffer {
-    VkBuffer handle;
-    VkDeviceMemory memory;
-    void* mapped_data;
-} vk_uniform_buffer;
-
 typedef struct vk_renderer_context { 
     VkInstance instance;
     VkAllocationCallbacks* allocator;
@@ -131,13 +146,13 @@ typedef struct vk_renderer_context {
     VkDeviceMemory depth_image_memory;
     VkImageView depth_image_view;
 
-    vk_pipeline pipelines[GDF_VK_RENDERER_PIPELINE_INDEX_MAX];
-    VkPipelineLayout pipeline_layouts[GDF_VK_RENDERER_PIPELINE_LAYOUT_INDEX_MAX];
+    vk_pipeline pipelines[GDF_VK_PIPELINE_INDEX_MAX];
+    VkPipelineLayout pipeline_layouts[GDF_VK_PIPELINE_LAYOUT_INDEX_MAX];
     vk_formats formats;
-    VkRenderPass renderpasses[GDF_VK_RENDERER_RENDERPASS_INDEX_MAX];
+    VkRenderPass renderpasses[GDF_VK_RENDERPASS_INDEX_MAX];
 
     // Shader resources
-    VkShaderModule builtin_shaders[GDF_VK_RENDERER_SHADER_MODULE_INDEX_MAX];
+    VkShaderModule builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_MAX];
     // GDF_LIST
     vk_uniform_buffer* uniform_buffers;
     // This field is modified then copied over to vk_uniform_buffer[n].mapped_Data
@@ -147,6 +162,9 @@ typedef struct vk_renderer_context {
     VkDescriptorSet* descriptor_sets;
     // GDF_LIST
     VkDescriptorSetLayout* descriptor_set_layouts;
+
+    VkCommandPool command_pool;
+    VkCommandBuffer* command_buffers;
 
     // GDF_LIST of physical device info structs
     vk_physical_device* physical_device_info_list;
@@ -165,7 +183,7 @@ typedef struct vk_renderer_context {
     VkFence* images_in_flight;
     
     bool pending_resize_event;
-    bool creating_swapchain;
+    bool recreating_swapchain;
     bool ready_for_use;
 
 

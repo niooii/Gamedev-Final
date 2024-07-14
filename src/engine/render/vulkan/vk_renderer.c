@@ -99,7 +99,7 @@ bool __create_shader_modules(vk_renderer_context* context)
         !vk_utils_create_shader_module(
             context, 
             "resources/shaders/geometry_base.vert.spv", 
-            &context->builtin_shaders[GDF_VK_RENDERER_SHADER_MODULE_INDEX_GEOMETRY_VERT]
+            &context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_GEOMETRY_VERT]
         )
     ) 
     {
@@ -111,7 +111,7 @@ bool __create_shader_modules(vk_renderer_context* context)
         !vk_utils_create_shader_module(
             context, 
             "resources/shaders/geometry_base.frag.spv", 
-            &context->builtin_shaders[GDF_VK_RENDERER_SHADER_MODULE_INDEX_GEOMETRY_FRAG]
+            &context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_GEOMETRY_FRAG]
         )
     ) 
     {
@@ -123,7 +123,7 @@ bool __create_shader_modules(vk_renderer_context* context)
         !vk_utils_create_shader_module(
             context, 
             "resources/shaders/lighting_base.vert.spv", 
-            &context->builtin_shaders[GDF_VK_RENDERER_SHADER_MODULE_INDEX_LIGHTING_VERT]
+            &context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_LIGHTING_VERT]
         )
     ) 
     {
@@ -135,7 +135,7 @@ bool __create_shader_modules(vk_renderer_context* context)
         !vk_utils_create_shader_module(
             context, 
             "resources/shaders/lighting_base.frag.spv", 
-            &context->builtin_shaders[GDF_VK_RENDERER_SHADER_MODULE_INDEX_LIGHTING_FRAG]
+            &context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_LIGHTING_FRAG]
         )
     ) 
     {
@@ -147,7 +147,7 @@ bool __create_shader_modules(vk_renderer_context* context)
         !vk_utils_create_shader_module(
             context, 
             "resources/shaders/post_processing_base.vert.spv", 
-            &context->builtin_shaders[GDF_VK_RENDERER_SHADER_MODULE_INDEX_POST_PROCESS_VERT]
+            &context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_POST_PROCESS_VERT]
         )
     ) 
     {
@@ -158,8 +158,32 @@ bool __create_shader_modules(vk_renderer_context* context)
     if (
         !vk_utils_create_shader_module(
             context, 
+            "resources/shaders/grid.vert.spv", 
+            &context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_GRID_VERT]
+        )
+    ) 
+    {
+        LOG_ERR("Failed to create grid fragment shader. exiting...");
+        return false;
+    }
+
+    if (
+        !vk_utils_create_shader_module(
+            context, 
+            "resources/shaders/grid.frag.spv", 
+            &context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_GRID_FRAG]
+        )
+    ) 
+    {
+        LOG_ERR("Failed to create grid fragment shader. exiting...");
+        return false;
+    }
+
+    if (
+        !vk_utils_create_shader_module(
+            context, 
             "resources/shaders/post_processing_base.frag.spv", 
-            &context->builtin_shaders[GDF_VK_RENDERER_SHADER_MODULE_INDEX_POST_PROCESS_FRAG]
+            &context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_POST_PROCESS_FRAG]
         )
     ) 
     {
@@ -259,7 +283,7 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
             context->device.handle,
             &rp_create_info,
             context->allocator,
-            &context->renderpasses[GDF_VK_RENDERER_RENDERPASS_INDEX_MAIN]
+            &context->renderpasses[GDF_VK_RENDERPASS_INDEX_MAIN]
         )
     );
 
@@ -271,18 +295,17 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
         return false;
     }
 
-    // Create shaders for geometry pass
-    
+    // Create shader stage for geometry pass
     VkPipelineShaderStageCreateInfo geometry_pass_vert = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
         .stage = VK_SHADER_STAGE_VERTEX_BIT,
-        .module = context->builtin_shaders[GDF_VK_RENDERER_SHADER_MODULE_INDEX_GEOMETRY_VERT],
+        .module = context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_GEOMETRY_VERT],
         .pName = "main"
     };
     VkPipelineShaderStageCreateInfo geometry_pass_frag = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
         .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-        .module = context->builtin_shaders[GDF_VK_RENDERER_SHADER_MODULE_INDEX_GEOMETRY_FRAG],
+        .module = context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_GEOMETRY_FRAG],
         .pName = "main"
     };
 
@@ -291,17 +314,17 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
         geometry_pass_frag
     };
 
-    // Create shaders for lighting pass
+    // Create shader stage for lighting pass
     VkPipelineShaderStageCreateInfo lighting_pass_vert = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
         .stage = VK_SHADER_STAGE_VERTEX_BIT,
-        .module = context->builtin_shaders[GDF_VK_RENDERER_SHADER_MODULE_INDEX_LIGHTING_VERT],
+        .module = context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_LIGHTING_VERT],
         .pName = "main"
     };
     VkPipelineShaderStageCreateInfo lighting_pass_frag = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
         .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-        .module = context->builtin_shaders[GDF_VK_RENDERER_SHADER_MODULE_INDEX_LIGHTING_FRAG],
+        .module = context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_LIGHTING_FRAG],
         .pName = "main"
     };
 
@@ -310,17 +333,17 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
         lighting_pass_frag
     };
 
-    // Create shaders for post processing pass
+    // Create shader stage for post processing pass
     VkPipelineShaderStageCreateInfo postprocessing_pass_vert = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
         .stage = VK_SHADER_STAGE_VERTEX_BIT,
-        .module = context->builtin_shaders[GDF_VK_RENDERER_SHADER_MODULE_INDEX_POST_PROCESS_VERT],
+        .module = context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_POST_PROCESS_VERT],
         .pName = "main"
     };
     VkPipelineShaderStageCreateInfo postprocessing_pass_frag = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
         .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-        .module = context->builtin_shaders[GDF_VK_RENDERER_SHADER_MODULE_INDEX_POST_PROCESS_FRAG],
+        .module = context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_POST_PROCESS_FRAG],
         .pName = "main"
     };
 
@@ -361,24 +384,7 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
         .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST
     };
 
-    // Viewport and scissor configuration
-
-    // VkRect2D scissor = {
-    //     .offset = {0, 0},
-    //     .extent = {
-    //         .width = context->framebuffer_width,
-    //         .height = context->framebuffer_height
-    //     }
-    // };
-
-    // VkPipelineViewportStateCreateInfo viewport_state = {
-    //     .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
-    //     .viewportCount = 1,
-    //     .pViewports = &viewport,
-    //     .scissorCount = 1,
-    //     .pScissors = &scissor
-    // };
-
+    // Viewport and scissor configuration (dynamic states)
     VkPipelineViewportStateCreateInfo viewport_state = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
         .viewportCount = 1,
@@ -417,14 +423,21 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
     // Color blending configuration
     VkPipelineColorBlendAttachmentState color_blend_attachment = {
         .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
-        .blendEnable = VK_FALSE
+        .blendEnable = VK_TRUE,
+        .srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
+        .dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+        .colorBlendOp = VK_BLEND_OP_ADD,
+        .srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
+        .dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
+        .alphaBlendOp = VK_BLEND_OP_ADD
     };
 
     VkPipelineColorBlendStateCreateInfo color_blend_state = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
         .logicOpEnable = VK_FALSE,
         .attachmentCount = 1,
-        .pAttachments = &color_blend_attachment
+        .pAttachments = &color_blend_attachment,
+        .blendConstants = {0.0f, 0.0f, 0.0f, 0.0f}
     };
 
     VkPushConstantRange push_constant_range = {
@@ -442,17 +455,28 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
         .pushConstantRangeCount = 1
     };
     
-    
     VK_ASSERT(
         vkCreatePipelineLayout(
             context->device.handle, 
             &layout_info,
             context->allocator,
-            &context->pipeline_layouts[GDF_VK_RENDERER_PIPELINE_LAYOUT_INDEX_WORLD]
+            &context->pipeline_layouts[GDF_VK_PIPELINE_LAYOUT_INDEX_WORLD]
         )
     );
 
-    GDF_VK_RENDERER_PIPELINE_LAYOUT_INDEX main_layout_index = GDF_VK_RENDERER_PIPELINE_LAYOUT_INDEX_WORLD;
+    // Create layout for grid (diff push constant)
+    push_constant_range.size = sizeof(vec3);
+
+    VK_ASSERT(
+        vkCreatePipelineLayout(
+            context->device.handle, 
+            &layout_info,
+            context->allocator,
+            &context->pipeline_layouts[GDF_VK_PIPELINE_LAYOUT_INDEX_GRID]
+        )
+    );
+
+    GDF_VK_PIPELINE_LAYOUT_INDEX main_layout_index = GDF_VK_PIPELINE_LAYOUT_INDEX_WORLD;
     VkPipelineLayout main_layout = context->pipeline_layouts[main_layout_index];
 
     // Create dynamic state for pipeline (viewport & scissor)
@@ -471,7 +495,7 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
     // Put all configuration in graphics pipeline info struct
     VkGraphicsPipelineCreateInfo pipeline_create_info = {
         .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-        .renderPass = context->renderpasses[GDF_VK_RENDERER_RENDERPASS_INDEX_MAIN],
+        .renderPass = context->renderpasses[GDF_VK_RENDERPASS_INDEX_MAIN],
         .stageCount = sizeof(geometry_pass_shaders) / sizeof(VkPipelineShaderStageCreateInfo),
         .pStages = geometry_pass_shaders,
         .pVertexInputState = &vertex_input_info,
@@ -494,10 +518,10 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
             1,
             &pipeline_create_info,
             context->allocator,
-            &context->pipelines[GDF_VK_RENDERER_PIPELINE_INDEX_GEOMETRY]
+            &context->pipelines[GDF_VK_PIPELINE_INDEX_GEOMETRY]
         )
     );
-    context->pipelines[GDF_VK_RENDERER_PIPELINE_INDEX_GEOMETRY].layout_index = main_layout_index;
+    context->pipelines[GDF_VK_PIPELINE_INDEX_GEOMETRY].layout_index = main_layout_index;
 
     // Create wireframe pipeline
     // TODO! this should work bc gp_create_info has pointers to these structs, but
@@ -511,10 +535,10 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
             1,
             &pipeline_create_info,
             context->allocator,
-            &context->pipelines[GDF_VK_RENDERER_PIPELINE_INDEX_GEOMETRY_WIREFRAME]
+            &context->pipelines[GDF_VK_PIPELINE_INDEX_GEOMETRY_WIREFRAME]
         )
     );
-    context->pipelines[GDF_VK_RENDERER_PIPELINE_INDEX_GEOMETRY_WIREFRAME].layout_index = main_layout_index;
+    context->pipelines[GDF_VK_PIPELINE_INDEX_GEOMETRY_WIREFRAME].layout_index = main_layout_index;
 
     // repeat pipeline creation with different shaders for other pipelines
     // Lighting subpass pipeline
@@ -530,10 +554,10 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
             1,
             &pipeline_create_info,
             context->allocator,
-            &context->pipelines[GDF_VK_RENDERER_PIPELINE_INDEX_LIGHTING]
+            &context->pipelines[GDF_VK_PIPELINE_INDEX_LIGHTING]
         )
     );
-    context->pipelines[GDF_VK_RENDERER_PIPELINE_INDEX_LIGHTING].layout_index = main_layout_index;
+    context->pipelines[GDF_VK_PIPELINE_INDEX_LIGHTING].layout_index = main_layout_index;
 
     // Post-processing subpass pipeline
     pipeline_create_info.stageCount = sizeof(postprocessing_pass_shaders) / sizeof(VkPipelineShaderStageCreateInfo);
@@ -546,10 +570,47 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
             1,
             &pipeline_create_info,
             context->allocator,
-            &context->pipelines[GDF_VK_RENDERER_PIPELINE_INDEX_POST_PROCESSING]
+            &context->pipelines[GDF_VK_PIPELINE_INDEX_POST_PROCESSING]
         )
     );
-    context->pipelines[GDF_VK_RENDERER_PIPELINE_INDEX_POST_PROCESSING].layout_index = main_layout_index;
+    context->pipelines[GDF_VK_PIPELINE_INDEX_POST_PROCESSING].layout_index = main_layout_index;
+
+    // Debug grid pipeline thingy
+    VkPipelineShaderStageCreateInfo grid_vert = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+        .stage = VK_SHADER_STAGE_VERTEX_BIT,
+        .module = context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_GRID_VERT],
+        .pName = "main"
+    };
+    VkPipelineShaderStageCreateInfo grid_frag = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+        .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
+        .module = context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_GRID_FRAG],
+        .pName = "main"
+    };
+
+    VkPipelineShaderStageCreateInfo grid_shaders[2] = {
+        grid_vert,
+        grid_frag
+    };
+
+    pipeline_create_info.stageCount = sizeof(grid_shaders) / sizeof(VkPipelineShaderStageCreateInfo);
+    pipeline_create_info.pStages = grid_shaders;
+    pipeline_create_info.layout = context->pipeline_layouts[GDF_VK_PIPELINE_LAYOUT_INDEX_GRID];
+    // no cull for grid render
+    rasterizer_state.cullMode = VK_CULL_MODE_NONE;
+
+    VK_ASSERT(
+        vkCreateGraphicsPipelines(
+            context->device.handle,
+            VK_NULL_HANDLE,
+            1,
+            &pipeline_create_info,
+            context->allocator,
+            &context->pipelines[GDF_VK_PIPELINE_INDEX_GRID]
+        )
+    );
+    context->pipelines[GDF_VK_PIPELINE_INDEX_GRID].layout_index = GDF_VK_PIPELINE_LAYOUT_INDEX_GRID;
 
     return true;
 }
@@ -665,7 +726,8 @@ bool __create_swapchain_and_images(renderer_backend* backend, vk_renderer_contex
         )
     );
 
-    context->swapchain.images = GDF_LIST_Reserve(vk_image, image_count);
+    if (!context->recreating_swapchain)
+        context->swapchain.images = GDF_LIST_Reserve(vk_image, image_count);
 
     // Create corresponding image views
     for (u32 i = 0; i < image_count; i++)
@@ -790,11 +852,54 @@ bool __create_swapchain_and_images(renderer_backend* backend, vk_renderer_contex
     return true;
 }
 
+void __destroy_swapchain_and_images(vk_renderer_context* context)
+{
+    VkDevice device = context->device.handle;
+    VkAllocationCallbacks* allocator = context->allocator;
+    for (u32 i = 0; i < context->swapchain.image_count; i++)
+    {
+        vkDestroyImageView(
+            device,
+            context->swapchain.images[i].view,
+            allocator
+        );
+    }
+
+    // destroy depth image
+    vkDestroyImage(
+        device,
+        context->depth_image,
+        allocator
+    );
+    vkDestroyImageView(
+        device,
+        context->depth_image_view,
+        allocator
+    );
+    vkFreeMemory(
+        device, 
+        context->depth_image_memory,
+        allocator
+    );
+
+    vkDestroySwapchainKHR(
+        device,
+        context->swapchain.handle,
+        allocator
+    );
+
+    if (!context->recreating_swapchain)
+    {
+        GDF_LIST_Destroy(context->swapchain.images);
+    }
+}
+
 bool __create_framebuffers(renderer_backend* backend, vk_renderer_context* context)
 {
     // Create framebuffers
     u32 image_count = context->swapchain.image_count;
-    context->swapchain.framebuffers = GDF_LIST_Reserve(VkFramebuffer, image_count);
+    if (!context->recreating_swapchain)
+        context->swapchain.framebuffers = GDF_LIST_Reserve(VkFramebuffer, image_count);
     for (u32 i = 0; i < image_count; i++) 
     {
         vk_image* img = &context->swapchain.images[i];
@@ -808,7 +913,7 @@ bool __create_framebuffers(renderer_backend* backend, vk_renderer_context* conte
             .sType = VK_STRUCTURE_TYPE_FRAMEBUFFER_CREATE_INFO,
             .attachmentCount = 2,
             .pAttachments = image_views,
-            .renderPass = context->renderpasses[GDF_VK_RENDERER_RENDERPASS_INDEX_MAIN],
+            .renderPass = context->renderpasses[GDF_VK_RENDERPASS_INDEX_MAIN],
             .width = context->swapchain.extent.width,
             .height = context->swapchain.extent.height,
             .layers = 1
@@ -824,6 +929,30 @@ bool __create_framebuffers(renderer_backend* backend, vk_renderer_context* conte
         );
     }
     return true;
+}
+
+void __destroy_framebuffers(vk_renderer_context* context)
+{
+    for (u32 i = 0; i < context->swapchain.image_count; i++)
+    {
+        vkDestroyFramebuffer(
+            context->device.handle,
+            context->swapchain.framebuffers[i],
+            context->allocator
+        );
+    }
+    
+    if (!context->recreating_swapchain)
+        GDF_LIST_Destroy(context->swapchain.framebuffers);
+}
+
+bool __recreate_sized_resources(renderer_backend* backend, vk_renderer_context* context)
+{
+    __destroy_framebuffers(context);
+    __destroy_swapchain_and_images(context);
+
+    return __create_swapchain_and_images(backend, context)
+        && __create_framebuffers(backend, context);
 }
 
 void __get_queue_indices(vk_renderer_context* context, VkPhysicalDevice physical_device, vk_pdevice_queues* queues)
@@ -891,61 +1020,39 @@ static const u16 indices[] = {
     4, 5, 0, 0, 5, 1   // Bottom face
 };
 
-static VkBuffer vertex_buffer;
-static VkBuffer index_buffer;
-static VkDeviceMemory vertex_buffer_memory;
-static VkDeviceMemory index_buffer_memory;
+// Grid vertices
+static const Vertex3d grid_vertices[] = {
+    {{-1.f, 0.f, -1.f}}, // bot left
+    {{-1.f, 0.f, 1.f}}, // top left
+    {{1.f, 0.f, 1.f}}, // top right
+    {{1.f, 0.f, -1.f}}, // bot right
+};
+
+// Grid indices
+static const u16 grid_indices[] = {
+    0, 3, 2, 2, 1, 0
+};
+
+static vk_buffer cube_vertex_buf;
+static vk_buffer cube_index_buf;
+
+static vk_buffer grid_vertex_buf;
+static vk_buffer grid_index_buf;
 
 static void __create_example_cube_buffers(vk_renderer_context* context) 
 {
-    vk_device* device = &context->device;
-    VkBufferCreateInfo vertex_buffer_info = {
-        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-        .size = sizeof(vertices),
-        .usage = VK_BUFFER_USAGE_VERTEX_BUFFER_BIT,
-        .sharingMode = VK_SHARING_MODE_EXCLUSIVE
-    };
-    vkCreateBuffer(device->handle, &vertex_buffer_info, NULL, &vertex_buffer);
-
-    VkMemoryRequirements vertex_mem_requirements;
-    vkGetBufferMemoryRequirements(device->handle, vertex_buffer, &vertex_mem_requirements);
-
-    VkMemoryAllocateInfo vertex_alloc_info = {
-        .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-        .allocationSize = vertex_mem_requirements.size,
-        .memoryTypeIndex = vk_utils_find_memory_type_idx(context, vertex_mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
-    };
-    vkAllocateMemory(device->handle, &vertex_alloc_info, NULL, &vertex_buffer_memory);
-    vkBindBufferMemory(device->handle, vertex_buffer, vertex_buffer_memory, 0);
-
-    void* data;
-    vkMapMemory(device->handle, vertex_buffer_memory, 0, sizeof(vertices), 0, &data);
-    memcpy(data, vertices, sizeof(vertices));
-    vkUnmapMemory(device->handle, vertex_buffer_memory);
-
-    // Similar process for index buffer
-    VkBufferCreateInfo index_buffer_info = {
-        .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-        .size = sizeof(indices),
-        .usage = VK_BUFFER_USAGE_INDEX_BUFFER_BIT,
-        .sharingMode = VK_SHARING_MODE_EXCLUSIVE
-    };
-    vkCreateBuffer(device->handle, &index_buffer_info, NULL, &index_buffer);
-
-    VkMemoryRequirements index_mem_requirements;
-    vkGetBufferMemoryRequirements(device->handle, index_buffer, &index_mem_requirements);
-
-    VkMemoryAllocateInfo index_alloc_info = {
-        .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-        .allocationSize = index_mem_requirements.size,
-        .memoryTypeIndex = vk_utils_find_memory_type_idx(context, index_mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
-    };
-    vkAllocateMemory(device->handle, &index_alloc_info, NULL, &index_buffer_memory);
-    vkBindBufferMemory(device->handle, index_buffer, index_buffer_memory, 0);
-
-    vkMapMemory(device->handle, index_buffer_memory, 0, sizeof(indices), 0, &data);
-    memcpy(data, indices, sizeof(indices));
-    vkUnmapMemory(device->handle, index_buffer_memory);
+    vk_buffers_create_vertex(
+        context,
+        vertices,
+        sizeof(vertices),
+        &cube_vertex_buf
+    );
+    vk_buffers_create_index(
+        context,
+        indices,
+        sizeof(indices),
+        &cube_index_buf
+    );
 }
 
 // TODO! Remove later
@@ -960,6 +1067,8 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
         GDF_Transform* cube_transform = cube_transforms + i;
         GDF_TRANSFORM_InitDefault(cube_transform);
         cube_transform->pos.x = -((f32)cube_transform_count) + 2 * i;
+        cube_transform->pos.x += 0.5;
+        cube_transform->pos.z += 0.5;
         LOG_INFO("pos: %f", cube_transform->pos.x);
         GDF_TRANSFORM_RecalculateModelMatrix(cube_transform);
     }
@@ -1171,23 +1280,6 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     LOG_DEBUG("Got queues");
 
     /* ======================================== */
-    /* ----- CREATE COMMAND POOL FOR GRAPHICS QUEUE ----- */
-    /* ======================================== */
-
-    VkCommandPoolCreateInfo pool_create_info = {VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
-    pool_create_info.queueFamilyIndex = context.device.physical_info->queues.graphics_family_index;
-    pool_create_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-    VK_ASSERT(
-        vkCreateCommandPool(
-            context.device.handle,
-            &pool_create_info,
-            context.allocator,
-            &context.device.graphics_cmd_pool
-        )
-    );
-    LOG_DEBUG("graphics command pool created.");
-
-    /* ======================================== */
     /* ----- CREATE SWAPCHAIN, IMAGES ----- */
     /* ======================================== */
     __create_swapchain_and_images(backend, &context);
@@ -1203,61 +1295,11 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     // Create separate ubo for each swapchain image
     for (u32 i = 0; i < image_count; i++) 
     {
-        VkBufferCreateInfo buffer_info = {
-            .sType = VK_STRUCTURE_TYPE_BUFFER_CREATE_INFO,
-            .size = buffer_size,
-            .usage = VK_BUFFER_USAGE_UNIFORM_BUFFER_BIT,
-            .sharingMode = VK_SHARING_MODE_EXCLUSIVE
-        };
-
-        VK_ASSERT(
-            vkCreateBuffer(
-                context.device.handle,
-                &buffer_info,
-                context.allocator,
-                &context.uniform_buffers[i].handle
-            )
-        );
-
-        VkMemoryRequirements mem_requirements;
-        vkGetBufferMemoryRequirements(
-            context.device.handle,
-            context.uniform_buffers[i].handle,
-            &mem_requirements
-        );
-
-        VkMemoryAllocateInfo alloc_info = {
-            .sType = VK_STRUCTURE_TYPE_MEMORY_ALLOCATE_INFO,
-            .allocationSize = mem_requirements.size,
-            .memoryTypeIndex = vk_utils_find_memory_type_idx(&context, mem_requirements.memoryTypeBits, VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT)
-        };
-
-        VK_ASSERT(
-            vkAllocateMemory(
-                context.device.handle, 
-                &alloc_info, 
-                NULL, 
-                &context.uniform_buffers[i].memory
-            )
-        );
-        VK_ASSERT(
-            vkBindBufferMemory(
-                context.device.handle, 
-                context.uniform_buffers[i].handle, 
-                context.uniform_buffers[i].memory, 
-                0
-            )
-        );
-        VK_ASSERT(
-            vkMapMemory(
-                context.device.handle, 
-                context.uniform_buffers[i].memory, 
-                0, 
-                buffer_size, 
-                0, 
-                &context.uniform_buffers[i].mapped_data
-            )
-        );
+        if (!vk_buffers_create_uniform(&context, buffer_size, &context.uniform_buffers[i]))
+        {
+            LOG_ERR("Failed to create a uniform buffer.");
+            return false;
+        }
     }
 
     // Create descriptor pool and allocate sets
@@ -1325,7 +1367,7 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     for (u32 i = 0; i < image_count; i++)
     {
         VkDescriptorBufferInfo buffer_info = {
-            .buffer = context.uniform_buffers[i].handle,
+            .buffer = context.uniform_buffers[i].buffer.handle,
             .offset = 0,
             .range = sizeof(UniformBuffer)
         };
@@ -1365,17 +1407,41 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     LOG_DEBUG("Created framebuffers");
 
     /* ======================================== */
-    /* ----- Allocate command buffer ----- */
+    /* ----- Allocate command buffers ----- */
     /* ======================================== */
+    VkCommandPoolCreateInfo pool_create_info = {VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
+    pool_create_info.queueFamilyIndex = context.device.physical_info->queues.graphics_family_index;
+    pool_create_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    VK_ASSERT(
+        vkCreateCommandPool(
+            context.device.handle,
+            &pool_create_info,
+            context.allocator,
+            &context.command_pool
+        )
+    );
+    LOG_DEBUG("graphics command pool created.");
+
+    u32 max_concurrent_frames = context.max_concurrent_frames;
     VkCommandBufferAllocateInfo command_buf_info = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-        .commandPool = context.device.graphics_cmd_pool,
+        .commandPool = context.command_pool,
         .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-        .commandBufferCount = 1
+        .commandBufferCount = max_concurrent_frames
     };
-    u32 max_concurrent_frames = context.max_concurrent_frames;
-    vkAllocateCommandBuffers(context.device.handle, &command_buf_info, &context.device.cmd_buffer);
-           
+    context.command_buffers = GDF_LIST_Reserve(VkCommandBuffer, max_concurrent_frames);
+    VK_ASSERT(
+        vkAllocateCommandBuffers(
+            context.device.handle, 
+            &command_buf_info, 
+            context.command_buffers
+        )
+    );
+    GDF_LIST_SetLength(context.command_buffers, max_concurrent_frames);
+
+    /* ======================================== */
+    /* ----- Create sync objects ----- */
+    /* ======================================== */  
     context.image_available_semaphores = GDF_LIST_Reserve(VkSemaphore, max_concurrent_frames);
     context.render_finished_semaphores = GDF_LIST_Reserve(VkSemaphore, max_concurrent_frames);
     context.in_flight_fences = GDF_LIST_Reserve(VkFence, max_concurrent_frames);
@@ -1422,6 +1488,19 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
 
     // TODO! remove later
     __create_example_cube_buffers(&context);
+    // Create grid buffers 
+    vk_buffers_create_vertex(
+        &context,
+        grid_vertices,
+        sizeof(grid_vertices),
+        &grid_vertex_buf
+    );
+    vk_buffers_create_index(
+        &context,
+        grid_indices,
+        sizeof(grid_indices),
+        &grid_index_buf
+    );
     LOG_DEBUG("Created example cube buffers (remove later)")
 
     LOG_INFO("Finished initialization of vulkan stuff...");
@@ -1438,7 +1517,7 @@ void vk_renderer_destroy(renderer_backend* backend)
     VkDevice device = context.device.handle;
     VkAllocationCallbacks* allocator = context.allocator;
     // Destroy a bunch of pipelines
-    for (u32 i = 0; i < GDF_VK_RENDERER_PIPELINE_INDEX_MAX; i++)
+    for (u32 i = 0; i < GDF_VK_PIPELINE_INDEX_MAX; i++)
     {
         vkDestroyPipeline(
             device,
@@ -1447,7 +1526,7 @@ void vk_renderer_destroy(renderer_backend* backend)
         );
     }
     
-    for (u32 i = 0; i < GDF_VK_RENDERER_PIPELINE_LAYOUT_INDEX_MAX; i++)
+    for (u32 i = 0; i < GDF_VK_PIPELINE_LAYOUT_INDEX_MAX; i++)
     {
         vkDestroyPipelineLayout(
             device,
@@ -1456,7 +1535,7 @@ void vk_renderer_destroy(renderer_backend* backend)
         );
     }
     
-    for (u32 i = 0; i < GDF_VK_RENDERER_RENDERPASS_INDEX_MAX; i++)
+    for (u32 i = 0; i < GDF_VK_RENDERPASS_INDEX_MAX; i++)
     {
         vkDestroyRenderPass(
             device,
@@ -1466,7 +1545,7 @@ void vk_renderer_destroy(renderer_backend* backend)
     }
 
     // Destroy shader modules
-    for (u32 i = 0; i < GDF_VK_RENDERER_SHADER_MODULE_INDEX_MAX; i++)
+    for (u32 i = 0; i < GDF_VK_SHADER_MODULE_INDEX_MAX; i++)
     {
         vkDestroyShaderModule(
             device,
@@ -1503,20 +1582,7 @@ void vk_renderer_destroy(renderer_backend* backend)
             context.render_finished_semaphores[i],
             allocator
         );
-        vkUnmapMemory(
-            device,
-            context.uniform_buffers[i].memory
-        );
-        vkFreeMemory(
-            device,
-            context.uniform_buffers[i].memory,
-            allocator
-        );
-        vkDestroyBuffer(
-            device,
-            context.uniform_buffers[i].handle,
-            allocator
-        );
+        vk_buffers_destroy_uniform(&context, &context.uniform_buffers[i]);
         // swapchain images destroyed automatically i think
         vkDestroyImageView(
             device,
@@ -1531,7 +1597,7 @@ void vk_renderer_destroy(renderer_backend* backend)
     }
 
     // destroy depth image resources
-    vkDestroyImageView(
+    vkDestroyImageView(  
         device,
         context.depth_image_view,
         allocator
@@ -1561,13 +1627,13 @@ void vk_renderer_destroy(renderer_backend* backend)
     );
     vkFreeCommandBuffers(
         device,
-        context.device.graphics_cmd_pool,
-        1,
-        &context.device.cmd_buffer
+        context.command_pool,
+        context.max_concurrent_frames,
+        context.command_buffers
     );
     vkDestroyCommandPool(
         device,
-        context.device.graphics_cmd_pool,
+        context.command_pool,
         allocator
     );
     vkDestroySwapchainKHR(
@@ -1606,7 +1672,6 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
 {
     vk_device* device = &context.device;
 
-    // Check if recreating swap chain and boot out.
     if (!context.ready_for_use) {
         if (!vk_result_is_success(vkDeviceWaitIdle(device->handle))) {
             LOG_ERR("vulkan_renderer_backend_begin_frame vkDeviceWaitIdle (1) failed");
@@ -1625,17 +1690,23 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
             return false;
         }
 
-        if (backend->framebuffer_height == 0 || backend->framebuffer_width == 0)
+        context.ready_for_use = false;
+        // TODO! HANDLE MINIMIZES BETTER... 
+        if (backend->framebuffer_height == 0 && backend->framebuffer_width == 0)
         {
             return false;
         }
 
-        if (!__create_swapchain_and_images(backend, &context)) {
+        context.recreating_swapchain = true;
+
+        if (!__recreate_sized_resources(backend, &context)) {
             return false;
         }
 
         LOG_INFO("Resized successfully.");
         context.pending_resize_event = false;
+        context.recreating_swapchain = false;
+        context.ready_for_use = true;
         return false;
     }
 
@@ -1682,7 +1753,7 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
     // }
     vkResetFences(device->handle, 1, &context.in_flight_fences[resource_idx]);
 
-    VkCommandBuffer cmd_buffer = context.device.cmd_buffer;
+    VkCommandBuffer cmd_buffer = context.command_buffers[resource_idx];
     vkResetCommandBuffer(cmd_buffer, 0);
 
     VkCommandBufferBeginInfo begin_info = {
@@ -1693,7 +1764,7 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
 
     VkRenderPassBeginInfo render_pass_info = {
         .sType = VK_STRUCTURE_TYPE_RENDER_PASS_BEGIN_INFO,
-        .renderPass = context.renderpasses[GDF_VK_RENDERER_RENDERPASS_INDEX_MAIN],
+        .renderPass = context.renderpasses[GDF_VK_RENDERPASS_INDEX_MAIN],
         .framebuffer = context.swapchain.framebuffers[current_img_idx],
         .renderArea.offset = {0, 0},
         .renderArea.extent = context.swapchain.extent
@@ -1707,21 +1778,6 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
     render_pass_info.pClearValues = clear_values;
 
     vkCmdBeginRenderPass(cmd_buffer, &render_pass_info, VK_SUBPASS_CONTENTS_INLINE);
-    VkPipelineLayout* pipeline_layouts = context.pipeline_layouts;
-    // Bind the geometry pass pipeline
-    vk_pipeline* bound_pipeline = &context.pipelines[GDF_VK_RENDERER_PIPELINE_INDEX_GEOMETRY_WIREFRAME];
-    vkCmdBindPipeline(cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, bound_pipeline->handle);
-    
-    vkCmdBindDescriptorSets(
-        cmd_buffer,
-        VK_PIPELINE_BIND_POINT_GRAPHICS,
-        pipeline_layouts[bound_pipeline->layout_index],
-        0,
-        1,
-        &context.descriptor_sets[resource_idx], 
-        0, 
-        NULL
-    );
 
     // make as similar to opengls as possible
     VkViewport viewport;
@@ -1738,11 +1794,28 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
         .extent = context.swapchain.extent
     };
     vkCmdSetScissor(cmd_buffer, 0, 1, &scissor);
-    // Bind example cube's vertex and index buffers
-    VkBuffer vertex_buffers[] = {vertex_buffer};
+
+    // Drawing stuff
+    VkPipelineLayout* pipeline_layouts = context.pipeline_layouts;
     VkDeviceSize offsets[] = {0};
-    vkCmdBindVertexBuffers(cmd_buffer, 0, 1, vertex_buffers, offsets);
-    vkCmdBindIndexBuffer(cmd_buffer, index_buffer, 0, VK_INDEX_TYPE_UINT16);
+    
+    // Bind the geometry pass pipeline
+    vk_pipeline* bound_pipeline = &context.pipelines[GDF_VK_PIPELINE_INDEX_GEOMETRY_WIREFRAME];
+    vkCmdBindPipeline(cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, bound_pipeline->handle);
+
+    vkCmdBindDescriptorSets(
+        cmd_buffer,
+        VK_PIPELINE_BIND_POINT_GRAPHICS,
+        pipeline_layouts[bound_pipeline->layout_index],
+        0,
+        1,
+        &context.descriptor_sets[resource_idx], 
+        0, 
+        NULL
+    );
+
+    vkCmdBindVertexBuffers(cmd_buffer, 0, 1, &cube_vertex_buf.handle, offsets);
+    vkCmdBindIndexBuffer(cmd_buffer, cube_index_buf.handle, 0, VK_INDEX_TYPE_UINT16);
 
     // funny test pulsing cube(s)
     for (u32 i = 0; i < cube_transform_count; i++)
@@ -1763,8 +1836,34 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
         vkCmdDrawIndexed(cmd_buffer, sizeof(indices) / sizeof(indices[0]), 1, 0, 0, 0);
     }
 
-    // draw test triangle 
-    vkCmdDraw(cmd_buffer, 3, 1, 0, 0);
+    // draw grid
+    vk_pipeline* grid_pipeline = &context.pipelines[GDF_VK_PIPELINE_INDEX_GRID];
+    vkCmdBindPipeline(cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, grid_pipeline->handle);
+    
+    vkCmdBindDescriptorSets(
+        cmd_buffer,
+        VK_PIPELINE_BIND_POINT_GRAPHICS,
+        pipeline_layouts[grid_pipeline->layout_index],
+        0,
+        1,
+        &context.descriptor_sets[resource_idx], 
+        0, 
+        NULL
+    );
+
+    vkCmdBindVertexBuffers(cmd_buffer, 0, 1, &grid_vertex_buf.handle, offsets);
+    vkCmdBindIndexBuffer(cmd_buffer, grid_index_buf.handle, 0, VK_INDEX_TYPE_UINT16);
+
+    vkCmdPushConstants(
+        cmd_buffer,
+        pipeline_layouts[grid_pipeline->layout_index],
+        VK_SHADER_STAGE_VERTEX_BIT,
+        0,
+        sizeof(vec3),
+        &backend->active_camera->pos
+    );
+
+    vkCmdDrawIndexed(cmd_buffer, sizeof(grid_indices) / sizeof(grid_indices[0]), 1, 0, 0, 0);
 
     return true;
 }
@@ -1772,10 +1871,9 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
 bool vk_renderer_end_frame(renderer_backend* backend, f32 delta_time) 
 {
     vk_device* device = &context.device;
-    // vk_cmd_buf* command_buffer = &context.graphics_cmd_buf_list[context.img_idx];
-    VkCommandBuffer cmd_buffer = context.device.cmd_buffer;
+    u32 resource_idx = context.current_frame % context.max_concurrent_frames;
+    VkCommandBuffer cmd_buffer = context.command_buffers[resource_idx];
     u32 current_img_idx = context.swapchain.current_img_idx;
-    u32 sync_object_idx = context.current_frame % context.max_concurrent_frames;
 
     vkCmdEndRenderPass(cmd_buffer);
 
@@ -1788,25 +1886,25 @@ bool vk_renderer_end_frame(renderer_backend* backend, f32 delta_time)
     VkSubmitInfo submit_info = {
         .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
         .waitSemaphoreCount = 1,
-        .pWaitSemaphores = &context.image_available_semaphores[sync_object_idx],
+        .pWaitSemaphores = &context.image_available_semaphores[resource_idx],
         .pWaitDstStageMask = (VkPipelineStageFlags[]) {VK_PIPELINE_STAGE_COLOR_ATTACHMENT_OUTPUT_BIT},
         .commandBufferCount = 1,
-        .pCommandBuffers = &context.device.cmd_buffer,
+        .pCommandBuffers = &cmd_buffer,
         .signalSemaphoreCount = 1,
-        .pSignalSemaphores = &context.render_finished_semaphores[sync_object_idx]
+        .pSignalSemaphores = &context.render_finished_semaphores[resource_idx]
     };
     vkQueueSubmit(
         device->graphics_queue,
         1,
         &submit_info,
-        context.in_flight_fences[sync_object_idx]
+        context.in_flight_fences[resource_idx]
     );
 
     VkPresentInfoKHR present_info = {
         .sType = VK_STRUCTURE_TYPE_PRESENT_INFO_KHR,
         .pImageIndices = &current_img_idx,
         .waitSemaphoreCount = 1,
-        .pWaitSemaphores = &context.render_finished_semaphores[sync_object_idx],
+        .pWaitSemaphores = &context.render_finished_semaphores[resource_idx],
         .swapchainCount = 1,
         .pSwapchains = &context.swapchain.handle,
         .pResults = NULL,

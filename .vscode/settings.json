@@ -133,6 +133,7 @@
         "math_types.h": "c",
         "camera.h": "c",
         "ios": "c",
-        "xiosbase": "c"
+        "xiosbase": "c",
+        "vk_buffers.h": "c"
     },
 }

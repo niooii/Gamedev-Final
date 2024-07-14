@@ -191,36 +191,45 @@ f64 GDF_RunApp()
 
         // quick camera input test stuff 
         // TODO! remove
+        f32 move_speed = 3;
+        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_LCONTROL))
+        {
+            move_speed = 20;
+        }
         vec3 camera_forward = vec3_forward(camera.yaw * DEG_TO_RAD, camera.pitch * DEG_TO_RAD);
         vec3 camera_right = vec3_right_from_forward(camera_forward);
-        vec3 camera_up = vec3_cross(camera_forward, camera_right);
 
-        camera_forward = vec3_mul_scalar(camera_forward, 2 * dt);
-        camera_right = vec3_mul_scalar(camera_right, 2 * dt);
-        camera_up = vec3_mul_scalar(camera_up, 2 * dt);
+        vec3 right_vec = vec3_new(camera_right.x, 0, camera_right.z);
+        vec3_normalize(&right_vec);
+        vec3 forward_vec = vec3_new(camera_forward.x, 0, camera_forward.z);
+        vec3_normalize(&forward_vec);
+        // TODO! handle normalization when traveling diagonally
+        right_vec = vec3_mul_scalar(right_vec, move_speed * dt);
+        forward_vec = vec3_mul_scalar(forward_vec, move_speed * dt);
+
         if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_W))
         {
-            vec3_add_to(&camera.pos, camera_forward);
+            vec3_add_to(&camera.pos, forward_vec);
         }
         if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_S))
         {
-            vec3_add_to(&camera.pos, vec3_negated(camera_forward));
+            vec3_add_to(&camera.pos, vec3_negated(forward_vec));
         }
         if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_A))
         {
-            vec3_add_to(&camera.pos, vec3_negated(camera_right));
+            vec3_add_to(&camera.pos, vec3_negated(right_vec));
         }
         if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_D))
         {
-            vec3_add_to(&camera.pos, camera_right);
+            vec3_add_to(&camera.pos, right_vec);
         }
         if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_SPACE))
         {
-            camera.pos.y += dt;
+            camera.pos.y += move_speed * dt;
         }
         if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_LSHIFT))
         {
-            camera.pos.y -= dt;
+            camera.pos.y -= move_speed * dt;
         }
         if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_UP))
         {

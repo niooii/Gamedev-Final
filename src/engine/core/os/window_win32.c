@@ -46,6 +46,7 @@ LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
         }
         case WM_MOVE: 
         {
+            LOWORD(l_param);
             // TODO! UPDATE WINDOW INTERNALS
             break;
         }
