@@ -134,6 +134,7 @@
         "camera.h": "c",
         "ios": "c",
         "xiosbase": "c",
-        "vk_buffers.h": "c"
+        "vk_buffers.h": "c",
+        "vk_textures.h": "c"
     },
 }

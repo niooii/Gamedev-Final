@@ -6,6 +6,8 @@
 #include "engine/math/math.h"
 #include "vk_buffers.h"
 
+
+
 bool vk_renderer_init(renderer_backend* backend, const char* application_name);
 void vk_renderer_destroy(renderer_backend* backend);
 

@@ -9,6 +9,16 @@ typedef enum GDF_RENDER_BACKEND_TYPE {
     GDF_RENDER_BACKEND_TYPE_OPENGL
 } GDF_RENDER_BACKEND_TYPE;
 
+typedef u16 GDF_Texture;
+
+typedef enum GDF_TEXTURE_INDEX {
+    GDF_TEXTURE_INDEX_DIRT,
+    GDF_TEXTURE_INDEX_GRASS_TOP,
+    GDF_TEXTURE_INDEX_GRASS_SIDE,
+
+    GDF_TEXTURE_INDEX_MAX,
+} GDF_TEXTURE_INDEX;
+
 typedef struct renderer_backend {
     u64 frame_number;
 
@@ -25,6 +35,8 @@ typedef struct renderer_backend {
 
     bool (*begin_frame)(struct renderer_backend* backend, f32 delta_time);
     bool (*end_frame)(struct renderer_backend* backend, f32 delta_time);
+
+    bool (*load_texture)(struct renderer_backend* backend, const char* image_path, GDF_Texture* out_texture);
 } renderer_backend;
 
 typedef struct GDF_RenderPacket {

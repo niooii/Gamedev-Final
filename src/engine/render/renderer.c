@@ -66,3 +66,8 @@ bool GDF_RENDERER_DrawFrame(GDF_RenderPacket* packet)
 
     return true;
 }
+
+bool GDF_RENDERER_LoadTexture(const char* image_path, GDF_Texture* out_texture)
+{
+    return backend->load_texture(backend, image_path, out_texture);
+}

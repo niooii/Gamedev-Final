@@ -15,7 +15,7 @@ static HMODULE class_h_instance = NULL;
 
 static GDF_Window* MAIN_WINDOW = NULL;
 
-typedef struct {
+typedef struct InternalWindowState {
     HWND hwnd;
     u32 client_w;
     u32 client_h;
@@ -46,8 +46,14 @@ LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
         }
         case WM_MOVE: 
         {
-            LOWORD(l_param);
-            // TODO! UPDATE WINDOW INTERNALS
+            if (MAIN_WINDOW != NULL)
+            {
+                u16 screen_x = LOWORD(l_param);
+                u16 screen_y = HIWORD(l_param);
+                InternalWindowState* internals = (InternalWindowState*)(MAIN_WINDOW->internals);
+                internals->x = screen_x;
+                internals->y = screen_y;
+            }
             break;
         }
         case WM_KILLFOCUS:
@@ -65,8 +71,7 @@ LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
             break;
         }
         case WM_SIZE: 
-        {
-            // TODO! UPDATE WINDOW INTERNALS
+        {  
             RECT r;
             GetClientRect(hwnd, &r);
             u32 width = r.right - r.left;
@@ -75,6 +80,12 @@ LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
             GDF_EventContext ctx;
             ctx.data.u16[0] = width;
             ctx.data.u16[1] = height;
+            if (MAIN_WINDOW != NULL)
+            {
+                InternalWindowState* internals = (InternalWindowState*)(MAIN_WINDOW->internals);
+                internals->client_w = width;
+                internals->client_h = height;
+            }
             GDF_EVENT_Fire(GDF_EVENT_INTERNAL_WINDOW_RESIZE, NULL, ctx);
             break;
         } 

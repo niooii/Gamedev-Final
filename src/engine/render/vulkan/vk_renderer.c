@@ -3,6 +3,7 @@
 #include "engine/core/containers/list.h"
 #include "vk_os.h"
 #include "engine/engine_core.h"
+#include "vk_textures.h"
 
 static vk_renderer_context context;
 
@@ -282,7 +283,7 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
         vkCreateRenderPass(
             context->device.handle,
             &rp_create_info,
-            context->allocator,
+            context->device.allocator,
             &context->renderpasses[GDF_VK_RENDERPASS_INDEX_MAIN]
         )
     );
@@ -459,7 +460,7 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
         vkCreatePipelineLayout(
             context->device.handle, 
             &layout_info,
-            context->allocator,
+            context->device.allocator,
             &context->pipeline_layouts[GDF_VK_PIPELINE_LAYOUT_INDEX_WORLD]
         )
     );
@@ -471,7 +472,7 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
         vkCreatePipelineLayout(
             context->device.handle, 
             &layout_info,
-            context->allocator,
+            context->device.allocator,
             &context->pipeline_layouts[GDF_VK_PIPELINE_LAYOUT_INDEX_GRID]
         )
     );
@@ -517,7 +518,7 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
             VK_NULL_HANDLE,
             1,
             &pipeline_create_info,
-            context->allocator,
+            context->device.allocator,
             &context->pipelines[GDF_VK_PIPELINE_INDEX_GEOMETRY]
         )
     );
@@ -534,7 +535,7 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
             VK_NULL_HANDLE,
             1,
             &pipeline_create_info,
-            context->allocator,
+            context->device.allocator,
             &context->pipelines[GDF_VK_PIPELINE_INDEX_GEOMETRY_WIREFRAME]
         )
     );
@@ -553,7 +554,7 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
             VK_NULL_HANDLE,
             1,
             &pipeline_create_info,
-            context->allocator,
+            context->device.allocator,
             &context->pipelines[GDF_VK_PIPELINE_INDEX_LIGHTING]
         )
     );
@@ -569,7 +570,7 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
             VK_NULL_HANDLE,
             1,
             &pipeline_create_info,
-            context->allocator,
+            context->device.allocator,
             &context->pipelines[GDF_VK_PIPELINE_INDEX_POST_PROCESSING]
         )
     );
@@ -606,7 +607,7 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
             VK_NULL_HANDLE,
             1,
             &pipeline_create_info,
-            context->allocator,
+            context->device.allocator,
             &context->pipelines[GDF_VK_PIPELINE_INDEX_GRID]
         )
     );
@@ -697,7 +698,7 @@ bool __create_swapchain_and_images(renderer_backend* backend, vk_renderer_contex
         vkCreateSwapchainKHR(
             context->device.handle,
             &sc_create_info,
-            context->allocator,
+            context->device.allocator,
             &context->swapchain.handle
         )
     );
@@ -757,7 +758,7 @@ bool __create_swapchain_and_images(renderer_backend* backend, vk_renderer_contex
             vkCreateImageView(
                 context->device.handle,
                 &image_view_info,
-                context->allocator,
+                context->device.allocator,
                 &context->swapchain.images[i].view
             )
         );
@@ -788,7 +789,7 @@ bool __create_swapchain_and_images(renderer_backend* backend, vk_renderer_contex
         vkCreateImage(
             context->device.handle, 
             &depth_image_info, 
-            context->allocator, 
+            context->device.allocator, 
             &context->depth_image
         )
     );
@@ -814,7 +815,7 @@ bool __create_swapchain_and_images(renderer_backend* backend, vk_renderer_contex
         vkAllocateMemory(
             context->device.handle, 
             &alloc_info, 
-            context->allocator, 
+            context->device.allocator, 
             &context->depth_image_memory
         )
     );
@@ -843,7 +844,7 @@ bool __create_swapchain_and_images(renderer_backend* backend, vk_renderer_contex
         vkCreateImageView(
             context->device.handle, 
             &depth_view_info, 
-            context->allocator, 
+            context->device.allocator, 
             &context->depth_image_view
         )
     );
@@ -855,7 +856,7 @@ bool __create_swapchain_and_images(renderer_backend* backend, vk_renderer_contex
 void __destroy_swapchain_and_images(vk_renderer_context* context)
 {
     VkDevice device = context->device.handle;
-    VkAllocationCallbacks* allocator = context->allocator;
+    VkAllocationCallbacks* allocator = context->device.allocator;
     for (u32 i = 0; i < context->swapchain.image_count; i++)
     {
         vkDestroyImageView(
@@ -923,7 +924,7 @@ bool __create_framebuffers(renderer_backend* backend, vk_renderer_context* conte
             vkCreateFramebuffer(
                 context->device.handle,
                 &framebuffer_info,
-                context->allocator,
+                context->device.allocator,
                 &context->swapchain.framebuffers[i]
             )
         );
@@ -938,7 +939,7 @@ void __destroy_framebuffers(vk_renderer_context* context)
         vkDestroyFramebuffer(
             context->device.handle,
             context->swapchain.framebuffers[i],
-            context->allocator
+            context->device.allocator
         );
     }
     
@@ -1073,7 +1074,7 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
         GDF_TRANSFORM_RecalculateModelMatrix(cube_transform);
     }
     // TODO! custom allocator.
-    context.allocator = 0;
+    context.device.allocator = 0;
 
     VkApplicationInfo app_info = {VK_STRUCTURE_TYPE_APPLICATION_INFO};
     app_info.apiVersion = VK_API_VERSION_1_2;
@@ -1105,7 +1106,7 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     create_info.enabledLayerCount = GDF_LIST_GetLength(validation_layers);
     create_info.ppEnabledLayerNames = validation_layers;
 #endif
-    VK_ASSERT(vkCreateInstance(&create_info, context.allocator, &context.instance));
+    VK_ASSERT(vkCreateInstance(&create_info, context.device.allocator, &context.instance));
 
     LOG_DEBUG("Vulkan instance initialized successfully.");
 
@@ -1124,7 +1125,7 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     PFN_vkCreateDebugUtilsMessengerEXT f =
         (PFN_vkCreateDebugUtilsMessengerEXT)vkGetInstanceProcAddr(context.instance, "vkCreateDebugUtilsMessengerEXT");
     GDF_ASSERT_MSG((f) != NULL, "Function returned was NULL.");
-    VK_ASSERT(f(context.instance, &debug_create_info, context.allocator, &context.debug_messenger));
+    VK_ASSERT(f(context.instance, &debug_create_info, context.device.allocator, &context.debug_messenger));
     LOG_DEBUG("Vulkan debugger created.");
 #endif
     
@@ -1249,7 +1250,7 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
         vkCreateDevice(
             selected_physical_device->handle,
             &device_create_info,
-            context.allocator,
+            context.device.allocator,
             &context.device.handle
         )
     );
@@ -1345,7 +1346,7 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
             vkCreateDescriptorSetLayout(
                 context.device.handle,
                 &layout_create_info,
-                context.allocator,
+                context.device.allocator,
                 &context.descriptor_set_layouts[i]
             )
         );
@@ -1390,7 +1391,7 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     /* ----- CREATE RENDERPASSES, SHADERS, GRAPHICS PIPELINE, FRAMEBUFFERS ----- */
     /* ======================================== */
 
-    // vkDestroyDevice(context.device.handle, context.allocator);
+    // vkDestroyDevice(context.device.handle, context.device.allocator);
 
     if (!__create_renderpasses_and_pipelines(&context))
     {
@@ -1416,7 +1417,7 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
         vkCreateCommandPool(
             context.device.handle,
             &pool_create_info,
-            context.allocator,
+            context.device.allocator,
             &context.command_pool
         )
     );
@@ -1462,7 +1463,7 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
             vkCreateSemaphore(
                 context.device.handle,
                 &semaphore_info,
-                context.allocator,
+                context.device.allocator,
                 &context.image_available_semaphores[i]
             )
         );
@@ -1470,7 +1471,7 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
             vkCreateSemaphore(
                 context.device.handle,
                 &semaphore_info,
-                context.allocator,
+                context.device.allocator,
                 &context.render_finished_semaphores[i]
             )
         );
@@ -1478,7 +1479,7 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
             vkCreateFence(
                 context.device.handle,
                 &fence_info,
-                context.allocator,
+                context.device.allocator,
                 &context.in_flight_fences[i]
             )
         );
@@ -1515,7 +1516,7 @@ void vk_renderer_destroy(renderer_backend* backend)
 {
     vkDeviceWaitIdle(context.device.handle);
     VkDevice device = context.device.handle;
-    VkAllocationCallbacks* allocator = context.allocator;
+    VkAllocationCallbacks* allocator = context.device.allocator;
     // Destroy a bunch of pipelines
     for (u32 i = 0; i < GDF_VK_PIPELINE_INDEX_MAX; i++)
     {
@@ -1643,11 +1644,11 @@ void vk_renderer_destroy(renderer_backend* backend)
     );
 
     LOG_DEBUG("Destroying Vulkan device...");
-    vkDestroyDevice(context.device.handle, context.allocator);
+    vkDestroyDevice(context.device.handle, context.device.allocator);
 
     LOG_DEBUG("Destroying Vulkan surface...");
     if (context.surface) {
-        vkDestroySurfaceKHR(context.instance, context.surface, context.allocator);
+        vkDestroySurfaceKHR(context.instance, context.surface, context.device.allocator);
         context.surface = 0;
     }
 
@@ -1656,11 +1657,11 @@ void vk_renderer_destroy(renderer_backend* backend)
     if (context.debug_messenger) {
         PFN_vkDestroyDebugUtilsMessengerEXT f =
             (PFN_vkDestroyDebugUtilsMessengerEXT)vkGetInstanceProcAddr(context.instance, "vkDestroyDebugUtilsMessengerEXT");
-        f(context.instance, context.debug_messenger, context.allocator);
+        f(context.instance, context.debug_messenger, context.device.allocator);
     }
 #endif
     LOG_DEBUG("Destroying Vulkan instance...");
-    vkDestroyInstance(context.instance, context.allocator);
+    vkDestroyInstance(context.instance, context.device.allocator);
 }
 
 void vk_renderer_resize(renderer_backend* backend, u16 width, u16 height) 
@@ -1800,7 +1801,7 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
     VkDeviceSize offsets[] = {0};
     
     // Bind the geometry pass pipeline
-    vk_pipeline* bound_pipeline = &context.pipelines[GDF_VK_PIPELINE_INDEX_GEOMETRY_WIREFRAME];
+    vk_pipeline* bound_pipeline = &context.pipelines[GDF_VK_PIPELINE_INDEX_GEOMETRY];
     vkCmdBindPipeline(cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, bound_pipeline->handle);
 
     vkCmdBindDescriptorSets(
@@ -1817,12 +1818,13 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
     vkCmdBindVertexBuffers(cmd_buffer, 0, 1, &cube_vertex_buf.handle, offsets);
     vkCmdBindIndexBuffer(cmd_buffer, cube_index_buf.handle, 0, VK_INDEX_TYPE_UINT16);
 
-    // funny test pulsing cube(s)
+    // funny test rotating cube(s)
     for (u32 i = 0; i < cube_transform_count; i++)
     {
         GDF_Transform* cube_transform = cube_transforms + i;
         GDF_TRANSFORM_InitDefault(cube_transforms + i);
-        cube_transform->rot.x += delta_time * 35 * DEG_TO_RAD;
+        cube_transform->rot.x += delta_time * (35 * gsin(PI * i/24.f)) * DEG_TO_RAD;
+        cube_transform->rot.y += delta_time * (20 * gsin(PI * i/24.f)) * DEG_TO_RAD;
         GDF_TRANSFORM_RecalculateModelMatrix(&cube_transform);
 
         vkCmdPushConstants(

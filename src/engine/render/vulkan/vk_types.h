@@ -61,19 +61,9 @@ typedef enum GDF_VK_PIPELINE_LAYOUT_INDEX {
     GDF_VK_PIPELINE_LAYOUT_INDEX_MAX,
 } GDF_VK_PIPELINE_LAYOUT_INDEX;
 
-/* ===== BUFFER TYPES ===== */
-typedef struct vk_buffer {
-    u32 mem_property_flags;
-    VkBuffer handle;
-    VkDeviceMemory memory;
-} vk_buffer;
-
-typedef struct vk_uniform_buffer {
-    vk_buffer buffer;
-    void* mapped_data;
-} vk_uniform_buffer;
-
-/* ===== BLAH BLAH blah ===== */
+/* ======================================= */
+/* ===== DEVICE TYPES ===== */
+/* ======================================= */
 typedef struct vk_pdevice_swapchain_support {
     VkSurfaceCapabilitiesKHR capabilities;
     u32 format_count;
@@ -105,23 +95,37 @@ typedef struct vk_device {
     VkQueue graphics_queue;
     VkQueue present_queue;
     VkQueue transfer_queue;
+    VkAllocationCallbacks* allocator;
 } vk_device;
 
-typedef struct vk_pipeline {
-    VkPipeline handle;
-    GDF_VK_PIPELINE_LAYOUT_INDEX layout_index;
-} vk_pipeline;
+/* ======================================= */
+/* ===== BUFFER TYPES ===== */
+/* ======================================= */
 
-typedef struct vk_formats {
-    VkFormat image_format;
-    VkColorSpaceKHR image_color_space;
-    VkFormat depth_format;
-} vk_formats;
+typedef struct vk_buffer {
+    u32 mem_property_flags;
+    VkBuffer handle;
+    VkDeviceMemory memory;
+} vk_buffer;
+
+typedef struct vk_uniform_buffer {
+    vk_buffer buffer;
+    void* mapped_data;
+} vk_uniform_buffer;
+
+
+/* ======================================= */
+/* ===== IMAGE TYPES ===== */
+/* ======================================= */
 
 typedef struct vk_image {
     VkImage handle;
     VkImageView view;
 } vk_image;
+
+/* ======================================= */
+/* ===== OTHER TYPES ===== */
+/* ======================================= */
 
 typedef struct vk_swapchain {
     VkSwapchainKHR handle;
@@ -135,9 +139,19 @@ typedef struct vk_swapchain {
     u32 image_count;
 } vk_swapchain;
 
+typedef struct vk_pipeline {
+    VkPipeline handle;
+    GDF_VK_PIPELINE_LAYOUT_INDEX layout_index;
+} vk_pipeline;
+
+typedef struct vk_formats {
+    VkFormat image_format;
+    VkColorSpaceKHR image_color_space;
+    VkFormat depth_format;
+} vk_formats;
+
 typedef struct vk_renderer_context { 
     VkInstance instance;
-    VkAllocationCallbacks* allocator;
     VkSurfaceKHR surface;
     vk_swapchain swapchain;
 
@@ -191,3 +205,27 @@ typedef struct vk_renderer_context {
     VkDebugUtilsMessengerEXT debug_messenger;
 #endif
 } vk_renderer_context;
+
+/* ======================================= */
+/* ===== TEXTURE TYPES ===== */
+/* ======================================= */
+
+// TODO! make texture loading system more general perhaps..
+typedef struct vk_texture {
+    vk_image image;
+    const char* image_path;
+} vk_texture;
+
+typedef struct vk_block_textures {
+    vk_device* device;
+    VkAllocationCallbacks* allocator;
+    
+    vk_texture textures[GDF_TEXTURE_INDEX_MAX];
+    VkSampler sampler;
+
+    VkDescriptorPool descriptor_pool;
+    // GDF_LIST
+    VkDescriptorSet* descriptor_sets;
+    // GDF_LIST
+    VkDescriptorSetLayout* descriptor_set_layouts;
+} vk_block_textures;
