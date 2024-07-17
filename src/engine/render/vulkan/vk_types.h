@@ -150,6 +150,31 @@ typedef struct vk_formats {
     VkFormat depth_format;
 } vk_formats;
 
+/* ======================================= */
+/* ===== TEXTURE TYPES ===== */
+/* ======================================= */
+
+// TODO! make texture loading system more general perhaps..
+typedef struct vk_texture {
+    vk_image image;
+    const char* image_path;
+} vk_texture;
+
+typedef struct vk_block_textures {
+    vk_device* device;
+    VkAllocationCallbacks* allocator;
+    
+    vk_image texture_array;
+    VkDeviceMemory texture_array_memory;
+    VkSampler sampler;
+
+    VkDescriptorPool descriptor_pool;
+    // GDF_LIST
+    VkDescriptorSet* descriptor_sets;
+    // GDF_LIST
+    VkDescriptorSetLayout* descriptor_set_layouts;
+} vk_block_textures;
+
 typedef struct vk_renderer_context { 
     VkInstance instance;
     VkSurfaceKHR surface;
@@ -177,7 +202,8 @@ typedef struct vk_renderer_context {
     // GDF_LIST
     VkDescriptorSetLayout* descriptor_set_layouts;
 
-    VkCommandPool command_pool;
+    VkCommandPool persistent_command_pool;
+    VkCommandPool transient_command_pool;
     VkCommandBuffer* command_buffers;
 
     // GDF_LIST of physical device info structs
@@ -200,32 +226,10 @@ typedef struct vk_renderer_context {
     bool recreating_swapchain;
     bool ready_for_use;
 
+    vk_block_textures block_textures;
+
 
 #ifndef GDF_RELEASE
     VkDebugUtilsMessengerEXT debug_messenger;
 #endif
 } vk_renderer_context;
-
-/* ======================================= */
-/* ===== TEXTURE TYPES ===== */
-/* ======================================= */
-
-// TODO! make texture loading system more general perhaps..
-typedef struct vk_texture {
-    vk_image image;
-    const char* image_path;
-} vk_texture;
-
-typedef struct vk_block_textures {
-    vk_device* device;
-    VkAllocationCallbacks* allocator;
-    
-    vk_texture textures[GDF_TEXTURE_INDEX_MAX];
-    VkSampler sampler;
-
-    VkDescriptorPool descriptor_pool;
-    // GDF_LIST
-    VkDescriptorSet* descriptor_sets;
-    // GDF_LIST
-    VkDescriptorSetLayout* descriptor_set_layouts;
-} vk_block_textures;

@@ -384,7 +384,7 @@ bool GDF_VK_CreateSurface(vk_renderer_context* context)
     {
         LOG_ERR("WTF BRO");
     }
-    VkResult result = vkCreateWin32SurfaceKHR(context->instance, &create_info, context->allocator, &context->surface);
+    VkResult result = vkCreateWin32SurfaceKHR(context->instance, &create_info, context->device.allocator, &context->surface);
     if (result != VK_SUCCESS) {
         LOG_ERR("Vulkan surface creation failed.");
         return false;

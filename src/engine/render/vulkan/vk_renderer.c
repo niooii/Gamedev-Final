@@ -555,7 +555,7 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
             1,
             &pipeline_create_info,
             context->device.allocator,
-            &context->pipelines[GDF_VK_PIPELINE_INDEX_LIGHTING]
+            &context->pipelines[GDF_VK_PIPELINE_INDEX_LIGHTING].handle
         )
     );
     context->pipelines[GDF_VK_PIPELINE_INDEX_LIGHTING].layout_index = main_layout_index;
@@ -1408,7 +1408,7 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     LOG_DEBUG("Created framebuffers");
 
     /* ======================================== */
-    /* ----- Allocate command buffers ----- */
+    /* ----- Allocate command pools & buffers ----- */
     /* ======================================== */
     VkCommandPoolCreateInfo pool_create_info = {VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
     pool_create_info.queueFamilyIndex = context.device.physical_info->queues.graphics_family_index;
@@ -1418,15 +1418,27 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
             context.device.handle,
             &pool_create_info,
             context.device.allocator,
-            &context.command_pool
+            &context.persistent_command_pool
         )
     );
-    LOG_DEBUG("graphics command pool created.");
+    LOG_DEBUG("Persistent command pool created.");
+    // change queue index and flags
+    pool_create_info.queueFamilyIndex = context.device.physical_info->queues.transfer_family_index;
+    pool_create_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
+    VK_ASSERT(
+        vkCreateCommandPool(
+            context.device.handle,
+            &pool_create_info,
+            context.device.allocator,
+            &context.transient_command_pool
+        )
+    );
+    LOG_DEBUG("Transient command pool created.");
 
     u32 max_concurrent_frames = context.max_concurrent_frames;
     VkCommandBufferAllocateInfo command_buf_info = {
         .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-        .commandPool = context.command_pool,
+        .commandPool = context.persistent_command_pool,
         .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
         .commandBufferCount = max_concurrent_frames
     };
@@ -1486,6 +1498,13 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     }
 
     LOG_DEBUG("Created sync objects");
+
+    // TODO! texture loading outside of render initialization
+    if (!vk_block_textures_init(&context, &context.block_textures))
+    {
+        LOG_ERR("Failed to initialize block textures");
+        return false;
+    }
 
     // TODO! remove later
     __create_example_cube_buffers(&context);
@@ -1628,13 +1647,13 @@ void vk_renderer_destroy(renderer_backend* backend)
     );
     vkFreeCommandBuffers(
         device,
-        context.command_pool,
+        context.persistent_command_pool,
         context.max_concurrent_frames,
         context.command_buffers
     );
     vkDestroyCommandPool(
         device,
-        context.command_pool,
+        context.persistent_command_pool,
         allocator
     );
     vkDestroySwapchainKHR(
@@ -1822,10 +1841,9 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
     for (u32 i = 0; i < cube_transform_count; i++)
     {
         GDF_Transform* cube_transform = cube_transforms + i;
-        GDF_TRANSFORM_InitDefault(cube_transforms + i);
         cube_transform->rot.x += delta_time * (35 * gsin(PI * i/24.f)) * DEG_TO_RAD;
         cube_transform->rot.y += delta_time * (20 * gsin(PI * i/24.f)) * DEG_TO_RAD;
-        GDF_TRANSFORM_RecalculateModelMatrix(&cube_transform);
+        GDF_TRANSFORM_RecalculateModelMatrix(cube_transform);
 
         vkCmdPushConstants(
             cmd_buffer,

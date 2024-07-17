@@ -46,7 +46,7 @@ bool vk_utils_create_shader_module(vk_renderer_context* context, const char* src
     VkResult res = vkCreateShaderModule(
         context->device.handle,
         &create_info,
-        context->allocator,
+        context->device.allocator,
         out_module
     );
 

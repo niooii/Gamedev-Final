@@ -29,7 +29,7 @@ bool vk_buffers_create(
         .memoryTypeIndex = vk_utils_find_memory_type_idx(context, mem_req.memoryTypeBits, mem_property_flags)
     };
     VK_RETURN_FALSE_ASSERT(
-        vkAllocateMemory(device->handle, &alloc_info, context->allocator, &out_buf->memory)
+        vkAllocateMemory(device->handle, &alloc_info, context->device.allocator, &out_buf->memory)
     );
     VK_RETURN_FALSE_ASSERT(
         vkBindBufferMemory(device->handle, out_buf->handle, out_buf->memory, 0)
@@ -108,12 +108,12 @@ void vk_buffers_destroy(
     vkFreeMemory(
         context->device.handle,
         buf->memory,
-        context->allocator
+        context->device.allocator
     );
     vkDestroyBuffer(
         context->device.handle,
         buf->handle,
-        context->allocator
+        context->device.allocator
     );
 }
 
