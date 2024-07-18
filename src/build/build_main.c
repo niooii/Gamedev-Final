@@ -90,8 +90,6 @@ int main(int argc, char *argv[]) {
             continue;
         }
     }
-
-    
     
     if (GDF_MakeFile(build_options_path) || !load_build_options(build_options_path, build_options))
     {

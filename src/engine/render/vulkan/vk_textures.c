@@ -21,79 +21,81 @@ bool vk_block_textures_init(vk_renderer_context* context, vk_block_textures* out
     out_textures->allocator = context->device.allocator;
     VkAllocationCallbacks* allocator = context->device.allocator;
 
-    // Descriptor pool
-    VkDescriptorPoolSize pool_sizes[] = {
-        {
-            .type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-            .descriptorCount = context->swapchain.image_count
-        }
-    };
+    // // Descriptor pool
+    // VkDescriptorPoolSize pool_sizes[] = {
+    //     {
+    //         .type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+    //         .descriptorCount = context->swapchain.image_count
+    //     }
+    // };
 
-    VkDescriptorPoolCreateInfo descriptor_pool_info = {
-        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-        .maxSets = context->swapchain.image_count,
-        .poolSizeCount = 1,
-        .pPoolSizes = pool_sizes
-    };
+    // VkDescriptorPoolCreateInfo descriptor_pool_info = {
+    //     .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
+    //     .maxSets = context->swapchain.image_count,
+    //     .poolSizeCount = 1,
+    //     .pPoolSizes = pool_sizes
+    // };
 
-    VK_RETURN_FALSE_ASSERT(
-        vkCreateDescriptorPool(
-            device->handle,
-            &descriptor_pool_info,
-            allocator,
-            &out_textures->descriptor_pool
-        )
-    );
+    // VK_RETURN_FALSE_ASSERT(
+    //     vkCreateDescriptorPool(
+    //         device->handle,
+    //         &descriptor_pool_info,
+    //         allocator,
+    //         &out_textures->descriptor_pool
+    //     )
+    // );
 
-    VkDescriptorSetLayoutBinding bindings[] = {
-        {
-            .binding = 0,
-            .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-            .descriptorCount = 1,
-            .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
-        }
-    };
+    // VkDescriptorSetLayoutBinding bindings[] = {
+    //     {
+    //         .binding = 0,
+    //         .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+    //         .descriptorCount = 1,
+    //         .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
+    //     }
+    // };
 
-    VkDescriptorSetLayoutCreateInfo descriptor_set_layout_info = {
-        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-        .bindingCount = 1,
-        .pBindings = bindings
-    };
+    // VkDescriptorSetLayoutCreateInfo descriptor_set_layout_info = {
+    //     .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
+    //     .bindingCount = 1,
+    //     .pBindings = bindings
+    // };
 
-    // Create layouts (each frame in flight)
-    out_textures->descriptor_set_layouts = GDF_LIST_Create(VkDescriptorSetLayout);
-    for (u32 i = 0; i < context->swapchain.image_count; i++)
-    {
-        VkDescriptorSetLayout layout;
-        VK_RETURN_FALSE_ASSERT(
-            vkCreateDescriptorSetLayout(
-                out_textures->device->handle, 
-                &descriptor_set_layout_info, 
-                out_textures->allocator,
-                &layout
-            )
-        );
-        GDF_LIST_Push(out_textures->descriptor_set_layouts, layout);
-    }
+    // // Create layouts (each frame in flight)
+    // out_textures->descriptor_set_layouts = GDF_LIST_Create(VkDescriptorSetLayout);
+    // for (u32 i = 0; i < context->swapchain.image_count; i++)
+    // {
+    //     VkDescriptorSetLayout layout;
+    //     VK_RETURN_FALSE_ASSERT(
+    //         vkCreateDescriptorSetLayout(
+    //             out_textures->device->handle, 
+    //             &descriptor_set_layout_info, 
+    //             out_textures->allocator,
+    //             &layout
+    //         )
+    //     );
+    //     GDF_LIST_Push(out_textures->descriptor_set_layouts, layout);
+    // }
 
-    out_textures->descriptor_sets = GDF_LIST_Reserve(VkDescriptorSet, context->swapchain.image_count);
+    // out_textures->descriptor_sets = GDF_LIST_Reserve(VkDescriptorSet, context->swapchain.image_count);
 
-    VkDescriptorSetAllocateInfo alloc_info = {
-        .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-        .descriptorPool = out_textures->descriptor_pool,
-        .descriptorSetCount = GDF_LIST_GetLength(out_textures->descriptor_set_layouts),
-        .pSetLayouts = out_textures->descriptor_set_layouts
-    };
+    // VkDescriptorSetAllocateInfo alloc_info = {
+    //     .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
+    //     .descriptorPool = out_textures->descriptor_pool,
+    //     .descriptorSetCount = GDF_LIST_GetLength(out_textures->descriptor_set_layouts),
+    //     .pSetLayouts = out_textures->descriptor_set_layouts
+    // };
 
-    VK_RETURN_FALSE_ASSERT(
-        vkAllocateDescriptorSets(
-            device->handle,
-            &alloc_info,
-            out_textures->descriptor_sets
-        )
-    );
+    // VK_RETURN_FALSE_ASSERT(
+    //     vkAllocateDescriptorSets(
+    //         device->handle,
+    //         &alloc_info,
+    //         out_textures->descriptor_sets
+    //     )
+    // );
 
-    LOG_DEBUG("Allocated descriptor sets for block textures");
+    // GDF_LIST_SetLength(out_textures->descriptor_sets, context->swapchain.image_count);
+
+    // LOG_DEBUG("Allocated descriptor sets for block textures");
 
     // assume each block texture is 16x16
     const u32 w = 16;
@@ -160,19 +162,21 @@ bool vk_block_textures_init(vk_renderer_context* context, vk_block_textures* out
         )
     );
 
+    VkImageSubresourceRange subresource_range = {
+        .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+        .baseMipLevel = 0,
+        .levelCount = 1,
+        .baseArrayLayer = 0,
+        .layerCount = GDF_TEXTURE_INDEX_MAX
+    };
+
     // Create image view
     VkImageViewCreateInfo view_info = {
         .sType = VK_STRUCTURE_TYPE_IMAGE_VIEW_CREATE_INFO,
         .image = out_textures->texture_array.handle,
         .viewType = VK_IMAGE_VIEW_TYPE_2D_ARRAY,
         .format = VK_FORMAT_R8G8B8A8_UNORM,
-        .subresourceRange = {
-            .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-            .baseMipLevel = 0,
-            .levelCount = 1,
-            .baseArrayLayer = 0,
-            .layerCount = GDF_TEXTURE_INDEX_MAX
-        }
+        .subresourceRange = subresource_range
     };
 
     VK_RETURN_FALSE_ASSERT(
@@ -256,28 +260,159 @@ bool vk_block_textures_init(vk_renderer_context* context, vk_block_textures* out
         staging_buffer.memory
     );
 
-    // TODO! copy staging buffer into image. allocate new command buffer
+    VkImageSubresourceLayers subresource_layers = {
+        .mipLevel = 0,
+        .aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
+        .baseArrayLayer = 0,
+        .layerCount = GDF_TEXTURE_INDEX_MAX
+    };
+
+    VkCommandBuffer cmd_buf;
+    if (
+        !vk_buffers_create_single_use_command(
+            context,
+            &cmd_buf
+        )
+    )
+    {
+        LOG_ERR("Failed to create command buffer to copy textures.");
+        return false;
+    }
+
+    VkCommandBufferBeginInfo begin_info = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_BEGIN_INFO,
+        .flags = VK_COMMAND_BUFFER_USAGE_ONE_TIME_SUBMIT_BIT,
+    };
+
+    VK_RETURN_FALSE_ASSERT(
+        vkBeginCommandBuffer(
+            cmd_buf,
+            &begin_info
+        )
+    );
+
+    // transition image layout to optimal gpu use
+    VkImageMemoryBarrier transfer_optimal_barrier = {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+        .oldLayout = VK_IMAGE_LAYOUT_UNDEFINED,
+        .newLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+        .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+        .image = out_textures->texture_array.handle,
+        .subresourceRange = subresource_range,
+        .srcAccessMask = 0,
+        .dstAccessMask = VK_ACCESS_TRANSFER_WRITE_BIT
+    };
+
+    vkCmdPipelineBarrier(
+        cmd_buf,
+        VK_PIPELINE_STAGE_TOP_OF_PIPE_BIT,
+        VK_PIPELINE_STAGE_TRANSFER_BIT,
+        0,
+        0, 
+        NULL,
+        0, 
+        NULL,
+        1, 
+        &transfer_optimal_barrier
+    );
 
     VkBufferImageCopy copy_region = {
         .bufferOffset = 0,
         .bufferRowLength = 0,
         .bufferImageHeight = 0,
-        .imageSubresource.aspectMask = VK_IMAGE_ASPECT_COLOR_BIT,
-        .imageSubresource.mipLevel = 0,
-        .imageSubresource.baseArrayLayer = 0,
-        .imageSubresource.layerCount = GDF_TEXTURE_INDEX_MAX,
+        .imageSubresource = subresource_layers,
         .imageOffset = {0, 0, 0},
         .imageExtent = {w, h, 1}
     };
 
-    // vkCmdCopyBufferToImage(
+    vkCmdCopyBufferToImage(
+        cmd_buf,
+        staging_buffer.handle,
+        out_textures->texture_array.handle,
+        VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        1,
+        &copy_region
+    );
 
-    // );
+    // transition image layout to optimal shader read
+    VkImageMemoryBarrier shader_read_barrier = {
+        .sType = VK_STRUCTURE_TYPE_IMAGE_MEMORY_BARRIER,
+        .oldLayout = VK_IMAGE_LAYOUT_TRANSFER_DST_OPTIMAL,
+        .newLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL,
+        .srcQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+        .dstQueueFamilyIndex = VK_QUEUE_FAMILY_IGNORED,
+        .image = out_textures->texture_array.handle,
+        .subresourceRange = subresource_range,
+        .srcAccessMask = 0,
+        .dstAccessMask = VK_ACCESS_SHADER_READ_BIT
+    };
+
+    vkCmdPipelineBarrier(
+        cmd_buf,
+        VK_PIPELINE_STAGE_TRANSFER_BIT,
+        VK_PIPELINE_STAGE_FRAGMENT_SHADER_BIT,
+        0,
+        0, 
+        NULL,
+        0, 
+        NULL,
+        1, 
+        &shader_read_barrier
+    );
+
+    vkEndCommandBuffer(cmd_buf);
+
+    VkFence fence;
+    VkFenceCreateInfo fence_info = {
+        .sType = VK_STRUCTURE_TYPE_FENCE_CREATE_INFO,
+    };
+
+    VK_RETURN_FALSE_ASSERT(
+        vkCreateFence(
+            device->handle,
+            &fence_info,
+            allocator,
+            &fence
+        )
+    );
+
+    VkSubmitInfo submit_info = {
+        .sType = VK_STRUCTURE_TYPE_SUBMIT_INFO,
+        .commandBufferCount = 1,
+        .pCommandBuffers = &cmd_buf,
+        .signalSemaphoreCount = 0,
+        .pWaitSemaphores = NULL
+    };
+
+    VK_RETURN_FALSE_ASSERT(
+        vkQueueSubmit(
+            device->graphics_queue,
+            1,
+            &submit_info,
+            fence
+        )
+    );
+
+    VK_RETURN_FALSE_ASSERT(
+        vkWaitForFences(
+            device->handle,
+            1,
+            &fence,
+            VK_TRUE,
+            UINT64_MAX
+        )
+    );
+
+    vk_buffers_destroy_single_use_command(
+        context,
+        &cmd_buf
+    );
 
     VkSamplerCreateInfo sampler_info = {
         .sType = VK_STRUCTURE_TYPE_SAMPLER_CREATE_INFO,
-        .magFilter = VK_FILTER_LINEAR,
-        .minFilter = VK_FILTER_LINEAR,
+        .magFilter = VK_FILTER_NEAREST,
+        .minFilter = VK_FILTER_NEAREST,
         .addressModeU = VK_SAMPLER_ADDRESS_MODE_REPEAT,
         .addressModeV = VK_SAMPLER_ADDRESS_MODE_REPEAT,
         .addressModeW = VK_SAMPLER_ADDRESS_MODE_REPEAT,
@@ -301,7 +436,8 @@ bool vk_block_textures_init(vk_renderer_context* context, vk_block_textures* out
             &out_textures->sampler
         )
     );
-
+    
+    LOG_DEBUG("Textures initialized successfully");
     return true;
 }
 

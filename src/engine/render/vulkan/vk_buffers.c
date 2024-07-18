@@ -155,3 +155,38 @@ void vk_buffers_destroy_uniform(
     );
     vk_buffers_destroy(context, &uniform_buf->buffer);
 }
+
+bool vk_buffers_create_single_use_command(
+    vk_renderer_context* context,
+    VkCommandBuffer* out_command_buf
+)
+{
+    VkCommandBufferAllocateInfo alloc_info = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+        .commandPool = context->transient_command_pool,
+        .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+        .commandBufferCount = 1,
+    };
+    VK_RETURN_FALSE_ASSERT(
+        vkAllocateCommandBuffers(
+            context->device.handle,
+            &alloc_info,
+            out_command_buf
+        )
+    );
+
+    return true;
+}
+
+void vk_buffers_destroy_single_use_command(
+    vk_renderer_context* context,
+    VkCommandBuffer* command_buf
+)
+{
+    vkFreeCommandBuffers(
+        context->device.handle,
+        context->transient_command_pool,
+        1,
+        command_buf
+    );
+}

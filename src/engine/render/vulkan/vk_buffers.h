@@ -42,3 +42,13 @@ void vk_buffers_destroy_uniform(
     vk_renderer_context* context,
     vk_uniform_buffer* uniform_buf
 );
+
+bool vk_buffers_create_single_use_command(
+    vk_renderer_context* context,
+    VkCommandBuffer* out_command_buf
+);
+
+void vk_buffers_destroy_single_use_command(
+    vk_renderer_context* context,
+    VkCommandBuffer* command_buf
+);

@@ -45,6 +45,8 @@ static bool __input_system_on_event(u16 event_code, void* sender, void* listener
             }
         }
     }
+
+    return false;
 }
 
 // Relies on the event system being initialized first.

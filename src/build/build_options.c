@@ -83,6 +83,12 @@ bool save_build_options(const char* rel_path, BuildOptions* options)
         GDF_MAP_DTYPE_STRING
     );
     bool success = GDF_WriteMapToFile(map, rel_path);
+    // try again
+    if (!success)
+    {
+        GDF_MakeFile(rel_path);
+        success = GDF_WriteMapToFile(map, rel_path);
+    }
     GDF_FreeMap(map);
     return success;
 }

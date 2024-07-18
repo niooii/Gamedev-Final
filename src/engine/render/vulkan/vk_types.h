@@ -19,7 +19,7 @@
 { \
     if ((expr) != VK_SUCCESS) \
     { \
-        LOG_FATAL("%s returned: %s, in file: %s, line: %d. Returning false..\n", #expr, string_VkResult((expr)), __FILE__, __LINE__) \
+        LOG_ERR("%s returned: %s, in file: %s, line: %d. Returning false..\n", #expr, string_VkResult((expr)), __FILE__, __LINE__) \
         return false; \
     } \
 } \
@@ -55,7 +55,7 @@ typedef enum GDF_VK_RENDERPASS_INDEX {
 } GDF_VK_RENDERPASS_INDEX;
 
 typedef enum GDF_VK_PIPELINE_LAYOUT_INDEX {
-    GDF_VK_PIPELINE_LAYOUT_INDEX_WORLD,
+    GDF_VK_PIPELINE_LAYOUT_INDEX_GEOMETRY,
     GDF_VK_PIPELINE_LAYOUT_INDEX_GRID,
 
     GDF_VK_PIPELINE_LAYOUT_INDEX_MAX,
@@ -167,12 +167,6 @@ typedef struct vk_block_textures {
     vk_image texture_array;
     VkDeviceMemory texture_array_memory;
     VkSampler sampler;
-
-    VkDescriptorPool descriptor_pool;
-    // GDF_LIST
-    VkDescriptorSet* descriptor_sets;
-    // GDF_LIST
-    VkDescriptorSetLayout* descriptor_set_layouts;
 } vk_block_textures;
 
 typedef struct vk_renderer_context { 

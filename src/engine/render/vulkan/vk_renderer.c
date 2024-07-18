@@ -95,7 +95,6 @@ void __query_swapchain_support(VkPhysicalDevice physical_device, VkSurfaceKHR su
 bool __create_shader_modules(vk_renderer_context* context)
 {
     // load all (built in) shaders
-    VkShaderModule geometry_base_vert;
     if (
         !vk_utils_create_shader_module(
             context, 
@@ -461,7 +460,7 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
             context->device.handle, 
             &layout_info,
             context->device.allocator,
-            &context->pipeline_layouts[GDF_VK_PIPELINE_LAYOUT_INDEX_WORLD]
+            &context->pipeline_layouts[GDF_VK_PIPELINE_LAYOUT_INDEX_GEOMETRY]
         )
     );
 
@@ -477,7 +476,7 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
         )
     );
 
-    GDF_VK_PIPELINE_LAYOUT_INDEX main_layout_index = GDF_VK_PIPELINE_LAYOUT_INDEX_WORLD;
+    GDF_VK_PIPELINE_LAYOUT_INDEX main_layout_index = GDF_VK_PIPELINE_LAYOUT_INDEX_GEOMETRY;
     VkPipelineLayout main_layout = context->pipeline_layouts[main_layout_index];
 
     // Create dynamic state for pipeline (viewport & scissor)
@@ -519,7 +518,7 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
             1,
             &pipeline_create_info,
             context->device.allocator,
-            &context->pipelines[GDF_VK_PIPELINE_INDEX_GEOMETRY]
+            &context->pipelines[GDF_VK_PIPELINE_INDEX_GEOMETRY].handle
         )
     );
     context->pipelines[GDF_VK_PIPELINE_INDEX_GEOMETRY].layout_index = main_layout_index;
@@ -536,7 +535,7 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
             1,
             &pipeline_create_info,
             context->device.allocator,
-            &context->pipelines[GDF_VK_PIPELINE_INDEX_GEOMETRY_WIREFRAME]
+            &context->pipelines[GDF_VK_PIPELINE_INDEX_GEOMETRY_WIREFRAME].handle
         )
     );
     context->pipelines[GDF_VK_PIPELINE_INDEX_GEOMETRY_WIREFRAME].layout_index = main_layout_index;
@@ -571,7 +570,7 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
             1,
             &pipeline_create_info,
             context->device.allocator,
-            &context->pipelines[GDF_VK_PIPELINE_INDEX_POST_PROCESSING]
+            &context->pipelines[GDF_VK_PIPELINE_INDEX_POST_PROCESSING].handle
         )
     );
     context->pipelines[GDF_VK_PIPELINE_INDEX_POST_PROCESSING].layout_index = main_layout_index;
@@ -608,7 +607,7 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
             1,
             &pipeline_create_info,
             context->device.allocator,
-            &context->pipelines[GDF_VK_PIPELINE_INDEX_GRID]
+            &context->pipelines[GDF_VK_PIPELINE_INDEX_GRID].handle
         )
     );
     context->pipelines[GDF_VK_PIPELINE_INDEX_GRID].layout_index = GDF_VK_PIPELINE_LAYOUT_INDEX_GRID;
@@ -1021,7 +1020,7 @@ static const u16 indices[] = {
     4, 5, 0, 0, 5, 1   // Bottom face
 };
 
-// Grid vertices
+// Grid vertices (legit just a plane)
 static const Vertex3d grid_vertices[] = {
     {{-1.f, 0.f, -1.f}}, // bot left
     {{-1.f, 0.f, 1.f}}, // top left
@@ -1289,6 +1288,66 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     LOG_DEBUG("Created swapchain and images.");
 
     /* ======================================== */
+    /* ----- Allocate command pools & buffers ----- */
+    /* ======================================== */
+    VkCommandPoolCreateInfo pool_create_info = {VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
+    pool_create_info.queueFamilyIndex = context.device.physical_info->queues.graphics_family_index;
+    pool_create_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
+    VK_ASSERT(
+        vkCreateCommandPool(
+            context.device.handle,
+            &pool_create_info,
+            context.device.allocator,
+            &context.persistent_command_pool
+        )
+    );
+    LOG_DEBUG("Persistent command pool created.");
+    // change queue index and flags
+    // still use graphics because it supports both transfer and graphics operations
+    pool_create_info.queueFamilyIndex = context.device.physical_info->queues.graphics_family_index;
+    pool_create_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
+    VK_ASSERT(
+        vkCreateCommandPool(
+            context.device.handle,
+            &pool_create_info,
+            context.device.allocator,
+            &context.transient_command_pool
+        )
+    );
+    LOG_DEBUG("Transient command pool created.");
+
+    u32 max_concurrent_frames = context.max_concurrent_frames;
+    VkCommandBufferAllocateInfo command_buf_info = {
+        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
+        .commandPool = context.persistent_command_pool,
+        .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
+        .commandBufferCount = max_concurrent_frames
+    };
+    context.command_buffers = GDF_LIST_Reserve(VkCommandBuffer, max_concurrent_frames);
+    VK_ASSERT(
+        vkAllocateCommandBuffers(
+            context.device.handle, 
+            &command_buf_info, 
+            context.command_buffers
+        )
+    );
+    GDF_LIST_SetLength(context.command_buffers, max_concurrent_frames);
+
+    /* ======================================== */
+    /* ----- Initialize block textures ----- */
+    /* ======================================== */
+    // TODO! texture loading outside of render initialization
+    if (!vk_block_textures_init(&context, &context.block_textures))
+    {
+        LOG_ERR("Failed to initialize block textures");
+        return false;
+    }
+    else
+    {
+        LOG_INFO("Finish init textures")
+    }
+
+    /* ======================================== */
     /* ----- Create and allocate ubos & descriptor things ----- */
     /* ======================================== */
     VkDeviceSize buffer_size = sizeof(UniformBuffer);
@@ -1327,19 +1386,27 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
         )
     );
     
-    VkDescriptorSetLayoutBinding layout_binding = {
-        .binding = 0,
-        .descriptorCount = 1,
-        .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-        .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+    VkDescriptorSetLayoutBinding layout_bindings[2] = {
+        {
+            .binding = 0,
+            .descriptorCount = 1,
+            .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+            .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+        },
+        {
+            .binding = 1,
+            .descriptorCount = 1,
+            .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+            .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+        }
     };
 
     for (u32 i = 0; i < image_count; i++)
     {
         VkDescriptorSetLayoutCreateInfo layout_create_info = {
             .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-            .bindingCount = 1,
-            .pBindings = &layout_binding,
+            .bindingCount = 2,
+            .pBindings = layout_bindings,
         };
         
         VK_ASSERT(
@@ -1365,25 +1432,51 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
         context.descriptor_sets
     );
 
+    // Update descriptor sets
     for (u32 i = 0; i < image_count; i++)
     {
+        // Vertex uniform buffer (geometry pass)
         VkDescriptorBufferInfo buffer_info = {
             .buffer = context.uniform_buffers[i].buffer.handle,
             .offset = 0,
             .range = sizeof(UniformBuffer)
         };
 
-        VkWriteDescriptorSet descriptor_write = {
-            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-            .dstSet = context.descriptor_sets[i],
-            .dstBinding = 0,
-            .dstArrayElement = 0,
-            .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
-            .descriptorCount = 1,
-            .pBufferInfo = &buffer_info
+        // Fragment texture sampler (geometry pass)
+        VkDescriptorImageInfo image_info = {
+            .sampler = context.block_textures.sampler,
+            .imageView = context.block_textures.texture_array.view,
+            .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
         };
 
-        vkUpdateDescriptorSets(context.device.handle, 1, &descriptor_write, 0, NULL);
+        VkWriteDescriptorSet descriptor_writes[2] = {
+            {
+                .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+                .dstSet = context.descriptor_sets[i],
+                .dstBinding = 0,
+                .dstArrayElement = 0,
+                .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
+                .descriptorCount = 1,
+                .pBufferInfo = &buffer_info
+            },
+            {
+                .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+                .dstSet = context.descriptor_sets[i],
+                .dstBinding = 1,
+                .dstArrayElement = 0,
+                .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                .descriptorCount = 1,
+                .pImageInfo = &image_info
+            }
+        };
+
+        vkUpdateDescriptorSets(
+            context.device.handle, 
+            2, 
+            descriptor_writes, 
+            0, 
+            NULL
+        );
     }
     LOG_DEBUG("Created descriptor pool and allocated descriptor sets.");
 
@@ -1406,51 +1499,6 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     }
 
     LOG_DEBUG("Created framebuffers");
-
-    /* ======================================== */
-    /* ----- Allocate command pools & buffers ----- */
-    /* ======================================== */
-    VkCommandPoolCreateInfo pool_create_info = {VK_STRUCTURE_TYPE_COMMAND_POOL_CREATE_INFO};
-    pool_create_info.queueFamilyIndex = context.device.physical_info->queues.graphics_family_index;
-    pool_create_info.flags = VK_COMMAND_POOL_CREATE_RESET_COMMAND_BUFFER_BIT;
-    VK_ASSERT(
-        vkCreateCommandPool(
-            context.device.handle,
-            &pool_create_info,
-            context.device.allocator,
-            &context.persistent_command_pool
-        )
-    );
-    LOG_DEBUG("Persistent command pool created.");
-    // change queue index and flags
-    pool_create_info.queueFamilyIndex = context.device.physical_info->queues.transfer_family_index;
-    pool_create_info.flags = VK_COMMAND_POOL_CREATE_TRANSIENT_BIT;
-    VK_ASSERT(
-        vkCreateCommandPool(
-            context.device.handle,
-            &pool_create_info,
-            context.device.allocator,
-            &context.transient_command_pool
-        )
-    );
-    LOG_DEBUG("Transient command pool created.");
-
-    u32 max_concurrent_frames = context.max_concurrent_frames;
-    VkCommandBufferAllocateInfo command_buf_info = {
-        .sType = VK_STRUCTURE_TYPE_COMMAND_BUFFER_ALLOCATE_INFO,
-        .commandPool = context.persistent_command_pool,
-        .level = VK_COMMAND_BUFFER_LEVEL_PRIMARY,
-        .commandBufferCount = max_concurrent_frames
-    };
-    context.command_buffers = GDF_LIST_Reserve(VkCommandBuffer, max_concurrent_frames);
-    VK_ASSERT(
-        vkAllocateCommandBuffers(
-            context.device.handle, 
-            &command_buf_info, 
-            context.command_buffers
-        )
-    );
-    GDF_LIST_SetLength(context.command_buffers, max_concurrent_frames);
 
     /* ======================================== */
     /* ----- Create sync objects ----- */
@@ -1499,13 +1547,6 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
 
     LOG_DEBUG("Created sync objects");
 
-    // TODO! texture loading outside of render initialization
-    if (!vk_block_textures_init(&context, &context.block_textures))
-    {
-        LOG_ERR("Failed to initialize block textures");
-        return false;
-    }
-
     // TODO! remove later
     __create_example_cube_buffers(&context);
     // Create grid buffers 
@@ -1526,7 +1567,6 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     LOG_INFO("Finished initialization of vulkan stuff...");
 
     context.ready_for_use = true;
-
 
     return true;
 }
