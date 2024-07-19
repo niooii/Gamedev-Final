@@ -1,18 +1,91 @@
 #pragma once
+
 #include "core.h"
+#include "engine/render/render_types.h"
 
-typedef enum BLOCK_ID {
-    BLOCK_ID_AIR,
-    BLOCK_ID_DIRT,
-    BLOCK_ID_GRASS,
-} BLOCK_ID;
+#define MAX_CHUNK_XZ 16
+#define MAX_CHUNK_Y 32
 
-// TODO! texture natural lighting and other stuff
-typedef struct BlockInfo {
-    BLOCK_ID id;
-    const char* name;
-    f32 strength;
-    bool interactable;
-} BlockInfo;
+typedef enum GDF_BLOCKTYPE {
+    GDF_BLOCKTYPE_Grass,
+    GDF_BLOCKTYPE_Dirt,
+    GDF_BLOCKTYPE_Glass,
+} GDF_BLOCKTYPE;
 
-BlockInfo* get_block_info(BLOCK_ID id);
+typedef struct GDF_CubeTextureIds {
+    u8 top;
+    u8 bottom;
+    u8 left;
+    u8 right;
+    u8 front;
+    u8 back;
+} GDF_CubeTextureIds;
+
+bool FORCEINLINE GDF_GetDefaultCubeTextures(GDF_BLOCKTYPE block_type, GDF_CubeTextureIds* tex_ids)
+{
+    u8 top;
+    u8 bottom;
+    u8 left;
+    u8 right;
+    u8 front;
+    u8 back;
+    switch (block_type)
+    {
+        case GDF_BLOCKTYPE_Grass:
+        {
+            top = GDF_TEXTURE_INDEX_GRASS_TOP;
+            bottom = GDF_TEXTURE_INDEX_DIRT;
+            left = GDF_TEXTURE_INDEX_GRASS_SIDE;
+            right = GDF_TEXTURE_INDEX_GRASS_SIDE;
+            front = GDF_TEXTURE_INDEX_GRASS_SIDE;
+            back = GDF_TEXTURE_INDEX_GRASS_SIDE;
+            break;
+        }
+        case GDF_BLOCKTYPE_Dirt:
+        {
+            top = GDF_TEXTURE_INDEX_DIRT;
+            bottom = GDF_TEXTURE_INDEX_DIRT;
+            left = GDF_TEXTURE_INDEX_DIRT;
+            right = GDF_TEXTURE_INDEX_DIRT;
+            front = GDF_TEXTURE_INDEX_DIRT;
+            back = GDF_TEXTURE_INDEX_DIRT;
+            break;
+        }
+
+        default: 
+        {
+            return false;
+        }
+    }
+
+    tex_ids->top = top;
+    tex_ids->bottom = bottom;
+    tex_ids->left = left;
+    tex_ids->right = right;
+    tex_ids->front = front;
+    tex_ids->back = back;
+
+    return true;
+}
+
+typedef struct GDF_ChunkBlockCreateInfo {
+    GDF_BLOCKTYPE type;
+    u8 chunk_x;
+    u8 chunk_y;
+    u8 chunk_z;
+} GDF_ChunkBlockCreateInfo;
+
+// These get directly inserted to chunks, no need to store position data
+typedef struct GDF_ChunkBlock {
+    GDF_CubeTextureIds cube_textures;
+} GDF_ChunkBlock;
+
+typedef enum GDF_BLOCK_OFFSETS {
+    GDF_BLOCK_OFFSETS_FaceChunkPosX = 0,
+    GDF_BLOCK_OFFSETS_FaceChunkPosY = 6,
+} GDF_BLOCK_OFFSETS;
+
+typedef enum GDF_BLOCK_BITS {
+    GDF_BLOCK_BITS_FaceChunkPosX = 6,
+    GDF_BLOCK_BITS_FaceChunkPosY = 6,
+} GDF_BLOCK_BITS;
