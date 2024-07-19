@@ -4,6 +4,7 @@ bool GDF_CHUNK_Create(GDF_Chunk* out_chunk)
 {
     return false;
 }
+
 bool GDF_CHUNK_GetBlock(
     GDF_Chunk* out_chunk, 
     u8 chunk_x, 
@@ -14,6 +15,7 @@ bool GDF_CHUNK_GetBlock(
 {
     return false;
 }
+
 bool GDF_CHUNK_SetBlock(
     GDF_Chunk* out_chunk, 
     GDF_ChunkBlockCreateInfo* chunk_block_info
@@ -21,6 +23,7 @@ bool GDF_CHUNK_SetBlock(
 {
     return false;
 }
+
 void GDF_CHUNK_RecalculateFaces(GDF_Chunk* chunk)
 {
 

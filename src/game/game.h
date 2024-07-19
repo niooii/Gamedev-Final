@@ -4,7 +4,7 @@
 #include "world/world.h"
 
 typedef struct GDF_Game {
-    World* world;
+    // World* world;
 } GDF_Game;
 
 bool GDF_InitGame();

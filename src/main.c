@@ -40,12 +40,11 @@ int main()
     // }
     // return 0;
 
-    u64 flags = 0;
-    SET_BITS(flags, 6, 10, 128);
-    u64 new = GET_BITS(flags, 6, 10);
-    unsigned int mask=1<<((sizeof(u64)<<3)-1);
-    printf("%u", new);
-    return 0;
+    // u64 flags = 0;
+    // SET_BITS(flags, 6, 10, 128);
+    // u64 new = GET_BITS(flags, 6, 10);
+    // unsigned int mask=1<<((sizeof(u64)<<3)-1);
+    // printf("%u", new);
     
     GDF_InitApp();
     f64 time_ran_for = GDF_RunApp();
