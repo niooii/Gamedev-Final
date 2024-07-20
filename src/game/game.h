@@ -3,11 +3,24 @@
 #include "core.h"
 #include "world/world.h"
 
+typedef enum GDF_GAME_SCREEN {
+    GDF_GAME_SCREEN_MAIN_MENU,
+    GDF_GAME_SCREEN_IN_WORLD,
+} GDF_GAME_SCREEN;
+
+typedef enum GDF_GAME_SCREENTYPE {
+    GDF_GAME_SCREENTYPE_GUI_MENU,
+    GDF_GAME_SCREENTYPE_WORLD,
+    GDF_GAME_SCREENTYPE_WORLD_GUI_MENU,
+} GDF_GAME_SCREENTYPE;
+
 typedef struct GDF_Game {
-    // World* world;
+    GDF_World* world;
+    GDF_Player* main_player;
+    GDF_GAME_SCREEN current_screen;
+    GDF_GAME_SCREENTYPE current_screen_type;
 } GDF_Game;
 
-bool GDF_InitGame();
-bool GDF_GameUpdate();
-bool GDF_GameRender();
-GDF_Game* GDF_GetGame();
+bool GDF_GAME_Init();
+bool GDF_GAME_Tick();
+GDF_Game* GDF_GAME_GetInstance();

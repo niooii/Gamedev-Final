@@ -116,6 +116,8 @@ bool GDF_InitApp()
     GDF_EVENT_Register(GDF_EVENT_INTERNAL_APP_QUIT, NULL, app_on_event);
     GDF_EVENT_Register(GDF_EVENT_INTERNAL_WINDOW_RESIZE, NULL, app_on_event);
 
+    GDF_GAME_Init();
+
     // initialize the renderer
     if (!GDF_InitRenderer(GDF_RENDER_BACKEND_TYPE_VULKAN))
     {

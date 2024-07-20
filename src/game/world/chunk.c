@@ -6,7 +6,7 @@ bool GDF_CHUNK_Create(GDF_Chunk* out_chunk)
 }
 
 bool GDF_CHUNK_GetBlock(
-    GDF_Chunk* out_chunk, 
+    GDF_Chunk* chunk, 
     u8 chunk_x, 
     u8 chunk_y, 
     u8 chunk_z, 
@@ -17,7 +17,7 @@ bool GDF_CHUNK_GetBlock(
 }
 
 bool GDF_CHUNK_SetBlock(
-    GDF_Chunk* out_chunk, 
+    GDF_Chunk* chunk, 
     GDF_ChunkBlockCreateInfo* chunk_block_info
 )
 {
@@ -26,5 +26,5 @@ bool GDF_CHUNK_SetBlock(
 
 void GDF_CHUNK_RecalculateFaces(GDF_Chunk* chunk)
 {
-
+    
 }

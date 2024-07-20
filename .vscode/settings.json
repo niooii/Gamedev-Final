@@ -136,6 +136,7 @@
         "xiosbase": "c",
         "vk_buffers.h": "c",
         "vk_textures.h": "c",
-        "generator.h": "c"
+        "generator.h": "c",
+        "player.h": "c"
     },
 }

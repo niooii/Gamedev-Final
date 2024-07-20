@@ -12,6 +12,8 @@ bool renderer_backend_create(GDF_RENDER_BACKEND_TYPE type, renderer_backend* out
         return true;
     }
 
+    out_renderer_backend->game = GDF_GAME_GetInstance();
+
     return false;
 }
 

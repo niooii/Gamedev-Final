@@ -40,6 +40,13 @@ int main()
     // }
     // return 0;
 
+    GDF_ChunkCubeFace face = {
+        .data = 0
+    };
+
+    // TODO! test bit ops
+    return -1;
+
     // u64 flags = 0;
     // SET_BITS(flags, 6, 10, 128);
     // u64 new = GET_BITS(flags, 6, 10);

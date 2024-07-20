@@ -81,11 +81,17 @@ typedef struct GDF_ChunkBlock {
 } GDF_ChunkBlock;
 
 typedef enum GDF_BLOCK_OFFSETS {
-    GDF_BLOCK_OFFSETS_FaceChunkPosX = 0,
-    GDF_BLOCK_OFFSETS_FaceChunkPosY = 6,
+    GDF_BLOCK_OFFSETS_FaceDirection = 0,
+    GDF_BLOCK_OFFSETS_FaceChunkPosX = 3,
+    GDF_BLOCK_OFFSETS_FaceChunkPosY = 9,
+    GDF_BLOCK_OFFSETS_FaceChunkPosZ = 15,
+    GDF_BLOCK_OFFSETS_FaceTextureId = 21,
 } GDF_BLOCK_OFFSETS;
 
 typedef enum GDF_BLOCK_BITS {
+    GDF_BLOCK_BITS_FaceDirection = 3,
     GDF_BLOCK_BITS_FaceChunkPosX = 6,
     GDF_BLOCK_BITS_FaceChunkPosY = 6,
+    GDF_BLOCK_BITS_FaceChunkPosZ = 6,
+    GDF_BLOCK_BITS_FaceTextureId = 8,
 } GDF_BLOCK_BITS;

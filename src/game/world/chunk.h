@@ -13,7 +13,6 @@ typedef enum GDF_DIRECTION {
 } GDF_DIRECTION;
 
 typedef struct GDF_ChunkCubeFace {
-    GDF_DIRECTION direction;
     u64 data;
 } GDF_ChunkCubeFace;
 

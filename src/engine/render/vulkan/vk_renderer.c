@@ -98,8 +98,8 @@ bool __create_shader_modules(vk_renderer_context* context)
     if (
         !vk_utils_create_shader_module(
             context, 
-            "resources/shaders/geometry_base.vert.spv", 
-            &context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_GEOMETRY_VERT]
+            "resources/shaders/blocks.vert.spv", 
+            &context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_BLOCKS_VERT]
         )
     ) 
     {
@@ -110,8 +110,8 @@ bool __create_shader_modules(vk_renderer_context* context)
     if (
         !vk_utils_create_shader_module(
             context, 
-            "resources/shaders/geometry_base.frag.spv", 
-            &context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_GEOMETRY_FRAG]
+            "resources/shaders/blocks.frag.spv", 
+            &context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_BLOCKS_FRAG]
         )
     ) 
     {
@@ -299,13 +299,13 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
     VkPipelineShaderStageCreateInfo geometry_pass_vert = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
         .stage = VK_SHADER_STAGE_VERTEX_BIT,
-        .module = context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_GEOMETRY_VERT],
+        .module = context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_BLOCKS_VERT],
         .pName = "main"
     };
     VkPipelineShaderStageCreateInfo geometry_pass_frag = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
         .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-        .module = context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_GEOMETRY_FRAG],
+        .module = context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_BLOCKS_FRAG],
         .pName = "main"
     };
 
@@ -518,10 +518,10 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
             1,
             &pipeline_create_info,
             context->device.allocator,
-            &context->pipelines[GDF_VK_PIPELINE_INDEX_GEOMETRY].handle
+            &context->pipelines[GDF_VK_PIPELINE_INDEX_BLOCKS].handle
         )
     );
-    context->pipelines[GDF_VK_PIPELINE_INDEX_GEOMETRY].layout_index = main_layout_index;
+    context->pipelines[GDF_VK_PIPELINE_INDEX_BLOCKS].layout_index = main_layout_index;
 
     // Create wireframe pipeline
     // TODO! this should work bc gp_create_info has pointers to these structs, but
@@ -535,10 +535,10 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
             1,
             &pipeline_create_info,
             context->device.allocator,
-            &context->pipelines[GDF_VK_PIPELINE_INDEX_GEOMETRY_WIREFRAME].handle
+            &context->pipelines[GDF_VK_PIPELINE_INDEX_BLOCKS_WIREFRAME].handle
         )
     );
-    context->pipelines[GDF_VK_PIPELINE_INDEX_GEOMETRY_WIREFRAME].layout_index = main_layout_index;
+    context->pipelines[GDF_VK_PIPELINE_INDEX_BLOCKS_WIREFRAME].layout_index = main_layout_index;
 
     // repeat pipeline creation with different shaders for other pipelines
     // Lighting subpass pipeline
@@ -1860,7 +1860,7 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
     VkDeviceSize offsets[] = {0};
     
     // Bind the geometry pass pipeline
-    vk_pipeline* bound_pipeline = &context.pipelines[GDF_VK_PIPELINE_INDEX_GEOMETRY];
+    vk_pipeline* bound_pipeline = &context.pipelines[GDF_VK_PIPELINE_INDEX_BLOCKS];
     vkCmdBindPipeline(cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, bound_pipeline->handle);
 
     vkCmdBindDescriptorSets(

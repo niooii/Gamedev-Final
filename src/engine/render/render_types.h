@@ -3,6 +3,7 @@
 #include "core.h"
 #include "engine/math/math_types.h"
 #include "engine/camera.h"
+#include "game/game.h"
 
 typedef enum GDF_RENDER_BACKEND_TYPE {
     GDF_RENDER_BACKEND_TYPE_VULKAN,
@@ -26,6 +27,9 @@ typedef struct renderer_backend {
     Camera* active_camera;
     u32 framebuffer_width;
     u32 framebuffer_height;
+
+    // Holds the current state of the game
+    GDF_Game* game;
 
     bool (*initialize)(struct renderer_backend* backend, const char* application_name);
 
