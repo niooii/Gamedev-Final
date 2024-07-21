@@ -47,11 +47,14 @@ int main()
     // TODO! test bit ops
     return -1;
 
-    // u64 flags = 0;
-    // SET_BITS(flags, 6, 10, 128);
-    // u64 new = GET_BITS(flags, 6, 10);
+    u64 flags = 0;
+    SET_BITS(flags, 6, 10, 128);
+    SET_BITS(flags, 16, 6, 22);
+    u64 new1 = GET_BITS(flags, 6, 10);
+    u64 new2 = GET_BITS(flags, 16, 6);
     // unsigned int mask=1<<((sizeof(u64)<<3)-1);
-    // printf("%u", new);
+    printf("%u", new1);
+    printf("%u", new2);
     
     GDF_InitApp();
     f64 time_ran_for = GDF_RunApp();
