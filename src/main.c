@@ -40,22 +40,25 @@ int main()
     // }
     // return 0;
 
-    GDF_ChunkCubeFace face = {
-        .data = 0
-    };
+    // GDF_ChunkCubeFace face = {
+    //     .data = 0
+    // };
 
-    // TODO! test bit ops
-    return -1;
+    // u64 flags = 0;
+    // SET_BITS(flags, 6, 10, 128);
+    // SET_BITS(flags, 16, 6, 22);
+    // SET_BITS(flags, 60, 4, 14);
+    // u64 new3 = GET_BITS(flags, 60, 4);
+    // u64 new1 = GET_BITS(flags, 6, 10);
+    // u64 new2 = GET_BITS(flags, 16, 6);
+    // // unsigned int mask=1<<((sizeof(u64)<<3)-1);
+    // printf("%u\n", new1);
+    // printf("%u\n", new2);
+    // printf("%u\n", new3);
 
-    u64 flags = 0;
-    SET_BITS(flags, 6, 10, 128);
-    SET_BITS(flags, 16, 6, 22);
-    u64 new1 = GET_BITS(flags, 6, 10);
-    u64 new2 = GET_BITS(flags, 16, 6);
-    // unsigned int mask=1<<((sizeof(u64)<<3)-1);
-    printf("%u", new1);
-    printf("%u", new2);
-    
+    // // TODO! test bit ops
+    // return -1;
+
     GDF_InitApp();
     f64 time_ran_for = GDF_RunApp();
     if (time_ran_for != -1)

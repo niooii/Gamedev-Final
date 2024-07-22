@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core.h"
-#include "engine/render/render_types.h"
+#include "engine/render/textures.h"
 
 #define MAX_CHUNK_XZ 16
 #define MAX_CHUNK_Y 32

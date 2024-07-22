@@ -449,7 +449,7 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
     // Pipeline layout
     VkPipelineLayoutCreateInfo layout_info = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-        .pSetLayouts = context->descriptor_set_layouts,
+        .pSetLayouts = context->ubo_set_layouts,
         .setLayoutCount = context->swapchain.image_count,
         .pPushConstantRanges = &push_constant_range,
         .pushConstantRangeCount = 1
@@ -1232,7 +1232,8 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
 
     VkPhysicalDeviceFeatures device_features = {
         .samplerAnisotropy = VK_TRUE,
-        .fillModeNonSolid = VK_TRUE
+        .fillModeNonSolid = VK_TRUE,
+        .shaderInt64 = VK_TRUE
     };
 
     VkDeviceCreateInfo device_create_info = {VK_STRUCTURE_TYPE_DEVICE_CREATE_INFO};
@@ -1363,8 +1364,8 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     }
 
     // Create descriptor pool and allocate sets
-    context.descriptor_sets = GDF_LIST_Reserve(VkDescriptorSet, image_count);
-    context.descriptor_set_layouts = GDF_LIST_Reserve(VkDescriptorSet, image_count);
+    context.ubo_descriptor_sets = GDF_LIST_Reserve(VkDescriptorSet, image_count);
+    context.ubo_set_layouts = GDF_LIST_Reserve(VkDescriptorSet, image_count);
     VkDescriptorPoolSize pool_size = {
         .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
         .descriptorCount = image_count
@@ -1414,7 +1415,7 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
                 context.device.handle,
                 &layout_create_info,
                 context.device.allocator,
-                &context.descriptor_set_layouts[i]
+                &context.ubo_set_layouts[i]
             )
         );
     }
@@ -1423,13 +1424,13 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
         .descriptorPool = context.descriptor_pool,
         .descriptorSetCount = image_count,
-        .pSetLayouts = context.descriptor_set_layouts
+        .pSetLayouts = context.ubo_set_layouts
     };
 
     vkAllocateDescriptorSets(
         context.device.handle,
         &descriptor_sets_alloc_info,
-        context.descriptor_sets
+        context.ubo_descriptor_sets
     );
 
     // Update descriptor sets
@@ -1452,7 +1453,7 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
         VkWriteDescriptorSet descriptor_writes[2] = {
             {
                 .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-                .dstSet = context.descriptor_sets[i],
+                .dstSet = context.ubo_descriptor_sets[i],
                 .dstBinding = 0,
                 .dstArrayElement = 0,
                 .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
@@ -1461,7 +1462,7 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
             },
             {
                 .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-                .dstSet = context.descriptor_sets[i],
+                .dstSet = context.ubo_descriptor_sets[i],
                 .dstBinding = 1,
                 .dstArrayElement = 0,
                 .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
@@ -1624,7 +1625,7 @@ void vk_renderer_destroy(renderer_backend* backend)
     {
         vkDestroyDescriptorSetLayout(
             device,
-            context.descriptor_set_layouts[i],
+            context.ubo_set_layouts[i],
             allocator
         );
         vkDestroyFence(
@@ -1869,7 +1870,7 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
         pipeline_layouts[bound_pipeline->layout_index],
         0,
         1,
-        &context.descriptor_sets[resource_idx], 
+        &context.ubo_descriptor_sets[resource_idx], 
         0, 
         NULL
     );
@@ -1906,7 +1907,7 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
         pipeline_layouts[grid_pipeline->layout_index],
         0,
         1,
-        &context.descriptor_sets[resource_idx], 
+        &context.ubo_descriptor_sets[resource_idx], 
         0, 
         NULL
     );

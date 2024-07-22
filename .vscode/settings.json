@@ -137,6 +137,7 @@
         "vk_buffers.h": "c",
         "vk_textures.h": "c",
         "generator.h": "c",
-        "player.h": "c"
+        "player.h": "c",
+        "vk_pipelines.h": "c"
     },
 }

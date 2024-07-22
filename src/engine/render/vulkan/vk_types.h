@@ -188,14 +188,15 @@ typedef struct vk_renderer_context {
     // Shader resources
     VkShaderModule builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_MAX];
     // GDF_LIST
+    // All vertex shaders will get input from these uniform buffers.
     vk_uniform_buffer* uniform_buffers;
     // This field is modified then copied over to vk_uniform_buffer[n].mapped_Data
     UniformBuffer uniform_buffer_data;
     VkDescriptorPool descriptor_pool;
     // GDF_LIST
-    VkDescriptorSet* descriptor_sets;
+    VkDescriptorSet* ubo_descriptor_sets;
     // GDF_LIST
-    VkDescriptorSetLayout* descriptor_set_layouts;
+    VkDescriptorSetLayout* ubo_set_layouts;
 
     VkCommandPool persistent_command_pool;
     VkCommandPool transient_command_pool;
