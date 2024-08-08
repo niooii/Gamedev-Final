@@ -2,6 +2,7 @@
 
 #include "core.h"
 #include "block.h"
+#include "engine/core/containers/list.h"
 
 typedef enum GDF_DIRECTION {
     GDF_DIRECTION_Up = 0,
@@ -12,23 +13,24 @@ typedef enum GDF_DIRECTION {
     GDF_DIRECTION_Backward = 5,
 } GDF_DIRECTION;
 
-typedef struct GDF_ChunkCubeFace {
-    u64 data;
-} GDF_ChunkCubeFace;
-
 typedef struct GDF_Chunk {
-    GDF_ChunkBlock* blocks;
+    // Heap allocated array of [MAX_CHUNK_XZ * MAX_CHUNK_Y] size for direct access.
+    GDF_ChunkBlock* block_arr;
 
-    GDF_ChunkCubeFace* faces;
+    // GDF_LIST of ChunkBlock pointers for easy iteration over existing blocks.
+    GDF_ChunkBlock** block_list;
+
+    u64* faces;
+
+    bool pending_render_update;
 } GDF_Chunk;
 
 bool GDF_CHUNK_Create(GDF_Chunk* out_chunk);
-bool GDF_CHUNK_GetBlock(
+GDF_ChunkBlock* GDF_CHUNK_GetBlock(
     GDF_Chunk* out_chunk, 
-    u8 chunk_x, 
-    u8 chunk_y, 
-    u8 chunk_z, 
-    GDF_ChunkBlock* out_chunk_block
+    u8 block_x, 
+    u8 block_y, 
+    u8 block_z
 );
 bool GDF_CHUNK_SetBlock(
     GDF_Chunk* out_chunk, 

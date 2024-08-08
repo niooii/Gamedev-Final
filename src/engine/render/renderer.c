@@ -47,9 +47,9 @@ void GDF_RENDERER_Resize(u16 width, u16 height)
     backend->resized(backend, width, height);
 }
 
-void GDF_RENDERER_SetCamera(Camera* camera)
+void GDF_RENDERER_SetCamera(GDF_Camera* camera)
 {
-    backend->active_camera = camera;
+    backend->game->main_camera = camera;
 }
 
 bool GDF_RENDERER_DrawFrame(GDF_RenderPacket* packet) 

@@ -25,7 +25,7 @@ void report_assertion_failure(const char* expression, const char* message, const
 
 #define GDF_ASSERT_MSG(expr, message)                                        \
     {                                                                        \
-        if (!expr) {                                                         \
+        if (!(expr)) {                                                         \
             report_assertion_failure(#expr, message, __FILE__, __LINE__);    \
             debugBreak();                                                    \
         }                                                                    \

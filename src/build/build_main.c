@@ -90,11 +90,12 @@ int main(int argc, char *argv[]) {
             continue;
         }
     }
-    
+    LOG_WARN("STAGE 1");
     if (GDF_MakeFile(build_options_path) || !load_build_options(build_options_path, build_options))
     {
         save_default_build_options(build_options_path);
         load_build_options(build_options_path, build_options);
+        LOG_WARN("LOADED DEFAULT BUILD OPTIONS..");
     }
     
     // if recompile_all is true the changes wouldnt matter anyways

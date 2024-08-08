@@ -12,13 +12,11 @@
 // does not actually support it, the static MAIN_WINDOW in every
 // implementation is the only window as of now.
 // one possible way is to pass in a GDF_Window* to the GDF_InitRenderer.
-// actually thats a fire idea wtf why didnt i do that ill do it later - 5/something/2024
+// actually thats a fire idea wtf why didnt i do that ill do it later - 5/4/2024
 
 // update: ill do it tommorow. - 7/11/2024
-typedef struct GDF_Window {
-    u16 id;
-    void* internals;
-} GDF_Window;
+// update: ill do it next week. - 8/7/2024
+typedef struct GDF_Window_T *GDF_Window;
 
 bool GDF_InitWindowing();
 void GDF_ShutdownWindowing();

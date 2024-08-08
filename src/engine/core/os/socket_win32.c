@@ -5,9 +5,9 @@
 #pragma comment(lib, "wsock32.lib")
 #include <winsock.h>
 
-typedef struct InternalState {
+typedef struct GDF_Socket_T {
     SOCKET sock;
-} InternalState;
+} GDF_Socket_T;
 
 static bool INITIALIZED = false;
 

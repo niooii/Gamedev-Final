@@ -1,9 +1,7 @@
 #pragma once
 #include "core.h"
 
-typedef struct GDF_Socket {
-    void* internals;
-} GDF_Socket;
+typedef struct GDF_Socket_T* GDF_Socket;
 
 typedef enum GDF_SOCKERR {
     GDF_SOCKERR_NONE,

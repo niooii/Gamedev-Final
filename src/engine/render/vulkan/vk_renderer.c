@@ -4,6 +4,8 @@
 #include "vk_os.h"
 #include "engine/engine_core.h"
 #include "vk_textures.h"
+#include "vk_game_renderer.h"
+#include "vk_pipelines.h"
 
 static vk_renderer_context context;
 
@@ -195,7 +197,7 @@ bool __create_shader_modules(vk_renderer_context* context)
 }
 
 // TODO! initialize lighting and postprocessing pipelines
-bool __create_renderpasses_and_pipelines(vk_renderer_context* context) 
+bool __create_renderpasses(vk_renderer_context* context) 
 {
     /* ======================================== */
     /* ----- CREATE RENDERPASS AND SUBPASSES ----- */
@@ -286,331 +288,6 @@ bool __create_renderpasses_and_pipelines(vk_renderer_context* context)
             &context->renderpasses[GDF_VK_RENDERPASS_INDEX_MAIN]
         )
     );
-
-    // Configure graphics pipeline
-
-    if (!__create_shader_modules(context))
-    {
-        LOG_ERR("Failed to create shaders gg");
-        return false;
-    }
-
-    // Create shader stage for geometry pass
-    VkPipelineShaderStageCreateInfo geometry_pass_vert = {
-        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-        .stage = VK_SHADER_STAGE_VERTEX_BIT,
-        .module = context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_BLOCKS_VERT],
-        .pName = "main"
-    };
-    VkPipelineShaderStageCreateInfo geometry_pass_frag = {
-        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-        .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-        .module = context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_BLOCKS_FRAG],
-        .pName = "main"
-    };
-
-    VkPipelineShaderStageCreateInfo geometry_pass_shaders[2] = {
-        geometry_pass_vert,
-        geometry_pass_frag
-    };
-
-    // Create shader stage for lighting pass
-    VkPipelineShaderStageCreateInfo lighting_pass_vert = {
-        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-        .stage = VK_SHADER_STAGE_VERTEX_BIT,
-        .module = context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_LIGHTING_VERT],
-        .pName = "main"
-    };
-    VkPipelineShaderStageCreateInfo lighting_pass_frag = {
-        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-        .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-        .module = context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_LIGHTING_FRAG],
-        .pName = "main"
-    };
-
-    VkPipelineShaderStageCreateInfo lighting_pass_shaders[2] = {
-        lighting_pass_vert,
-        lighting_pass_frag
-    };
-
-    // Create shader stage for post processing pass
-    VkPipelineShaderStageCreateInfo postprocessing_pass_vert = {
-        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-        .stage = VK_SHADER_STAGE_VERTEX_BIT,
-        .module = context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_POST_PROCESS_VERT],
-        .pName = "main"
-    };
-    VkPipelineShaderStageCreateInfo postprocessing_pass_frag = {
-        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-        .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-        .module = context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_POST_PROCESS_FRAG],
-        .pName = "main"
-    };
-
-    VkPipelineShaderStageCreateInfo postprocessing_pass_shaders[2] = {
-        postprocessing_pass_vert,
-        postprocessing_pass_frag
-    };
-
-    // Vertex input configuration
-    VkVertexInputBindingDescription bindings = {
-        .binding = 0,
-        .stride = sizeof(Vertex3d), 
-        .inputRate = VK_VERTEX_INPUT_RATE_VERTEX
-    };
-
-    VkVertexInputAttributeDescription attributes[] = {
-        {
-            .binding = 0,
-            .location = 0,
-            .format = VK_FORMAT_R32G32B32_SFLOAT,
-            .offset = offsetof(Vertex3d, pos)
-        },
-        // Add more attributes for normals, texture coordinates, etc.
-    };
-
-    VkPipelineVertexInputStateCreateInfo vertex_input_info = {
-        .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
-        .vertexBindingDescriptionCount = 1,
-        .pVertexBindingDescriptions = &bindings,
-        .vertexAttributeDescriptionCount = sizeof(attributes) / sizeof(attributes[0]),
-        .pVertexAttributeDescriptions = attributes
-    };
-
-    // Input assembly configuration
-    VkPipelineInputAssemblyStateCreateInfo input_assembly = {
-        .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
-        .primitiveRestartEnable = VK_FALSE,
-        .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST
-    };
-
-    // Viewport and scissor configuration (dynamic states)
-    VkPipelineViewportStateCreateInfo viewport_state = {
-        .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
-        .viewportCount = 1,
-        .scissorCount = 1,
-    };
-
-    // Rasterization configuration
-    VkPipelineRasterizationStateCreateInfo rasterizer_state = {
-        .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
-        .depthClampEnable = VK_FALSE,
-        .rasterizerDiscardEnable = VK_FALSE,
-        .polygonMode = VK_POLYGON_MODE_FILL,
-        .lineWidth = 1.0f,
-        .cullMode = VK_CULL_MODE_BACK_BIT,
-        .frontFace = VK_FRONT_FACE_CLOCKWISE,
-        .depthBiasEnable = VK_FALSE
-    };
-
-    // Multisampling configuration
-    VkPipelineMultisampleStateCreateInfo multisampling_state = {
-        .sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
-        .sampleShadingEnable = VK_FALSE,
-        .rasterizationSamples = VK_SAMPLE_COUNT_1_BIT,
-    };
-
-    // Depths stencil configuration
-    VkPipelineDepthStencilStateCreateInfo depth_stencil_state = {
-        .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
-        .depthTestEnable = VK_TRUE,
-        .depthWriteEnable = VK_TRUE,
-        .depthCompareOp = VK_COMPARE_OP_LESS,
-        .depthBoundsTestEnable = VK_FALSE,
-        .stencilTestEnable = VK_FALSE
-    };
-
-    // Color blending configuration
-    VkPipelineColorBlendAttachmentState color_blend_attachment = {
-        .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
-        .blendEnable = VK_TRUE,
-        .srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
-        .dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
-        .colorBlendOp = VK_BLEND_OP_ADD,
-        .srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
-        .dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
-        .alphaBlendOp = VK_BLEND_OP_ADD
-    };
-
-    VkPipelineColorBlendStateCreateInfo color_blend_state = {
-        .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
-        .logicOpEnable = VK_FALSE,
-        .attachmentCount = 1,
-        .pAttachments = &color_blend_attachment,
-        .blendConstants = {0.0f, 0.0f, 0.0f, 0.0f}
-    };
-
-    VkPushConstantRange push_constant_range = {
-        .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
-        .offset = 0,
-        .size = sizeof(mat4)
-    };
-
-    // Pipeline layout
-    VkPipelineLayoutCreateInfo layout_info = {
-        .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-        .pSetLayouts = context->ubo_set_layouts,
-        .setLayoutCount = context->swapchain.image_count,
-        .pPushConstantRanges = &push_constant_range,
-        .pushConstantRangeCount = 1
-    };
-    
-    VK_ASSERT(
-        vkCreatePipelineLayout(
-            context->device.handle, 
-            &layout_info,
-            context->device.allocator,
-            &context->pipeline_layouts[GDF_VK_PIPELINE_LAYOUT_INDEX_GEOMETRY]
-        )
-    );
-
-    // Create layout for grid (diff push constant)
-    push_constant_range.size = sizeof(vec3);
-
-    VK_ASSERT(
-        vkCreatePipelineLayout(
-            context->device.handle, 
-            &layout_info,
-            context->device.allocator,
-            &context->pipeline_layouts[GDF_VK_PIPELINE_LAYOUT_INDEX_GRID]
-        )
-    );
-
-    GDF_VK_PIPELINE_LAYOUT_INDEX main_layout_index = GDF_VK_PIPELINE_LAYOUT_INDEX_GEOMETRY;
-    VkPipelineLayout main_layout = context->pipeline_layouts[main_layout_index];
-
-    // Create dynamic state for pipeline (viewport & scissor)
-    // TODO! eventually if the game is fixed size remove these and bake states
-    // into pipelines
-    VkDynamicState d_states[2] = {
-        VK_DYNAMIC_STATE_VIEWPORT,
-        VK_DYNAMIC_STATE_SCISSOR
-    };
-    VkPipelineDynamicStateCreateInfo dynamic_states = {
-        .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
-        .dynamicStateCount = 2,
-        .pDynamicStates = d_states
-    };
-
-    // Put all configuration in graphics pipeline info struct
-    VkGraphicsPipelineCreateInfo pipeline_create_info = {
-        .sType = VK_STRUCTURE_TYPE_GRAPHICS_PIPELINE_CREATE_INFO,
-        .renderPass = context->renderpasses[GDF_VK_RENDERPASS_INDEX_MAIN],
-        .stageCount = sizeof(geometry_pass_shaders) / sizeof(VkPipelineShaderStageCreateInfo),
-        .pStages = geometry_pass_shaders,
-        .pVertexInputState = &vertex_input_info,
-        .pInputAssemblyState = &input_assembly,
-        .pViewportState = &viewport_state,
-        .pRasterizationState = &rasterizer_state,
-        .pMultisampleState = &multisampling_state,
-        .pDepthStencilState = &depth_stencil_state,
-        .pColorBlendState = &color_blend_state,
-        .layout = main_layout,
-        // index of geometry subpass
-        .subpass = 0,
-        .pDynamicState = &dynamic_states,
-    };
-
-    VK_ASSERT(
-        vkCreateGraphicsPipelines(
-            context->device.handle,
-            VK_NULL_HANDLE,
-            1,
-            &pipeline_create_info,
-            context->device.allocator,
-            &context->pipelines[GDF_VK_PIPELINE_INDEX_BLOCKS].handle
-        )
-    );
-    context->pipelines[GDF_VK_PIPELINE_INDEX_BLOCKS].layout_index = main_layout_index;
-
-    // Create wireframe pipeline
-    // TODO! this should work bc gp_create_info has pointers to these structs, but
-    // if anything happens check here
-    rasterizer_state.polygonMode = VK_POLYGON_MODE_LINE;
-
-    VK_ASSERT(
-        vkCreateGraphicsPipelines(
-            context->device.handle,
-            VK_NULL_HANDLE,
-            1,
-            &pipeline_create_info,
-            context->device.allocator,
-            &context->pipelines[GDF_VK_PIPELINE_INDEX_BLOCKS_WIREFRAME].handle
-        )
-    );
-    context->pipelines[GDF_VK_PIPELINE_INDEX_BLOCKS_WIREFRAME].layout_index = main_layout_index;
-
-    // repeat pipeline creation with different shaders for other pipelines
-    // Lighting subpass pipeline
-    input_assembly.topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST;
-    rasterizer_state.polygonMode = VK_POLYGON_MODE_FILL;
-    pipeline_create_info.stageCount = sizeof(lighting_pass_shaders) / sizeof(VkPipelineShaderStageCreateInfo);
-    pipeline_create_info.pStages = lighting_pass_shaders;
-
-    VK_ASSERT(
-        vkCreateGraphicsPipelines(
-            context->device.handle,
-            VK_NULL_HANDLE,
-            1,
-            &pipeline_create_info,
-            context->device.allocator,
-            &context->pipelines[GDF_VK_PIPELINE_INDEX_LIGHTING].handle
-        )
-    );
-    context->pipelines[GDF_VK_PIPELINE_INDEX_LIGHTING].layout_index = main_layout_index;
-
-    // Post-processing subpass pipeline
-    pipeline_create_info.stageCount = sizeof(postprocessing_pass_shaders) / sizeof(VkPipelineShaderStageCreateInfo);
-    pipeline_create_info.pStages = postprocessing_pass_shaders;
-
-    VK_ASSERT(
-        vkCreateGraphicsPipelines(
-            context->device.handle,
-            VK_NULL_HANDLE,
-            1,
-            &pipeline_create_info,
-            context->device.allocator,
-            &context->pipelines[GDF_VK_PIPELINE_INDEX_POST_PROCESSING].handle
-        )
-    );
-    context->pipelines[GDF_VK_PIPELINE_INDEX_POST_PROCESSING].layout_index = main_layout_index;
-
-    // Debug grid pipeline thingy
-    VkPipelineShaderStageCreateInfo grid_vert = {
-        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-        .stage = VK_SHADER_STAGE_VERTEX_BIT,
-        .module = context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_GRID_VERT],
-        .pName = "main"
-    };
-    VkPipelineShaderStageCreateInfo grid_frag = {
-        .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
-        .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-        .module = context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_GRID_FRAG],
-        .pName = "main"
-    };
-
-    VkPipelineShaderStageCreateInfo grid_shaders[2] = {
-        grid_vert,
-        grid_frag
-    };
-
-    pipeline_create_info.stageCount = sizeof(grid_shaders) / sizeof(VkPipelineShaderStageCreateInfo);
-    pipeline_create_info.pStages = grid_shaders;
-    pipeline_create_info.layout = context->pipeline_layouts[GDF_VK_PIPELINE_LAYOUT_INDEX_GRID];
-    // no cull for grid render
-    rasterizer_state.cullMode = VK_CULL_MODE_NONE;
-
-    VK_ASSERT(
-        vkCreateGraphicsPipelines(
-            context->device.handle,
-            VK_NULL_HANDLE,
-            1,
-            &pipeline_create_info,
-            context->device.allocator,
-            &context->pipelines[GDF_VK_PIPELINE_INDEX_GRID].handle
-        )
-    );
-    context->pipelines[GDF_VK_PIPELINE_INDEX_GRID].layout_index = GDF_VK_PIPELINE_LAYOUT_INDEX_GRID;
 
     return true;
 }
@@ -991,67 +668,37 @@ void __get_queue_indices(vk_renderer_context* context, VkPhysicalDevice physical
         }
     }
 
-    LOG_DEBUG("%d", queues->graphics_family_index);
-    LOG_DEBUG("%d", queues->compute_family_index);
-    LOG_DEBUG("%d", queues->present_family_index);
-    LOG_DEBUG("%d", queues->transfer_family_index);
+    // LOG_DEBUG("%d", queues->graphics_family_index);
+    // LOG_DEBUG("%d", queues->compute_family_index);
+    // LOG_DEBUG("%d", queues->present_family_index);
+    // LOG_DEBUG("%d", queues->transfer_family_index);
 }
 
-// TODO! example cube for now...
-// Cube vertices
-static const Vertex3d vertices[] = {
-    {{-0.5f, -0.5f, -0.5f}},
-    {{0.5f, -0.5f, -0.5f}},
-    {{0.5f, 0.5f, -0.5f}},
+// Up facing plane vertices
+static const Vertex3d plane_vertices[] = {
     {{-0.5f, 0.5f, -0.5f}},
-    {{-0.5f, -0.5f, 0.5f}},
-    {{0.5f, -0.5f, 0.5f}},
+    {{0.5f, 0.5f, -0.5f}},
     {{0.5f, 0.5f, 0.5f}},
-    {{-0.5f, 0.5f, 0.5f}}
+    {{-0.5f, 0.5f, 0.5f}},
 };
 
-// Cube indices
-static const u16 indices[] = {
-    0, 1, 3, 3, 1, 2,  // Front face
-    1, 5, 2, 2, 5, 6,  // Right face
-    5, 4, 6, 6, 4, 7,  // Back face
-    4, 0, 7, 7, 0, 3,  // Left face
-    3, 2, 7, 7, 2, 6,  // Top face
-    4, 5, 0, 0, 5, 1   // Bottom face
+static const u16 plane_indices[] = {
+    0, 1, 2, 2, 3, 0
 };
 
-// Grid vertices (legit just a plane)
-static const Vertex3d grid_vertices[] = {
-    {{-1.f, 0.f, -1.f}}, // bot left
-    {{-1.f, 0.f, 1.f}}, // top left
-    {{1.f, 0.f, 1.f}}, // top right
-    {{1.f, 0.f, -1.f}}, // bot right
-};
-
-// Grid indices
-static const u16 grid_indices[] = {
-    0, 3, 2, 2, 1, 0
-};
-
-static vk_buffer cube_vertex_buf;
-static vk_buffer cube_index_buf;
-
-static vk_buffer grid_vertex_buf;
-static vk_buffer grid_index_buf;
-
-static void __create_example_cube_buffers(vk_renderer_context* context) 
+static void __create_global_vbos(vk_renderer_context* context) 
 {
     vk_buffers_create_vertex(
         context,
-        vertices,
-        sizeof(vertices),
-        &cube_vertex_buf
+        plane_vertices,
+        sizeof(plane_vertices),
+        &context->up_facing_plane_vbo
     );
     vk_buffers_create_index(
         context,
-        indices,
-        sizeof(indices),
-        &cube_index_buf
+        plane_indices,
+        sizeof(plane_indices),
+        &context->up_facing_plane_index_buffer
     );
 }
 
@@ -1482,13 +1129,31 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     LOG_DEBUG("Created descriptor pool and allocated descriptor sets.");
 
     /* ======================================== */
-    /* ----- CREATE RENDERPASSES, SHADERS, GRAPHICS PIPELINE, FRAMEBUFFERS ----- */
+    /* ----- CREATE RENDERPASSES, SHADERS, PIPELINES, FRAMEBUFFERS ----- */
     /* ======================================== */
 
     // vkDestroyDevice(context.device.handle, context.device.allocator);
 
-    if (!__create_renderpasses_and_pipelines(&context))
+    if (!__create_renderpasses(&context))
     {
+        return false;
+    }
+
+    if (!__create_shader_modules(&context))
+    {
+        LOG_ERR("Failed to create shaders gg");
+        return false;
+    }
+
+    if (!vk_pipelines_create_blocks(&context))
+    {
+        LOG_ERR("Failed to create block rendering pipeline");
+        return false;
+    }
+
+    if (!vk_pipelines_create_grid(&context))
+    {
+        LOG_ERR("Failed to create grid rendering pipeline");
         return false;
     }
 
@@ -1549,20 +1214,7 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     LOG_DEBUG("Created sync objects");
 
     // TODO! remove later
-    __create_example_cube_buffers(&context);
-    // Create grid buffers 
-    vk_buffers_create_vertex(
-        &context,
-        grid_vertices,
-        sizeof(grid_vertices),
-        &grid_vertex_buf
-    );
-    vk_buffers_create_index(
-        &context,
-        grid_indices,
-        sizeof(grid_indices),
-        &grid_index_buf
-    );
+    __create_global_vbos(&context);
     LOG_DEBUG("Created example cube buffers (remove later)")
 
     LOG_INFO("Finished initialization of vulkan stuff...");
@@ -1578,23 +1230,27 @@ void vk_renderer_destroy(renderer_backend* backend)
     VkDevice device = context.device.handle;
     VkAllocationCallbacks* allocator = context.device.allocator;
     // Destroy a bunch of pipelines
-    for (u32 i = 0; i < GDF_VK_PIPELINE_INDEX_MAX; i++)
-    {
-        vkDestroyPipeline(
-            device,
-            context.pipelines[i].handle,
-            allocator
-        );
-    }
-    
-    for (u32 i = 0; i < GDF_VK_PIPELINE_LAYOUT_INDEX_MAX; i++)
-    {
-        vkDestroyPipelineLayout(
-            device,
-            context.pipeline_layouts[i],
-            allocator
-        );
-    }
+    vkDestroyPipeline(
+        device,
+        context.block_pipeline.handle,
+        allocator
+    );
+    vkDestroyPipelineLayout(
+        device,
+        context.grid_pipeline.layout,
+        allocator
+    );
+
+    vkDestroyPipeline(
+        device,
+        context.grid_pipeline.handle,
+        allocator
+    );
+    vkDestroyPipelineLayout(
+        device,
+        context.grid_pipeline.layout,
+        allocator
+    );
     
     for (u32 i = 0; i < GDF_VK_RENDERPASS_INDEX_MAX; i++)
     {
@@ -1797,13 +1453,24 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
     // shorthand i guess i aint typing all that 
     u32 current_img_idx = context.swapchain.current_img_idx;
 
-    Camera* active_camera = backend->active_camera;
+    GDF_Camera* active_camera = backend->game->main_camera;
     // TODO! remove and extract updating ubo into another function
     UniformBuffer ubo = {
         .view_projection = active_camera->view_perspective
         // .proj = mat4_identity(),
     };
     memcpy(context.uniform_buffers[current_img_idx].mapped_data, &ubo, sizeof(ubo));
+    LOG_INFO(
+        "%f, %f, %f, %f, %f, %f, %f", 
+        active_camera->view_perspective.data[0],
+        active_camera->view_perspective.data[1],
+        active_camera->view_perspective.data[2],
+        active_camera->view_perspective.data[3],
+        active_camera->view_perspective.data[4],
+        active_camera->view_perspective.data[5],
+        active_camera->view_perspective.data[6],
+        active_camera->view_perspective.data[7]
+    );
 
     // Check if a previous frame is using this image (i.e. there is its fence to wait on)
     // if (context.images_in_flight[current_img_idx] != VK_NULL_HANDLE) 
@@ -1856,75 +1523,13 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
     };
     vkCmdSetScissor(cmd_buffer, 0, 1, &scissor);
 
-    // Drawing stuff
-    VkPipelineLayout* pipeline_layouts = context.pipeline_layouts;
-    VkDeviceSize offsets[] = {0};
-    
-    // Bind the geometry pass pipeline
-    vk_pipeline* bound_pipeline = &context.pipelines[GDF_VK_PIPELINE_INDEX_BLOCKS];
-    vkCmdBindPipeline(cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, bound_pipeline->handle);
-
-    vkCmdBindDescriptorSets(
-        cmd_buffer,
-        VK_PIPELINE_BIND_POINT_GRAPHICS,
-        pipeline_layouts[bound_pipeline->layout_index],
-        0,
-        1,
-        &context.ubo_descriptor_sets[resource_idx], 
-        0, 
-        NULL
-    );
-
-    vkCmdBindVertexBuffers(cmd_buffer, 0, 1, &cube_vertex_buf.handle, offsets);
-    vkCmdBindIndexBuffer(cmd_buffer, cube_index_buf.handle, 0, VK_INDEX_TYPE_UINT16);
-
-    // funny test rotating cube(s)
-    for (u32 i = 0; i < cube_transform_count; i++)
+    // render the game
+    if (!vk_draw_game(&context, backend, resource_idx, delta_time))
     {
-        GDF_Transform* cube_transform = cube_transforms + i;
-        cube_transform->rot.x += delta_time * (35 * gsin(PI * i/24.f)) * DEG_TO_RAD;
-        cube_transform->rot.y += delta_time * (20 * gsin(PI * i/24.f)) * DEG_TO_RAD;
-        GDF_TRANSFORM_RecalculateModelMatrix(cube_transform);
-
-        vkCmdPushConstants(
-            cmd_buffer,
-            pipeline_layouts[bound_pipeline->layout_index],
-            VK_SHADER_STAGE_VERTEX_BIT,
-            0,
-            sizeof(mat4),
-            &cube_transform->model_matrix
-        );
-        vkCmdDrawIndexed(cmd_buffer, sizeof(indices) / sizeof(indices[0]), 1, 0, 0, 0);
+        LOG_ERR("Failed to render the game.");
+        // TODO! handle some weird sync stuff here
+        return false;
     }
-
-    // draw grid
-    vk_pipeline* grid_pipeline = &context.pipelines[GDF_VK_PIPELINE_INDEX_GRID];
-    vkCmdBindPipeline(cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, grid_pipeline->handle);
-    
-    vkCmdBindDescriptorSets(
-        cmd_buffer,
-        VK_PIPELINE_BIND_POINT_GRAPHICS,
-        pipeline_layouts[grid_pipeline->layout_index],
-        0,
-        1,
-        &context.ubo_descriptor_sets[resource_idx], 
-        0, 
-        NULL
-    );
-
-    vkCmdBindVertexBuffers(cmd_buffer, 0, 1, &grid_vertex_buf.handle, offsets);
-    vkCmdBindIndexBuffer(cmd_buffer, grid_index_buf.handle, 0, VK_INDEX_TYPE_UINT16);
-
-    vkCmdPushConstants(
-        cmd_buffer,
-        pipeline_layouts[grid_pipeline->layout_index],
-        VK_SHADER_STAGE_VERTEX_BIT,
-        0,
-        sizeof(vec3),
-        &backend->active_camera->pos
-    );
-
-    vkCmdDrawIndexed(cmd_buffer, sizeof(grid_indices) / sizeof(grid_indices[0]), 1, 0, 0, 0);
 
     return true;
 }

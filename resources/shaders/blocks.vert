@@ -5,17 +5,15 @@ layout(set = 0, binding = 0) uniform VertexUniformBuffer {
     mat4 view_projection;
 } ubo;
 
-struct FaceData {
-    uint64_t data;
-};
-
 layout(set = 1, binding = 0) readonly buffer FaceDataBuffer {
-    FaceData faces[];
+    uint64_t faces[];
 } faceBuffer;
 
-// layout(push_constant) uniform PushConstants {
-//     uint64_t face_data;
-// } push_constants;
+layout(push_constant) uniform PushConstants {
+    int chunk_world_x;
+    int chunk_world_y;
+    int chunk_world_z;
+} push_constants;
 
 layout(location = 0) in vec3 up_plane_vertex;
 
@@ -31,12 +29,19 @@ void main() {
     uint64_t three_bit_mask = ((one) << 3) - 1;
     uint64_t six_bit_mask = ((one) << 6) - 1;
     uint64_t eight_bit_mask = ((one) << 8) - 1;
-    uint64_t face_data = faceBuffer.faces[gl_InstanceIndex].data;
+    uint64_t face_data = faceBuffer.faces[gl_InstanceIndex];
 
     uint64_t direction = face_data & three_bit_mask;
     uint64_t block_pos_x = (face_data >> 3) & six_bit_mask;
     uint64_t block_pos_y = (face_data >> 9) & six_bit_mask;
     uint64_t block_pos_z = (face_data >> 15) & six_bit_mask;
+    
+    vec3 transformed_vertex = vec3(
+        up_plane_vertex.x + float(block_pos_x), 
+        up_plane_vertex.y + float(block_pos_y),
+        up_plane_vertex.z + float(block_pos_z)
+    );
+
     out_tex_id = uint((face_data >> 21) & eight_bit_mask);
-    gl_Position = ubo.view_projection * vec4(1.0);
+    gl_Position = ubo.view_projection * vec4(transformed_vertex, 1.0);
 }

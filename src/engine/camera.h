@@ -4,7 +4,7 @@
 #include "engine/math/math_types.h"
 #include "math/math.h"
 
-typedef struct Camera {
+typedef struct GDF_Camera {
     vec3 pos;
     // IN DEGREES
     f32 pitch;
@@ -20,33 +20,33 @@ typedef struct Camera {
     f32 fov;
     f32 near_clip;
     f32 far_clip;
-} Camera;
+} GDF_Camera;
 
-static FORCEINLINE void __recalc_view_perspective(Camera* camera)
+static FORCEINLINE void __recalc_view_perspective(GDF_Camera* camera)
 {
     camera->view_perspective = mat4_mul(camera->view_matrix, camera->perspective_matrix);
 }
 
-FORCEINLINE void GDF_CAMERA_RecalculateViewMatrix(Camera* camera)
+FORCEINLINE void GDF_CAMERA_RecalculateViewMatrix(GDF_Camera* camera)
 {
     camera->view_matrix = mat4_view(camera->pos, camera->yaw * DEG_TO_RAD, camera->pitch * DEG_TO_RAD);
     __recalc_view_perspective(camera);
 }
 
-FORCEINLINE void GDF_CAMERA_RecalculatePerspectiveMatrix(Camera* camera)
+FORCEINLINE void GDF_CAMERA_RecalculatePerspectiveMatrix(GDF_Camera* camera)
 {
     camera->perspective_matrix = mat4_perspective(camera->fov, camera->aspect_ratio, camera->near_clip, camera->far_clip);
     __recalc_view_perspective(camera);
 }
 
-FORCEINLINE void GDF_CAMERA_RecalculateMatrices(Camera* camera)
+FORCEINLINE void GDF_CAMERA_RecalculateMatrices(GDF_Camera* camera)
 {
     camera->view_matrix = mat4_view(camera->pos, camera->yaw * DEG_TO_RAD, camera->pitch * DEG_TO_RAD);
     camera->perspective_matrix = mat4_perspective(camera->fov, camera->aspect_ratio, camera->near_clip, camera->far_clip);
     __recalc_view_perspective(camera);
 }
 
-FORCEINLINE void GDF_CAMERA_InitDefault(Camera* out_camera)
+FORCEINLINE void GDF_CAMERA_InitDefault(GDF_Camera* out_camera)
 {
     out_camera->aspect_ratio = 1.77777f;
     out_camera->fov = 50 * DEG_TO_RAD;
@@ -56,7 +56,7 @@ FORCEINLINE void GDF_CAMERA_InitDefault(Camera* out_camera)
     GDF_CAMERA_RecalculateMatrices(out_camera);
 }
 
-FORCEINLINE void GDF_CAMERA_InitWithPerspective(Camera* out_camera, f32 aspect_ratio, f32 fov, f32 near_clip, f32 far_clip)
+FORCEINLINE void GDF_CAMERA_InitWithPerspective(GDF_Camera* out_camera, f32 aspect_ratio, f32 fov, f32 near_clip, f32 far_clip)
 {
     out_camera->aspect_ratio = aspect_ratio;
     out_camera->fov = fov;
@@ -66,7 +66,7 @@ FORCEINLINE void GDF_CAMERA_InitWithPerspective(Camera* out_camera, f32 aspect_r
     GDF_CAMERA_RecalculateMatrices(out_camera);
 }
 
-FORCEINLINE void GDF_CAMERA_InitWithPosition(Camera* out_camera, vec3 pos)
+FORCEINLINE void GDF_CAMERA_InitWithPosition(GDF_Camera* out_camera, vec3 pos)
 {
     out_camera->pos = pos;
 

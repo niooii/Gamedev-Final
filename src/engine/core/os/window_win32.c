@@ -13,9 +13,10 @@ const char win_class_name[] = "gdf_window";
 static u16 current_window_id = 0;
 static HMODULE class_h_instance = NULL;
 
-static GDF_Window* MAIN_WINDOW = NULL;
+static GDF_Window MAIN_WINDOW = NULL;
 
-typedef struct InternalWindowState {
+typedef struct GDF_Window_T {
+    u16 id;
     HWND hwnd;
     u32 client_w;
     u32 client_h;
@@ -23,7 +24,7 @@ typedef struct InternalWindowState {
     u32 x;
     // top left corner
     u32 y;
-} InternalWindowState;
+} GDF_Window_T;
 
 LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
 {
@@ -50,9 +51,8 @@ LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
             {
                 u16 screen_x = LOWORD(l_param);
                 u16 screen_y = HIWORD(l_param);
-                InternalWindowState* internals = (InternalWindowState*)(MAIN_WINDOW->internals);
-                internals->x = screen_x;
-                internals->y = screen_y;
+                MAIN_WINDOW->x = screen_x;
+                MAIN_WINDOW->y = screen_y;
             }
             break;
         }
@@ -82,9 +82,8 @@ LRESULT CALLBACK process_msg(HWND hwnd, u32 msg, WPARAM w_param, LPARAM l_param)
             ctx.data.u16[1] = height;
             if (MAIN_WINDOW != NULL)
             {
-                InternalWindowState* internals = (InternalWindowState*)(MAIN_WINDOW->internals);
-                internals->client_w = width;
-                internals->client_h = height;
+                MAIN_WINDOW->client_w = width;
+                MAIN_WINDOW->client_h = height;
             }
             GDF_EVENT_Fire(GDF_EVENT_INTERNAL_WINDOW_RESIZE, NULL, ctx);
             break;
@@ -241,22 +240,19 @@ GDF_Window* GDF_CreateWindow(i16 x_, i16 y_, i16 w, i16 h, const char* title)
     i16 y = y_ == GDF_WIN_CENTERED ?  300 /*calc later*/ : y_;
     // create window and stuff
 
-    GDF_Window* window = GDF_Malloc(sizeof(GDF_Window), GDF_MEMTAG_APPLICATION);
-    window->internals = GDF_Malloc(sizeof(InternalWindowState), GDF_MEMTAG_APPLICATION);
+    GDF_Window window = GDF_Malloc(sizeof(GDF_Window_T), GDF_MEMTAG_APPLICATION);
     window->id = current_window_id++;
 
-    InternalWindowState* internals = (InternalWindowState*) window->internals;
-    
     // create window
     u32 client_x = x;
     u32 client_y = y;
     u32 client_width = w;
     u32 client_height = h;
 
-    internals->client_w = client_width;
-    internals->client_h = client_height;
-    internals->x = client_x;
-    internals->y = client_y;
+    window->client_w = client_width;
+    window->client_h = client_height;
+    window->x = client_x;
+    window->y = client_y;
 
     u32 window_x = client_x;
     u32 window_y = client_y;
@@ -293,7 +289,7 @@ GDF_Window* GDF_CreateWindow(i16 x_, i16 y_, i16 w, i16 h, const char* title)
         MessageBoxA(NULL, "Window creation failed!", "Error!", MB_ICONEXCLAMATION | MB_OK);
         return NULL;
     } 
-    internals->hwnd = handle;
+    window->hwnd = handle;
 
     RAWINPUTDEVICE rid[1];
     rid[0].usUsagePage = HID_USAGE_PAGE_GENERIC; 
@@ -304,11 +300,11 @@ GDF_Window* GDF_CreateWindow(i16 x_, i16 y_, i16 w, i16 h, const char* title)
     RegisterRawInputDevices(rid, 1, sizeof(rid[0]));
 
     // Show the window
-    bool should_activate = true;  // TODO: if the window should not accept input, this should be false.
+    bool should_activate = true;  // TODO! if the window should not accept input, this should be false.
     i32 show_window_command_flags = should_activate ? SW_SHOW : SW_SHOWNOACTIVATE;
     // If initially minimized, use SW_MINIMIZE : SW_SHOWMINNOACTIVE;
     // If initially maximized, use SW_SHOWMAXIMIZED : SW_MAXIMIZE
-    ShowWindow(internals->hwnd, show_window_command_flags);
+    ShowWindow(window->hwnd, show_window_command_flags);
 
     if (MAIN_WINDOW == NULL)
     {
@@ -326,25 +322,22 @@ bool GDF_SetWindowPos(i16 dest_x, i16 dest_y)
 
 void GDF_GetWindowPos(i16* x, i16* y)
 {
-    InternalWindowState* internals = (InternalWindowState*) MAIN_WINDOW->internals;
-    *x = internals->x;
-    *y = internals->y;
+    *x = MAIN_WINDOW->x;
+    *y = MAIN_WINDOW->y;
 }
 
 // TODO! this seems to be incomplete..
 bool GDF_SetWindowSizeInternal(i16 w, i16 h)
 {
-    InternalWindowState* internals = (InternalWindowState*) MAIN_WINDOW->internals;
-    internals->client_w = w;
-    internals->client_h = h;
+    MAIN_WINDOW->client_w = w;
+    MAIN_WINDOW->client_h = h;
     return true;
 }
 
 void GDF_GetWindowSize(i16* w, i16* h)
 {
-    InternalWindowState* internals = (InternalWindowState*) MAIN_WINDOW->internals;
-    *w = internals->client_w;
-    *h = internals->client_h;
+    *w = MAIN_WINDOW->client_w;
+    *h = MAIN_WINDOW->client_h;
 }
 
 bool GDF_PumpMessages()
@@ -361,10 +354,9 @@ bool GDF_PumpMessages()
 
 bool GDF_DestroyWindow(GDF_Window* window)
 {
-    InternalWindowState* internals = (InternalWindowState*) window->internals;
-    if (internals->hwnd) 
+    if (MAIN_WINDOW->hwnd) 
     {
-        DestroyWindow(internals->hwnd);
+        DestroyWindow(MAIN_WINDOW->hwnd);
     }
     return true;
 }
@@ -378,7 +370,7 @@ bool GDF_VK_CreateSurface(vk_renderer_context* context)
 {
     VkWin32SurfaceCreateInfoKHR create_info = {VK_STRUCTURE_TYPE_WIN32_SURFACE_CREATE_INFO_KHR};
     create_info.hinstance = class_h_instance;
-    create_info.hwnd = ((InternalWindowState*)MAIN_WINDOW->internals)->hwnd;
+    create_info.hwnd = MAIN_WINDOW->hwnd;
 
     if (&vkCreateWin32SurfaceKHR == NULL)
     {

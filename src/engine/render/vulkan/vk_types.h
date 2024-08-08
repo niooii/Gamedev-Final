@@ -5,6 +5,7 @@
 #include <vulkan/vk_enum_string_helper.h>
 #include "engine/camera.h"
 #include "engine/render/render_types.h"
+#include "engine/render/gpu_structs.h"
 
 #define VK_ASSERT(expr) \
 { \
@@ -24,18 +25,6 @@
     } \
 } \
 
-// Enumeration types to access resources from context
-typedef enum GDF_VK_PIPELINE_INDEX {
-    GDF_VK_PIPELINE_INDEX_BLOCKS,
-    GDF_VK_PIPELINE_INDEX_BLOCKS_WIREFRAME,
-    GDF_VK_PIPELINE_INDEX_GENERAL_GEOMETRY,
-    GDF_VK_PIPELINE_INDEX_LIGHTING,
-    GDF_VK_PIPELINE_INDEX_POST_PROCESSING,
-    GDF_VK_PIPELINE_INDEX_GRID,
-
-    GDF_VK_PIPELINE_INDEX_MAX,
-} GDF_VK_PIPELINE_INDEX;
-
 typedef enum GDF_VK_SHADER_MODULE_INDEX {
     GDF_VK_SHADER_MODULE_INDEX_BLOCKS_VERT,
     GDF_VK_SHADER_MODULE_INDEX_BLOCKS_FRAG,
@@ -54,13 +43,6 @@ typedef enum GDF_VK_RENDERPASS_INDEX {
 
     GDF_VK_RENDERPASS_INDEX_MAX,
 } GDF_VK_RENDERPASS_INDEX;
-
-typedef enum GDF_VK_PIPELINE_LAYOUT_INDEX {
-    GDF_VK_PIPELINE_LAYOUT_INDEX_GEOMETRY,
-    GDF_VK_PIPELINE_LAYOUT_INDEX_GRID,
-
-    GDF_VK_PIPELINE_LAYOUT_INDEX_MAX,
-} GDF_VK_PIPELINE_LAYOUT_INDEX;
 
 /* ======================================= */
 /* ===== DEVICE TYPES ===== */
@@ -114,7 +96,6 @@ typedef struct vk_uniform_buffer {
     void* mapped_data;
 } vk_uniform_buffer;
 
-
 /* ======================================= */
 /* ===== IMAGE TYPES ===== */
 /* ======================================= */
@@ -123,6 +104,48 @@ typedef struct vk_image {
     VkImage handle;
     VkImageView view;
 } vk_image;
+
+/* ======================================= */
+/* ===== ALL PIPELINES ===== */
+/* ======================================= */
+
+typedef struct vk_pipeline_block {
+    VkPipeline handle;
+    VkPipelineLayout layout;
+
+    VkPipeline wireframe_handle;
+    VkPipelineLayout wireframe_layout;
+    
+    VkShaderModule vert;
+    VkShaderModule frag;
+
+    // Shader storage buffer, accessed through instancing.
+    vk_buffer face_data_ssbo;
+
+    VkDescriptorPool descriptor_pool;
+    // GDF_LIST
+    VkDescriptorSet* descriptor_sets;
+    // GDF_LIST
+    VkDescriptorSetLayout* descriptor_layouts;
+} vk_pipeline_block;
+
+typedef struct vk_pipeline_grid {
+    VkPipeline handle;
+    VkPipelineLayout layout;
+    
+    VkShaderModule vert;
+    VkShaderModule frag;
+} vk_pipeline_grid;
+
+// typedef struct vk_shading_pipeline {
+//     VkPipeline handle;
+//     VkPipelineLayout layout;
+    
+//     // VkShaderModule
+
+//     // VkDescriptorSet* descriptor_sets;
+//     // VkDescriptorSetLayout* descriptor_layouts;
+// } vk_shading_pipeline;
 
 /* ======================================= */
 /* ===== OTHER TYPES ===== */
@@ -139,11 +162,6 @@ typedef struct vk_swapchain {
     VkExtent2D extent;
     u32 image_count;
 } vk_swapchain;
-
-typedef struct vk_pipeline {
-    VkPipeline handle;
-    GDF_VK_PIPELINE_LAYOUT_INDEX layout_index;
-} vk_pipeline;
 
 typedef struct vk_formats {
     VkFormat image_format;
@@ -180,13 +198,14 @@ typedef struct vk_renderer_context {
     VkDeviceMemory depth_image_memory;
     VkImageView depth_image_view;
 
-    vk_pipeline pipelines[GDF_VK_PIPELINE_INDEX_MAX];
-    VkPipelineLayout pipeline_layouts[GDF_VK_PIPELINE_LAYOUT_INDEX_MAX];
-    vk_formats formats;
-    VkRenderPass renderpasses[GDF_VK_RENDERPASS_INDEX_MAX];
-
-    // Shader resources
+    // All pipelines used in application
+    vk_pipeline_block block_pipeline;
+    vk_pipeline_grid grid_pipeline;
     VkShaderModule builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_MAX];
+    VkRenderPass renderpasses[GDF_VK_RENDERPASS_INDEX_MAX];
+    
+    vk_formats formats;
+
     // GDF_LIST
     // All vertex shaders will get input from these uniform buffers.
     vk_uniform_buffer* uniform_buffers;
@@ -222,8 +241,13 @@ typedef struct vk_renderer_context {
     bool recreating_swapchain;
     bool ready_for_use;
 
+    vk_buffer up_facing_plane_vbo;
+    vk_buffer up_facing_plane_index_buffer;
+
     vk_block_textures block_textures;
 
+    // GDF_LIST of visible chunk data.
+    GpuChunkData* visible_chunks;
 
 #ifndef GDF_RELEASE
     VkDebugUtilsMessengerEXT debug_messenger;

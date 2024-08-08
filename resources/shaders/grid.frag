@@ -1,12 +1,10 @@
 #version 450
 
-layout(location = 0) in vec3 in_position;
-
 layout(location = 0) out vec4 out_color;
 
-layout(location = 1) in vec3 in_world_pos;
+layout(location = 0) in vec3 in_world_pos;
 
-layout(location = 2) in vec3 camera_pos;
+layout(location = 1) in vec3 camera_pos;
 
 float ease_inout_exp(float x) {
     return x <= 0.0 ? 0.0 : pow(2.0, 10.0 * (x - 1.0));

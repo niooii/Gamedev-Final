@@ -10,18 +10,19 @@ layout(push_constant) uniform PushConstants {
 
 layout(location = 0) in vec3 in_position;
 
-layout(location = 0) out vec3 out_position;
+layout(location = 0) out vec3 out_world_pos;
 
-layout(location = 1) out vec3 out_world_pos;
-
-layout(location = 2) out vec3 camera_pos;
+layout(location = 1) out vec3 camera_pos;
 
 void main() {
-    // grid wont have a world transform, scale it here
-    vec3 transformed_vertex = in_position * 20;
-    transformed_vertex.xz += pc.camera_pos.xz;
-    out_world_pos.xz = transformed_vertex.xz;
     camera_pos = pc.camera_pos;
+    // grid wont have a world transform, scale it here
+    vec3 transformed_vertex = in_position * 40;
+    transformed_vertex.xz += pc.camera_pos.xz;
+    // // because the input is the "up plane" for a cube so set y to 0.
+    transformed_vertex.y = 0;
 
+    out_world_pos = transformed_vertex;
     gl_Position = ubo.view_projection * vec4(transformed_vertex, 1.0);
+    // gl_Position = vec4(out_position, 1.0);
 }

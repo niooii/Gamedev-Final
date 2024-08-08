@@ -80,7 +80,7 @@ bool app_on_event(u16 event_code, void *sender, void *listener_instance, GDF_Eve
 }
 
 #include "engine/camera.h"
-static Camera camera;
+static GDF_Camera camera;
 bool GDF_InitApp() 
 {
     if (INITIALIZED) 
@@ -116,7 +116,11 @@ bool GDF_InitApp()
     GDF_EVENT_Register(GDF_EVENT_INTERNAL_APP_QUIT, NULL, app_on_event);
     GDF_EVENT_Register(GDF_EVENT_INTERNAL_WINDOW_RESIZE, NULL, app_on_event);
 
-    GDF_GAME_Init();
+    if (!GDF_GAME_Init())
+    {
+        LOG_ERR("Failed to initialize the game??");
+        return false;
+    }
 
     // initialize the renderer
     if (!GDF_InitRenderer(GDF_RENDER_BACKEND_TYPE_VULKAN))
@@ -195,77 +199,8 @@ f64 GDF_RunApp()
             GDF_Sleep((u64)(wait_secs * 1000));
         }
 
-        // quick camera input test stuff 
-        // TODO! remove
-        f32 move_speed = 3;
-        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_LCONTROL))
-        {
-            move_speed = 20;
-        }
-        vec3 camera_forward = vec3_forward(camera.yaw * DEG_TO_RAD, camera.pitch * DEG_TO_RAD);
-        vec3 camera_right = vec3_right_from_forward(camera_forward);
-
-        vec3 right_vec = vec3_new(camera_right.x, 0, camera_right.z);
-        vec3_normalize(&right_vec);
-        vec3 forward_vec = vec3_new(camera_forward.x, 0, camera_forward.z);
-        vec3_normalize(&forward_vec);
-        // TODO! handle normalization when traveling diagonally
-        right_vec = vec3_mul_scalar(right_vec, move_speed * dt);
-        forward_vec = vec3_mul_scalar(forward_vec, move_speed * dt);
-
-        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_W))
-        {
-            vec3_add_to(&camera.pos, forward_vec);
-        }
-        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_S))
-        {
-            vec3_add_to(&camera.pos, vec3_negated(forward_vec));
-        }
-        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_A))
-        {
-            vec3_add_to(&camera.pos, vec3_negated(right_vec));
-        }
-        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_D))
-        {
-            vec3_add_to(&camera.pos, right_vec);
-        }
-        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_SPACE))
-        {
-            camera.pos.y += move_speed * dt;
-        }
-        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_LSHIFT))
-        {
-            camera.pos.y -= move_speed * dt;
-        }
-        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_UP))
-        {
-            camera.pitch -= dt;
-            LOG_DEBUG("TURNING CAMERA YES %f", camera.pitch);
-        }
-        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_DOWN))
-        {
-            camera.pitch += dt;
-            LOG_DEBUG("TURNING CAMERA YES %f", camera.pitch);
-        }
-        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_LEFT))
-        {
-            camera.yaw += dt;
-            LOG_DEBUG("TURNING CAMERA YES %f", camera.yaw);
-        }
-        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_RIGHT))
-        {
-            camera.yaw -= dt;
-            LOG_DEBUG("TURNING CAMERA YES %f", camera.yaw);
-        }
-        i32 dx;
-        i32 dy;
-        GDF_INPUT_GetMouseDelta(&dx, &dy);
-        camera.yaw -= dx * 0.4;
-        camera.pitch -= dy * 0.4;
-        // TODO! weird behavior when not clamped: when pitch passes -90 or 90, scene flips??
-        camera.pitch = CLAMP(camera.pitch, -89, 89);
-        GDF_CAMERA_RecalculateViewMatrix(&camera);
-        // LOG_DEBUG("curr: %d | prev: %d", mouse_x, prev_mouse_x);
+        GDF_Game* game_instance = GDF_GAME_GetInstance();
+        GDF_GAME_Update(dt);
 
         GDF_INPUT_Update(dt);
 

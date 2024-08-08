@@ -21,6 +21,11 @@ typedef struct GDF_CubeTextureIds {
     u8 back;
 } GDF_CubeTextureIds;
 
+typedef struct GDF_BlockData {
+    GDF_BLOCKTYPE type;
+    GDF_CubeTextureIds textures;
+} GDF_BlockData;
+
 bool FORCEINLINE GDF_GetDefaultCubeTextures(GDF_BLOCKTYPE block_type, GDF_CubeTextureIds* tex_ids)
 {
     u8 top;
@@ -70,14 +75,17 @@ bool FORCEINLINE GDF_GetDefaultCubeTextures(GDF_BLOCKTYPE block_type, GDF_CubeTe
 
 typedef struct GDF_ChunkBlockCreateInfo {
     GDF_BLOCKTYPE type;
+    u8 block_x;
+    u8 block_y;
+    u8 block_z;
+} GDF_ChunkBlockCreateInfo;
+
+typedef struct GDF_ChunkBlock {
+    GDF_BlockData data;
     u8 chunk_x;
     u8 chunk_y;
     u8 chunk_z;
-} GDF_ChunkBlockCreateInfo;
-
-// These get directly inserted to chunks, no need to store position data
-typedef struct GDF_ChunkBlock {
-    GDF_CubeTextureIds cube_textures;
+    bool exists;
 } GDF_ChunkBlock;
 
 typedef enum GDF_BLOCK_OFFSETS {

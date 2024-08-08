@@ -14,7 +14,6 @@ typedef struct renderer_backend {
     u64 frame_number;
 
     // Camera (and view and projection) stuff
-    Camera* active_camera;
     u32 framebuffer_width;
     u32 framebuffer_height;
 
