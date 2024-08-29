@@ -62,7 +62,7 @@ bool app_on_event(u16 event_code, void *sender, void *listener_instance, GDF_Eve
                 {
                     LOG_INFO("Window is minimized kinda.");
                 }
-                GDF_RENDERER_Resize(width, height);
+                renderer_resize(width, height);
             }
             return false;
         }
@@ -134,7 +134,7 @@ bool GDF_InitApp()
     camera.near_clip = 0.01f;
     camera.far_clip = 1000;
     camera_recalc_matrices(&camera);
-    GDF_RENDERER_SetCamera(&camera);
+    renderer_set_camera(&camera);
 
     APP_STATE.stopwatch = GDF_Stopwatch_Create();
 
@@ -187,7 +187,7 @@ f64 GDF_RunApp()
 
         GDF_RenderPacket packet;
         packet.delta_time = dt;
-        GDF_RENDERER_DrawFrame(&packet);
+        renderer_draw_frame(&packet);
 
         f64 frame_time = GDF_Stopwatch_TimeElasped(frame_timer);
         

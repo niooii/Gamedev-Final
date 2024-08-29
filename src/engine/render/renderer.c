@@ -40,19 +40,19 @@ bool renderer_end_frame(f32 delta_time)
     return result;
 }
 
-void GDF_RENDERER_Resize(u16 width, u16 height)
+void renderer_resize(u16 width, u16 height)
 {
     backend->framebuffer_width = width;
     backend->framebuffer_height = height;
     backend->resized(backend, width, height);
 }
 
-void GDF_RENDERER_SetCamera(GDF_Camera* camera)
+void renderer_set_camera(GDF_Camera* camera)
 {
     backend->game->main_camera = camera;
 }
 
-bool GDF_RENDERER_DrawFrame(GDF_RenderPacket* packet) 
+bool renderer_draw_frame(GDF_RenderPacket* packet) 
 {
     if (renderer_begin_frame(packet->delta_time)) {
 
