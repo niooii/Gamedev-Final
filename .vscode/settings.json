@@ -92,7 +92,7 @@
         "game.h": "c",
         "item.h": "c",
         "assert.h": "c",
-        "info.h": "c",
+        "misc.h": "c",
         "sstream": "c",
         "serde.h": "c",
         "stdlib.h": "c",
@@ -141,6 +141,8 @@
         "vk_pipelines.h": "c",
         "vk_utils.h": "c",
         "math.h": "c",
-        "engine_core.h": "c"
+        "geometry.h": "c",
+        "xlocbuf": "c",
+        "misc.h": "c"
     },
 }

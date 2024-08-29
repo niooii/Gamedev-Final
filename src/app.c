@@ -133,7 +133,7 @@ bool GDF_InitApp()
     camera.fov = 80 * DEG_TO_RAD;
     camera.near_clip = 0.01f;
     camera.far_clip = 1000;
-    GDF_CAMERA_RecalculateMatrices(&camera);
+    camera_recalc_matrices(&camera);
     GDF_RENDERER_SetCamera(&camera);
 
     APP_STATE.stopwatch = GDF_Stopwatch_Create();

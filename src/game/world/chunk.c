@@ -1,23 +1,23 @@
 #include "chunk.h"
 
-bool GDF_CHUNK_Create(GDF_Chunk* out_chunk)
+bool chunk_create(Chunk* out_chunk)
 {
-    out_chunk->block_arr = GDF_Malloc(MAX_CHUNK_XZ * MAX_CHUNK_Y * sizeof(GDF_ChunkBlock), GDF_MEMTAG_GAME);
-    out_chunk->block_list = GDF_LIST_Reserve(GDF_ChunkBlock*, 2048);
+    out_chunk->block_arr = GDF_Malloc(MAX_CHUNK_XZ * MAX_CHUNK_Y * sizeof(ChunkBlock), GDF_MEMTAG_GAME);
+    out_chunk->block_list = GDF_LIST_Reserve(ChunkBlock*, 2048);
 
     out_chunk->faces = NULL;
     out_chunk->pending_render_update = true;
     return true;
 }
 
-GDF_ChunkBlock* GDF_CHUNK_GetBlock(
-    GDF_Chunk* chunk, 
+ChunkBlock* GDF_CHUNK_GetBlock(
+    Chunk* chunk, 
     u8 block_x, 
     u8 block_y, 
     u8 block_z
 )
 {
-    GDF_ChunkBlock* chunk_block = &chunk->block_arr[block_x * block_y * block_z];
+    ChunkBlock* chunk_block = &chunk->block_arr[block_x * block_y * block_z];
     
     if (!chunk_block->exists)
         return NULL;
@@ -25,12 +25,12 @@ GDF_ChunkBlock* GDF_CHUNK_GetBlock(
         return chunk_block;
 }
 
-bool GDF_CHUNK_SetBlock(
-    GDF_Chunk* chunk, 
+bool chunk_setblock(
+    Chunk* chunk, 
     GDF_ChunkBlockCreateInfo* chunk_block_info
 )
 {
-    GDF_ChunkBlock* block = &chunk->block_arr[
+    ChunkBlock* block = &chunk->block_arr[
         chunk_block_info->block_x * 
         chunk_block_info->block_y * 
         chunk_block_info->block_z
@@ -42,7 +42,7 @@ bool GDF_CHUNK_SetBlock(
     block->chunk_z = chunk_block_info->block_z;
 
     block->data.type = chunk_block_info->type;
-    if (!GDF_GetDefaultCubeTextures(block->data.type, &block->data.textures))
+    if (!cube_textures_get_default(block->data.type, &block->data.textures))
     {
         LOG_ERR("No default textures for block type %u", block->data.type);
         return false;
@@ -53,7 +53,7 @@ bool GDF_CHUNK_SetBlock(
     return true;
 }
 
-void GDF_CHUNK_RecalculateFaces(GDF_Chunk* chunk)
+void chunk_recalc_faces(Chunk* chunk)
 {
     
 }

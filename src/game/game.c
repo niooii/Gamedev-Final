@@ -9,7 +9,7 @@ bool GDF_GAME_Init()
 {
     GAME = GDF_Malloc(sizeof(*GAME), GDF_MEMTAG_GAME);
     GAME->main_camera = GDF_Malloc(sizeof(GDF_Camera), GDF_MEMTAG_GAME);
-    GDF_CAMERA_InitDefault(GAME->main_camera);
+    camera_init_default(GAME->main_camera);
 
     // TODO! uncomment later, the game will be initilaized in world state for now.
     // GAME->current_screen = GDF_GAME_SCREEN_MAIN_MENU;
@@ -20,12 +20,12 @@ bool GDF_GAME_Init()
     GAME->current_screen = GDF_GAME_SCREEN_IN_WORLD;
     GAME->current_screen_type = GDF_GAME_SCREENTYPE_WORLD;
     GAME->main_player = NULL;
-    GAME->world = GDF_Malloc(sizeof(GDF_World), GDF_MEMTAG_GAME);
-    GDF_WorldCreateInfo world_info = {
+    GAME->world = GDF_Malloc(sizeof(World), GDF_MEMTAG_GAME);
+    WorldCreateInfo world_info = {
         .chunk_simulate_distance = 16,
         .ticks_per_sec = 20,
     };
-    GDF_WORLD_Create(GAME->world, &world_info);
+    world_create(GAME->world, &world_info);
     return true;
 }
 
@@ -101,8 +101,7 @@ bool GDF_GAME_Update(f32 dt)
     camera->pitch -= dy * 0.4;
     // TODO! weird behavior when not clamped: when pitch passes -90 or 90, scene flips??
     camera->pitch = CLAMP(camera->pitch, -89, 89);
-    GDF_CAMERA_RecalculateViewMatrix(camera);
-    LOG_DEBUG("%f, %f, %f", camera->pitch, camera->yaw, camera->pos.z);
+    camera_recalc_view_matrix(camera);
     return true;
 }
 

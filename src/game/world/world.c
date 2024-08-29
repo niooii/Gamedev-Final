@@ -1,6 +1,6 @@
 #include "world.h"
 
-void GDF_WORLD_Create(GDF_World* out_world, GDF_WorldCreateInfo* create_info)
+void world_create(World* out_world, WorldCreateInfo* create_info)
 {
     out_world->chunk_simulate_distance = create_info->chunk_simulate_distance;
     i32 chunk_sim_distance = out_world->chunk_simulate_distance;
@@ -21,7 +21,7 @@ void GDF_WORLD_Create(GDF_World* out_world, GDF_WorldCreateInfo* create_info)
     }
 }
 
-void GDF_WORLD_Tick(GDF_World* world)
+void world_tick(World* world)
 {
     LOG_INFO("something update world");
 }

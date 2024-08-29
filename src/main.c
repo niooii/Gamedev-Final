@@ -1,17 +1,38 @@
 #ifndef COMPILE_BUILDER
 
 #include "game/game.h"
-#include "engine/core/os/info.h"
+#include "engine/core/os/misc.h"
 #include "app.h"
 #include "engine/core/asserts.h"
 #include "engine/core/subsystems.h"
+#include "engine/core/os/thread.h"
+#include "game/server.h"
+
+int test_counter = 0;
+GDF_Mutex test_counter_mutex;
+unsigned long thread_test_callback(void* args) 
+{
+    u32 thread_num = *((u32*)args);
+    LOG_WARN("hi from thread %u", thread_num);
+    for (int i = 0; i < 1000000; i++)
+    {
+        GDF_LockMutex(test_counter_mutex);
+        test_counter++;
+        GDF_ReleaseMutex(test_counter_mutex);
+    }
+    LOG_WARN("bye from thread %u", thread_num);
+    return 0;
+}
+
+unsigned long server_thread_wrapper(void* args)
+{
+    world_server_run();
+    return 0;
+}
 
 int main()
 {
     GDF_InitSubsystems(GDF_SUBSYSTEM_WINDOWING | GDF_SUBSYSTEM_EVENTS | GDF_SUBSYSTEM_INPUT | GDF_SUBSYSTEM_NET);
-    // u64 yes = 0b10000000111;
-    // printf("val unshifted: %lu\n", yes);
-    // printf("val u8 shifted: %u\n", (yes >> 8));
     // GDF_Socket* serverSocket = GDF_MakeSocket();
     // if (!serverSocket) {
     //     printf("Failed to create server socket.\n");
@@ -28,17 +49,18 @@ int main()
     // }
 
     // printf("Server listening on port 8080...\n");
-    // GDF_Socket* client = GDF_MakeSocket();
+    GDF_CreateThread(server_thread_wrapper, NULL);
+    GDF_Socket* client = GDF_MakeSocket();
 
-    // if (!GDF_SocketConnect(client, "127.0.0.1", 8080))
-    // {
-    //     LOG_ERR("FALIED TO CONNECT");
-    // }
-    // else
-    // {
-    //     printf("CONECTED\n");
-    // }
-    // return 0;
+    if (!GDF_SocketConnect(client, "127.0.0.1", SERVER_PORT))
+    {
+        LOG_ERR("FALIED TO CONNECT");
+    }
+    else
+    {
+        LOG_INFO("CONECTED\n");
+    }
+    return 0;
 
     // GDF_ChunkCubeFace face = {
     //     .data = 0
@@ -58,14 +80,24 @@ int main()
 
     // // TODO! test bit ops
     // return -1;
-
-    GDF_InitApp();
-    f64 time_ran_for = GDF_RunApp();
-    if (time_ran_for != -1)
+    test_counter_mutex = GDF_CreateMutex();
+    GDF_Thread handles[3];
+    for (u32 i = 0; i < 3; i++)
     {
-        LOG_INFO("App has been running for %lf seconds... Time to rest!", time_ran_for);
+        handles[i] = GDF_CreateThread(thread_test_callback, &i);
     }
-    GDF_ShutdownSubsystems();
+    for (u32 i = 0; i < 3; i++)
+    {
+        GDF_JoinThread(handles[i]);
+    }
+    printf("COUNTER IS NOW: %d, SHOULD BE 3000000", test_counter);
+    // GDF_InitApp();
+    // f64 time_ran_for = GDF_RunApp();
+    // if (time_ran_for != -1)
+    // {
+    //     LOG_INFO("App has been running for %lf seconds... Time to rest!", time_ran_for);
+    // }
+    // GDF_ShutdownSubsystems();
     return 0;
 }
 

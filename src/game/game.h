@@ -16,7 +16,7 @@ typedef enum GDF_GAME_SCREENTYPE {
 } GDF_GAME_SCREENTYPE;
 
 typedef struct GDF_Game {
-    GDF_World* world;
+    World* world;
     GDF_Player* main_player;
     GDF_GAME_SCREEN current_screen;
     GDF_GAME_SCREENTYPE current_screen_type;

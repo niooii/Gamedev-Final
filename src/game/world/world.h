@@ -6,21 +6,21 @@
 #include "worldgen/generator.h"
 
 
-typedef struct GDF_World {
+typedef struct World {
     // Terrain stuff
-    GDF_Generator generator;
+    Generator generator;
     // GDF_List
-    GDF_Chunk* chunks;
+    Chunk* chunks;
     u8 chunk_simulate_distance;
     u16 ticks_per_sec;
     GDF_Stopwatch* since_last_tick;
-} GDF_World;
+} World;
 
-typedef struct GDF_WorldCreateInfo {
+typedef struct WorldCreateInfo {
     u8 chunk_simulate_distance;
     u16 ticks_per_sec;
-} GDF_WorldCreateInfo;
+} WorldCreateInfo;
 
-void GDF_WORLD_Create(GDF_World* out_world, GDF_WorldCreateInfo* create_info);
+void world_create(World* out_world, WorldCreateInfo* create_info);
 
-void GDF_WORLD_Tick(GDF_World* world);
+void world_tick(World* world);

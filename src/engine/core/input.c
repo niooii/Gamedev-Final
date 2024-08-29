@@ -68,7 +68,7 @@ void GDF_ShutdownInput()
 
 static void __update_mouse_confinement_rect() 
 {
-    // TODO! rename info.h to misc.h and slap a (CROSS PLATFORM) GDF_ShowCursor & GDF_ClipCursor in there and call that instead.
+    // TODO! rename misc.h to misc.h and slap a (CROSS PLATFORM) GDF_ShowCursor & GDF_ClipCursor in there and call that instead.
     i16 screen_offset_x, screen_offset_y, w, h;
     GDF_GetWindowPos(&screen_offset_x, &screen_offset_y);
     GDF_GetWindowSize(&w, &h);

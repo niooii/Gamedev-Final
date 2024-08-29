@@ -233,7 +233,7 @@ void GDF_ShutdownWindowing()
     // even though it should be automatic but its fine
 }
 
-GDF_Window* GDF_CreateWindow(i16 x_, i16 y_, i16 w, i16 h, const char* title) 
+GDF_Window GDF_CreateWindow(i16 x_, i16 y_, i16 w, i16 h, const char* title) 
 {
     // TODO!
     i16 x = x_ == GDF_WIN_CENTERED ?  300 /*calc later*/ : x_;
@@ -386,7 +386,7 @@ bool GDF_VK_CreateSurface(vk_renderer_context* context)
     return true;
 }
 
-GDF_Window* GDF_GetMainWindow()
+GDF_Window GDF_GetMainWindow()
 {
     return MAIN_WINDOW;
 }

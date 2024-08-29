@@ -2,7 +2,7 @@
 #include "vk_types.h"
 #include "engine/core/containers/list.h"
 #include "vk_os.h"
-#include "engine/engine_core.h"
+#include "engine/geometry.h"
 #include "vk_textures.h"
 #include "vk_game_renderer.h"
 #include "vk_pipelines.h"
@@ -1460,17 +1460,17 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
         // .proj = mat4_identity(),
     };
     memcpy(context.uniform_buffers[current_img_idx].mapped_data, &ubo, sizeof(ubo));
-    LOG_INFO(
-        "%f, %f, %f, %f, %f, %f, %f", 
-        active_camera->view_perspective.data[0],
-        active_camera->view_perspective.data[1],
-        active_camera->view_perspective.data[2],
-        active_camera->view_perspective.data[3],
-        active_camera->view_perspective.data[4],
-        active_camera->view_perspective.data[5],
-        active_camera->view_perspective.data[6],
-        active_camera->view_perspective.data[7]
-    );
+    // LOG_INFO(
+    //     "%f, %f, %f, %f, %f, %f, %f", 
+    //     active_camera->view_perspective.data[0],
+    //     active_camera->view_perspective.data[1],
+    //     active_camera->view_perspective.data[2],
+    //     active_camera->view_perspective.data[3],
+    //     active_camera->view_perspective.data[4],
+    //     active_camera->view_perspective.data[5],
+    //     active_camera->view_perspective.data[6],
+    //     active_camera->view_perspective.data[7]
+    // );
 
     // Check if a previous frame is using this image (i.e. there is its fence to wait on)
     // if (context.images_in_flight[current_img_idx] != VK_NULL_HANDLE) 

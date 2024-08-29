@@ -5,19 +5,19 @@
 #include "game/world/chunk.h"
 
 
-typedef struct GDF_WorldGenParameters {
+typedef struct GeneratorCreateInfo {
     GDF_WORLD_GEN_ALGORITHM algorithm;
-} GDF_WorldGenParameters;
+} GeneratorCreateInfo;
 
-typedef struct GDF_Generator {
+typedef struct Generator {
     u32 testfield;
-} GDF_Generator;
+} Generator;
 
-GDF_Generator GDF_WORLDGEN_CreateGenerator(GDF_WorldGenParameters* parameters);
+Generator generator_create(GeneratorCreateInfo* parameters);
 
-bool GDF_WORLDGEN_GenChunk(
-    GDF_Generator* generator, 
-    GDF_Chunk* chunk, 
+bool generator_make_chunk(
+    Generator* generator, 
+    Chunk* chunk, 
     i32 chunk_x, 
     i32 chunk_y, 
     i32 chunk_z

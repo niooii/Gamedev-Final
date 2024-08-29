@@ -32,7 +32,7 @@ void GDF_ShutdownSockets()
     }
 }
 
-GDF_Socket* GDF_MakeSocket()
+GDF_Socket GDF_MakeSocket()
 {
     if (!INITIALIZED)
     {
@@ -40,55 +40,44 @@ GDF_Socket* GDF_MakeSocket()
         return NULL;
     }
 
-    GDF_Socket* gdf_socket = (GDF_Socket*)GDF_Malloc(sizeof(GDF_Socket), GDF_MEMTAG_IO);
+    GDF_Socket gdf_socket = (GDF_Socket)GDF_Malloc(sizeof(GDF_Socket_T), GDF_MEMTAG_IO);
     if (!gdf_socket)
     {
         return NULL;
     }
 
-    InternalState* state = (InternalState*)GDF_Malloc(sizeof(InternalState), GDF_MEMTAG_IO);
-
-    state->sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
-    if (state->sock == INVALID_SOCKET)
+    gdf_socket->sock = socket(AF_INET, SOCK_STREAM, IPPROTO_TCP);
+    if (gdf_socket->sock == INVALID_SOCKET)
     {
-        GDF_Free(state);
         GDF_Free(gdf_socket);
         return NULL;
     }
 
-    gdf_socket->internals = state;
     return gdf_socket;
 }
 
-void GDF_DestroySocket(GDF_Socket* socket)
+void GDF_DestroySocket(GDF_Socket socket)
 {
     if (socket)
     {
-        InternalState* state = (InternalState*)socket->internals;
-        if (state)
-        {
-            closesocket(state->sock);
-            GDF_Free(state);
-        }
-        free(socket);
+        GDF_Free(socket);
     }
 }
 
-bool GDF_SocketListen(GDF_Socket* socket, u16 port)
+bool GDF_SocketListen(GDF_Socket socket, u16 port)
 {
-    InternalState* state = (InternalState*)socket->internals;
     struct sockaddr_in service;
 
     service.sin_family = AF_INET;
     service.sin_addr.s_addr = INADDR_ANY;
     service.sin_port = htons(port);
 
-    if (bind(state->sock, (SOCKADDR*)&service, sizeof(service)) == SOCKET_ERROR)
+    if (bind(socket->sock, (SOCKADDR*)&service, sizeof(service)) == SOCKET_ERROR)
     {
         return false;
     }
 
-    if (listen(state->sock, SOMAXCONN) == SOCKET_ERROR)
+    if (listen(socket->sock, SOMAXCONN) == SOCKET_ERROR)
     {
         return false;
     }
@@ -96,51 +85,41 @@ bool GDF_SocketListen(GDF_Socket* socket, u16 port)
     return true;
 }
 
-GDF_Socket* GDF_SocketAccept(GDF_Socket* socket)
+GDF_Socket GDF_SocketAccept(GDF_Socket socket)
 {
-    if (!socket || !socket->internals)
+    if (!socket)
     {
         return NULL;
     }
 
-    InternalState* state = (InternalState*)socket->internals;
-    SOCKET client_socket = accept(state->sock, NULL, NULL);
+    SOCKET client_socket = accept(socket->sock, NULL, NULL);
     if (client_socket == INVALID_SOCKET)
     {
         return NULL;
     }
 
-    GDF_Socket* client_gdf_socket = (GDF_Socket*)malloc(sizeof(GDF_Socket));
-    if (!client_gdf_socket)
+    GDF_Socket client_sock = GDF_Malloc(sizeof(GDF_Socket_T), GDF_MEMTAG_APPLICATION);
+    if (!client_sock)
     {
         closesocket(client_socket);
+        GDF_Free(client_sock);
         return NULL;
     }
 
-    InternalState* client_state = (InternalState*)malloc(sizeof(InternalState));
-    if (!client_state)
-    {
-        closesocket(client_socket);
-        free(client_gdf_socket);
-        return NULL;
-    }
+    client_sock->sock = client_socket;
 
-    client_state->sock = client_socket;
-    client_gdf_socket->internals = client_state;
-
-    return client_gdf_socket;
+    return client_sock;
 }
 
-bool GDF_SocketConnect(GDF_Socket* socket, const char* address, u16 port)
+bool GDF_SocketConnect(GDF_Socket socket, const char* address, u16 port)
 {
-    InternalState* state = (InternalState*)socket->internals;
     struct sockaddr_in service;
 
     service.sin_family = AF_INET;
     service.sin_addr.s_addr = inet_addr(address);
     service.sin_port = htons(port);
 
-    if (connect(state->sock, (SOCKADDR*)&service, sizeof(service)) == SOCKET_ERROR)
+    if (connect(socket->sock, (SOCKADDR*)&service, sizeof(service)) == SOCKET_ERROR)
     {
         return false;
     }
@@ -148,17 +127,15 @@ bool GDF_SocketConnect(GDF_Socket* socket, const char* address, u16 port)
     return true;
 }
 
-bool GDF_SocketSend(GDF_Socket* socket, const char* buffer, u32 buf_size)
+bool GDF_SocketSend(GDF_Socket socket, const char* buffer, u32 buf_size)
 {
-    InternalState* state = (InternalState*)socket->internals;
-    int r = send(state->sock, buffer, buf_size, 0);
+    int r = send(socket->sock, buffer, buf_size, 0);
     return r != SOCKET_ERROR;
 }
 
-bool GDF_SocketRecv(GDF_Socket* socket, char* buffer, u32 buf_size)
+bool GDF_SocketRecv(GDF_Socket socket, char* buffer, u32 buf_size)
 {
-    InternalState* state = (InternalState*)socket->internals;
-    int r = recv(state->sock, buffer, buf_size, 0);
+    int r = recv(socket->sock, buffer, buf_size, 0);
     return r != SOCKET_ERROR;
 }
 

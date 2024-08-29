@@ -6,27 +6,27 @@
 #define MAX_CHUNK_XZ 16
 #define MAX_CHUNK_Y 32
 
-typedef enum GDF_BLOCKTYPE {
+typedef enum BLOCKTYPE {
     GDF_BLOCKTYPE_Grass,
     GDF_BLOCKTYPE_Dirt,
     GDF_BLOCKTYPE_Glass,
-} GDF_BLOCKTYPE;
+} BLOCKTYPE;
 
-typedef struct GDF_CubeTextureIds {
+typedef struct CubeTextureIds {
     u8 top;
     u8 bottom;
     u8 left;
     u8 right;
     u8 front;
     u8 back;
-} GDF_CubeTextureIds;
+} CubeTextureIds;
 
-typedef struct GDF_BlockData {
-    GDF_BLOCKTYPE type;
-    GDF_CubeTextureIds textures;
-} GDF_BlockData;
+typedef struct BlockData {
+    BLOCKTYPE type;
+    CubeTextureIds textures;
+} BlockData;
 
-bool FORCEINLINE GDF_GetDefaultCubeTextures(GDF_BLOCKTYPE block_type, GDF_CubeTextureIds* tex_ids)
+bool FORCEINLINE cube_textures_get_default(BLOCKTYPE block_type, CubeTextureIds* tex_ids)
 {
     u8 top;
     u8 bottom;
@@ -74,19 +74,19 @@ bool FORCEINLINE GDF_GetDefaultCubeTextures(GDF_BLOCKTYPE block_type, GDF_CubeTe
 }
 
 typedef struct GDF_ChunkBlockCreateInfo {
-    GDF_BLOCKTYPE type;
+    BLOCKTYPE type;
     u8 block_x;
     u8 block_y;
     u8 block_z;
 } GDF_ChunkBlockCreateInfo;
 
-typedef struct GDF_ChunkBlock {
-    GDF_BlockData data;
+typedef struct ChunkBlock {
+    BlockData data;
     u8 chunk_x;
     u8 chunk_y;
     u8 chunk_z;
     bool exists;
-} GDF_ChunkBlock;
+} ChunkBlock;
 
 typedef enum GDF_BLOCK_OFFSETS {
     GDF_BLOCK_OFFSETS_FaceDirection = 0,

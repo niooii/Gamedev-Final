@@ -1,5 +1,5 @@
 #include "stopwatch.h"
-#include "engine/core/os/info.h"
+#include "engine/core/os/misc.h"
 
 GDF_Stopwatch* GDF_Stopwatch_Create()
 {
