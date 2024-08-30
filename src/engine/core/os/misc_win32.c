@@ -22,11 +22,6 @@ f64 GDF_GetAbsoluteTime()
     return (f64)now_time.QuadPart * clock_freq;
 }
 
-void GDF_Sleep(u64 ms)
-{
-    Sleep(ms);
-}
-
 GDF_DisplayInfo GDF_GetDisplayInfo()
 {
     GDF_DisplayInfo di = {

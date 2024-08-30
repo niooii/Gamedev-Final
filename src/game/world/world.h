@@ -5,7 +5,6 @@
 #include "chunk.h"
 #include "worldgen/generator.h"
 
-
 typedef struct World {
     // Terrain stuff
     Generator generator;
@@ -13,7 +12,7 @@ typedef struct World {
     Chunk* chunks;
     u8 chunk_simulate_distance;
     u16 ticks_per_sec;
-    GDF_Stopwatch* since_last_tick;
+    GDF_Stopwatch* world_update_stopwatch;
 } World;
 
 typedef struct WorldCreateInfo {

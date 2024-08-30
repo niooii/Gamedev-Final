@@ -6,7 +6,7 @@ void world_create(World* out_world, WorldCreateInfo* create_info)
     i32 chunk_sim_distance = out_world->chunk_simulate_distance;
     out_world->ticks_per_sec = create_info->ticks_per_sec;
 
-    out_world->since_last_tick = GDF_Stopwatch_Create();
+    out_world->world_update_stopwatch = GDF_Stopwatch_Create();
 
     // Create da chunks
     for (i32 chunk_x = -chunk_sim_distance; chunk_x <= chunk_sim_distance; chunk_x++)

@@ -143,6 +143,6 @@
         "math.h": "c",
         "geometry.h": "c",
         "xlocbuf": "c",
-        "misc.h": "c"
+        "server.h": "c"
     },
 }

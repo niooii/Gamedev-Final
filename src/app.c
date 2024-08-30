@@ -2,6 +2,7 @@
 #include "engine/core/containers/list.h"
 #include "engine/core/input.h"
 #include "engine/math/math.h"
+#include "engine/core/os/thread.h"
 
 typedef struct AppState {
     bool is_running;
@@ -196,7 +197,7 @@ f64 GDF_RunApp()
         f64 wait_secs = secs_per_frame - frame_time;
         if (wait_secs > 0)
         {
-            GDF_Sleep((u64)(wait_secs * 1000));
+            GDF_ThreadSleep((u64)(wait_secs * 1000));
         }
 
         GDF_Game* game_instance = GDF_GAME_GetInstance();

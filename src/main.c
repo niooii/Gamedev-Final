@@ -8,25 +8,14 @@
 #include "engine/core/os/thread.h"
 #include "game/server.h"
 
-int test_counter = 0;
-GDF_Mutex test_counter_mutex;
-unsigned long thread_test_callback(void* args) 
-{
-    u32 thread_num = *((u32*)args);
-    LOG_WARN("hi from thread %u", thread_num);
-    for (int i = 0; i < 1000000; i++)
-    {
-        GDF_LockMutex(test_counter_mutex);
-        test_counter++;
-        GDF_ReleaseMutex(test_counter_mutex);
-    }
-    LOG_WARN("bye from thread %u", thread_num);
-    return 0;
-}
-
 unsigned long server_thread_wrapper(void* args)
 {
-    world_server_run();
+    WorldServer ctx;
+    WorldServerStartInfo start_info = {
+        .max_clients = 20,
+    };
+    world_server_init(&start_info, &ctx);
+    world_server_run(&ctx);
     return 0;
 }
 
@@ -59,6 +48,7 @@ int main()
     else
     {
         LOG_INFO("CONECTED\n");
+        while(1);
     }
     return 0;
 
@@ -80,24 +70,13 @@ int main()
 
     // // TODO! test bit ops
     // return -1;
-    test_counter_mutex = GDF_CreateMutex();
-    GDF_Thread handles[3];
-    for (u32 i = 0; i < 3; i++)
-    {
-        handles[i] = GDF_CreateThread(thread_test_callback, &i);
-    }
-    for (u32 i = 0; i < 3; i++)
-    {
-        GDF_JoinThread(handles[i]);
-    }
-    printf("COUNTER IS NOW: %d, SHOULD BE 3000000", test_counter);
     // GDF_InitApp();
     // f64 time_ran_for = GDF_RunApp();
     // if (time_ran_for != -1)
     // {
     //     LOG_INFO("App has been running for %lf seconds... Time to rest!", time_ran_for);
     // }
-    // GDF_ShutdownSubsystems();
+    GDF_ShutdownSubsystems();
     return 0;
 }
 

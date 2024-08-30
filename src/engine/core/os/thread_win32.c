@@ -33,6 +33,11 @@ void GDF_JoinThread(GDF_Thread thread)
     WaitForSingleObject(thread->thread_handle, INFINITE);
 }
 
+void GDF_ThreadSleep(u64 ms)
+{
+    Sleep(ms);
+}
+
 GDF_Mutex GDF_CreateMutex()
 {
     HANDLE handle = CreateMutex(NULL, FALSE, NULL);
