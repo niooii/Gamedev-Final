@@ -48,6 +48,7 @@ void GDF_ShutdownMemory()
 
 }
 
+// TODO! make memtag do something or remove it
 void* GDF_Malloc(u64 size, GDF_MEMTAG tag) 
 {
     if (tag == GDF_MEMTAG_UNKNOWN) {
@@ -87,7 +88,7 @@ void GDF_MemZero(void* block, u64 size)
     memzero(block, size);
 }
 
-// TODO!
+// TODO! copy over memtag and shi
 void GDF_MemCopy(void* dest, void* src, u64 size)
 {
     memcpy(dest, src, size);

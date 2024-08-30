@@ -28,6 +28,11 @@ GDF_Thread GDF_CreateThread(unsigned long thread_fn(void*), void* args) {
     return thread;
 }
 
+u32 GDF_GetCurrentThreadId()
+{
+    return GetCurrentThreadId();
+}
+
 void GDF_JoinThread(GDF_Thread thread)
 {
     WaitForSingleObject(thread->thread_handle, INFINITE);

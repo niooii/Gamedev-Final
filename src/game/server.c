@@ -18,6 +18,7 @@ WORLDSERVER_EXIT_CODE listen_for_connections(WorldServer* ctx)
         // add to list
         // ctx->clients[];
         ctx->connected_clients++;
+        LOG_INFO("NEW CLIENT!!");
 
         GDF_ReleaseMutex(ctx->clients_mutex);
     }
@@ -60,6 +61,9 @@ WORLDSERVER_EXIT_CODE world_server_run(WorldServer* ctx)
     {
         World* world = &ctx->world;
         GDF_Stopwatch_Reset(world->world_update_stopwatch);
+        // Broadcast tick event
+        // TODO! packet serialization
+
         // TODO! heavy processing stuff
         int a;
         for (int i = 0; i < 480000000; i++)
@@ -67,6 +71,7 @@ WORLDSERVER_EXIT_CODE world_server_run(WorldServer* ctx)
             a++;
         }
 
+        // Updating world finish, wait for next tick
         f64 t = GDF_Stopwatch_TimeElasped(world->world_update_stopwatch);
         f64 period = 1.f/(world->ticks_per_sec);
         if (t < period)
