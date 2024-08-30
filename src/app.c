@@ -1,8 +1,14 @@
 #include "app.h"
+<<<<<<< HEAD
 #include "engine/core/containers/list.h"
 #include "engine/core/input.h"
 #include "engine/math/math.h"
 #include "engine/core/os/thread.h"
+=======
+#include "core/containers/list.h"
+#include "core/input.h"
+#include "render/vulkan/vk_renderer.h"
+>>>>>>> 677566846b902e7f530c0723741fbcc2aaecfa19
 
 typedef struct AppState {
     bool is_running;
@@ -26,12 +32,14 @@ bool app_on_event(u16 event_code, void *sender, void *listener_instance, GDF_Eve
         case GDF_EVENT_INTERNAL_KEY_PRESSED:
         {
             u16 key_code = ctx.data.u16[0];
+            LOG_DEBUG("KEY PRESSED: %u", key_code);
             if (key_code == GDF_KEYCODE_ESCAPE)
             {
                 GDF_EventContext tmp_ctx = {.data = 0};
                 GDF_EVENT_Fire(GDF_EVENT_INTERNAL_APP_QUIT, NULL, tmp_ctx);
                 return true;
             }
+<<<<<<< HEAD
             switch (key_code) {
                 case GDF_KEYCODE_GRAVE:
                 {
@@ -40,6 +48,11 @@ bool app_on_event(u16 event_code, void *sender, void *listener_instance, GDF_Eve
                     GDF_INPUT_SetMouseLockState(state);
                     LOG_DEBUG("TOGGLE MOUSE LOCK");
                 }
+=======
+            switch (key_code)
+            {
+                
+>>>>>>> 677566846b902e7f530c0723741fbcc2aaecfa19
             }
             break;
         }
@@ -48,7 +61,7 @@ bool app_on_event(u16 event_code, void *sender, void *listener_instance, GDF_Eve
             u16 width = ctx.data.u16[0];
             u16 height = ctx.data.u16[1];
 
-            // Check if different. If so, trigger a resize event.
+            // check if different bc i need to resize renderer and whatnot
             u16 old_w;
             u16 old_h;
             GDF_GetWindowSize(&old_w, &old_h);
@@ -146,6 +159,7 @@ bool GDF_InitApp()
 
 bool GDF_InitFirstLaunch()
 {
+    // TODO! WRITE A BETTER FILE FORMAT THIS ONE SUCKS 
     // if it succeeds, we didnt have an app_settings before and creates one and then saves the default instance of appsettings
     if (GDF_MakeFile("client_settings.gdf"))
     {
@@ -200,8 +214,28 @@ f64 GDF_RunApp()
             GDF_ThreadSleep((u64)(wait_secs * 1000));
         }
 
+<<<<<<< HEAD
         GDF_Game* game_instance = GDF_GAME_GetInstance();
         GDF_GAME_Update(dt);
+=======
+        // TODO! remove later
+        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_A))
+        {
+            yes(-1 * dt);
+        }
+        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_D))
+        {
+            yes(dt);
+        }
+        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_W))
+        {
+            no(dt);
+        }
+        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_S))
+        {
+            no(-1 * dt);
+        }
+>>>>>>> 677566846b902e7f530c0723741fbcc2aaecfa19
 
         GDF_INPUT_Update(dt);
 
