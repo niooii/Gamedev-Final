@@ -23,9 +23,9 @@ int main()
 {
     GDF_InitSubsystems(GDF_SUBSYSTEM_WINDOWING | GDF_SUBSYSTEM_EVENTS | GDF_SUBSYSTEM_INPUT | GDF_SUBSYSTEM_NET);
     
-    // TODO! eventually move to either a dedicated server start or creating a world.
-    GDF_CreateThread(server_thread_wrapper, NULL);
-    GDF_Socket* client = GDF_MakeSocket();
+    // TODO! eventually move to either a dedicated server start or creating a world. 
+    GDF_Thread server_thread = GDF_CreateThread(server_thread_wrapper, NULL);
+    GDF_Socket client = GDF_MakeSocket();
 
     if (!GDF_SocketConnect(client, "127.0.0.1", SERVER_PORT))
     {
@@ -34,9 +34,7 @@ int main()
     else
     {
         printf("CONNECTED!!!!\n");
-        while(1);
     }
-    return 0;
 
     GDF_InitApp();
     f64 time_ran_for = GDF_RunApp();
