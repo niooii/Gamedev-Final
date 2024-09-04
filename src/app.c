@@ -15,7 +15,7 @@ typedef struct AppState {
 
 static bool INITIALIZED = false;
 static AppState APP_STATE;
-static GDF_Window* MAIN_WINDOW;
+static GDF_Window MAIN_WINDOW;
 static bool mouse_lock_toggle = false;
 
 // is gonna be registered for a bunch of events
