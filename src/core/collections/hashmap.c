@@ -16,7 +16,8 @@ GDF_HashMap __hashmap_create(u32 k_stride, u32 v_stride, bool string_keys)
 
 void GDF_HashmapInsert(GDF_HashMap hashmap, void* key, void* value)
 {
-    
+    // TODO! when num entries is almost (0.75 or 0.5)x at capacity, alloc new array
+    // and rehash all entries.    
 }
 
 void* GDF_HashmapGet(GDF_HashMap hashmap, void* key)
