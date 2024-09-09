@@ -48,7 +48,7 @@ void GDF_Free(void* block);
 void GDF_MemZero(void* block, u64 size);
 
 // TODO!
-void GDF_MemCopy(void* dest, void* src, u64 size);
+void GDF_MemCopy(void* dest, const void* src, u64 size);
 
 // TODO!
 void GDF_MemSet(void* block, i32 val, u64 size);

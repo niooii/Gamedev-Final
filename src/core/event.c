@@ -1,5 +1,5 @@
 #include "event.h"
-#include "engine/core/containers/list.h"
+#include "core/collections/list.h"
 
 // represents a registered listener for an event
 typedef struct registered_event {

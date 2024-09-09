@@ -1,5 +1,5 @@
 #include "client/client_settings.h"
-#include "engine/core/serde/serde.h"
+#include "core/serde/serde.h"
 static GDF_ClientSettings settings;
 
 bool GDF_ClientSettings_Load()

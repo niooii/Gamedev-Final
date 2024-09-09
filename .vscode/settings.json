@@ -143,6 +143,9 @@
         "math.h": "c",
         "geometry.h": "c",
         "xlocbuf": "c",
-        "server.h": "c"
+        "server.h": "c",
+        "superfasthash.h": "c",
+        "compare": "c",
+        "tuple": "c"
     },
 }

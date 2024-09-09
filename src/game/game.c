@@ -1,5 +1,5 @@
 #include "game.h"
-#include "engine/core/input.h"
+#include "core/input.h"
 #include "engine/math/math.h"
 #include "engine/math/math_types.h"
 

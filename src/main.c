@@ -1,13 +1,13 @@
 #ifndef COMPILE_BUILDER
 
 #include "game/game.h"
-#include "engine/core/os/misc.h"
+#include "core/os/misc.h"
 #include "app.h"
-#include "engine/core/asserts.h"
-#include "engine/core/subsystems.h"
-#include "engine/core/os/thread.h"
+#include "core/asserts.h"
+#include "core/subsystems.h"
+#include "core/os/thread.h"
 #include "game/server.h"
-#include "engine/core/containers/hashmap.h"
+#include "core/collections/hashmap.h"
 
 unsigned long server_thread_wrapper(void* args)
 {
@@ -37,7 +37,14 @@ int main()
     //     printf("CONNECTED!!!!\n");
     // }
 
-    GDF_HashMap test_map;
+    // test map impl
+    GDF_HashMap test_map = GDF_HashmapCreate(int, int, false);
+    int testval1 = 200400;
+    int testkey1 = 24;
+    GDF_HashmapInsert(test_map, &testkey1, &testval1);
+    int* testval1_p = GDF_HashmapGet(test_map, &testkey1);
+    printf("got val: %d\n", *testval1_p);
+    return 1;
 
     GDF_InitApp();
     f64 time_ran_for = GDF_RunApp();

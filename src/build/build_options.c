@@ -1,7 +1,7 @@
 #ifdef COMPILE_BUILDER
 #include "build_options.h"
-#include "engine/core/serde/serde.h"
-#include "engine/core/os/io.h"
+#include "core/serde/serde.h"
+#include "core/os/io.h"
 
 bool load_build_options(const char* rel_path, BuildOptions* out_opts)
 {

@@ -1,9 +1,9 @@
 #pragma once
 #include "core.h"
-#include "engine/core/os/io.h"
-#include "engine/core/input.h"
+#include "core/os/io.h"
+#include "core/input.h"
 #include "engine/render/vulkan/vk_os.h"
-#include "engine/core/containers/list.h"
+#include "core/collections/list.h"
 
 #define GDF_WIN_CENTERED 32767
 

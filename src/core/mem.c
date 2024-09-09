@@ -89,7 +89,7 @@ void GDF_MemZero(void* block, u64 size)
 }
 
 // TODO! copy over memtag and shi
-void GDF_MemCopy(void* dest, void* src, u64 size)
+void GDF_MemCopy(void* dest, const void* src, u64 size)
 {
     memcpy(dest, src, size);
 }

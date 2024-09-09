@@ -5,8 +5,8 @@
 #include "os/io.h"
 #include "os/window.h"
 #include "os/socket.h"
-#include "engine/core/event.h"
-#include "engine/core/input.h"
+#include "core/event.h"
+#include "core/input.h"
 
 enum {
     GDF_SUBSYSTEM_WINDOWING = 0b00000001,

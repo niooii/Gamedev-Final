@@ -7,11 +7,11 @@
 #include <sys/stat.h>
 #include <direct.h>
 #include "io.h"
-#include "engine/core/subsystems.h"
+#include "core/subsystems.h"
 #include "md5.h"
 #include "build_options.h"
 #include "checksums.h"
-#include "engine/core/serde/serde.h"
+#include "core/serde/serde.h"
 
 #define NUM_CFILES 500
 #define CFILES_STR_LEN NUM_CFILES * MAX_PATH_LEN

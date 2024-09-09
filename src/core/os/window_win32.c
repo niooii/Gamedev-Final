@@ -1,12 +1,12 @@
 #include "window.h"
 
 #ifdef OS_WINDOWS
-#include "engine/core/logging.h"
-#include "engine/core/mem.h"
+#include "core/logging.h"
+#include "core/mem.h"
 #include <windows.h>
 #include <windowsx.h>
 #include <vulkan/vulkan_win32.h>
-#include "engine/core/event.h"
+#include "core/event.h"
 #include <hidusage.h>
 
 const char win_class_name[] = "gdf_window";

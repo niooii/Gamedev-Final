@@ -1,6 +1,6 @@
 #include "input.h"
-#include "engine/core/event.h"
-#include "engine/core/os/window.h"
+#include "core/event.h"
+#include "core/os/window.h"
 #include "engine/math/math_types.h"
 // TODO! yes yes i know this will go away later.
 #include <windows.h>

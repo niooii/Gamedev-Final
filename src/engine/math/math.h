@@ -1,7 +1,7 @@
 #pragma once
 
 #include "def.h"
-#include "engine/core/mem.h"
+#include "core/mem.h"
 #include "math_types.h"
 
 #define PI 3.14159265358979323846f

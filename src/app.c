@@ -1,8 +1,8 @@
 #include "app.h"
-#include "engine/core/containers/list.h"
-#include "engine/core/input.h"
+#include "core/collections/list.h"
+#include "core/input.h"
 #include "engine/math/math.h"
-#include "engine/core/os/thread.h"
+#include "core/os/thread.h"
 
 typedef struct AppState {
     bool is_running;

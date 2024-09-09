@@ -2,7 +2,7 @@
 #include "renderer_backend.h"
 
 #include "core.h"
-#include "engine/core/os/window.h"
+#include "core/os/window.h"
 
 // Backend render context.
 static renderer_backend* backend = NULL;

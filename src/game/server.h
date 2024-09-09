@@ -1,7 +1,7 @@
 #pragma once
 #include "core.h"
-#include "engine/core/os/socket.h"
-#include "engine/core/os/thread.h"
+#include "core/os/socket.h"
+#include "core/os/thread.h"
 #include "world/world.h"
 
 // NOT MINECRFT CLONE I SWEAR
