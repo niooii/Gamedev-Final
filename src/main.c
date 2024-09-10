@@ -51,6 +51,22 @@ int main()
     // should fail, duplicate key
     GDF_ASSERT(!GDF_HashmapInsert(map, &key2, &val1));
     LOG_INFO("got val2: %d", *val2_p);
+
+    // key iteration test
+    HashMapEntry* iter1 = GDF_HashmapIter(map);
+    GDF_ASSERT(iter1 != NULL)
+    for (; iter1 != NULL; GDF_HashmapIterNext(&iter1))
+    {
+        LOG_INFO("1 key: %d, val: %d", *((int*)iter1->key), *((int*)iter1->val));
+    }
+    GDF_HashmapRemove(map, &key1);
+    HashMapEntry* iter2 = GDF_HashmapIter(map);
+    GDF_ASSERT(iter2 != NULL)
+    for (; iter2 != NULL; GDF_HashmapIterNext(&iter2))
+    {
+        LOG_INFO("2 key: %d, val: %d", *((int*)iter2->key), *((int*)iter2->val));
+    }
+    LOG_INFO("tests finish");
     return 1;
 
     GDF_InitApp();

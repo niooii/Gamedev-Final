@@ -11,48 +11,17 @@ typedef struct GDF_HashMap_T {
     HashMapEntry* bucket;
 } GDF_HashMap_T;
 
-static uint32_t SuperFastHash (const char * data, int len) {
-uint32_t hash = (uint32_t)len, tmp;
-int rem;
-    if (len <= 0 || data == NULL) return 0;
-    rem = len & 3;
-    len >>= 2;
-    /* Main loop */
-    for (;len > 0; len--) {
-        hash  += get16bits (data);
-        tmp    = (uint32_t)(get16bits (data+2) << 11) ^ hash;
-        hash   = (hash << 16) ^ tmp;
-        data  += 2*sizeof (uint16_t);
-        hash  += hash >> 11;
-    }
-    /* Handle end cases */
-    switch (rem) {
-        case 3: hash += get16bits (data);
-                hash ^= hash << 16;
-                hash ^= (uint32_t)(signed char)data[sizeof (uint16_t)] << 18;
-                hash += hash >> 11;
-                break;
-        case 2: hash += get16bits (data);
-                hash ^= hash << 11;
-                hash += hash >> 17;
-                break;
-        case 1: hash += (uint32_t)((signed char)*data);
-                hash ^= hash << 10;
-                hash += hash >> 1;
-    }
-    /* Force "avalanching" of final 127 bits */
-    hash ^= hash << 3;
-    hash += hash >> 5;
-    hash ^= hash << 4;
-    hash += hash >> 17;
-    hash ^= hash << 25;
-    hash += hash >> 6;
-    return hash;
-}
-
 static FORCEINLINE u32 __get_idx(GDF_HashMap hashmap, void* key)
 {
     return SuperFastHash((const char*)key, hashmap->k_stride) % hashmap->capacity;
+}
+
+static FORCEINLINE void __free_mapentry(HashMapEntry* map_entry)
+{
+    GDF_Free(map_entry->key);
+    map_entry->key = NULL;
+    GDF_Free(map_entry->val);
+    map_entry->val = NULL;
 }
 
 GDF_HashMap __hashmap_create(u32 k_stride, u32 v_stride, bool string_keys)
@@ -101,6 +70,7 @@ bool GDF_HashmapInsert(GDF_HashMap hashmap, void* key, void* value)
     GDF_MemCopy(bucket[idx].key, key, hashmap->k_stride);
     bucket[idx].val = GDF_Malloc(hashmap->v_stride, GDF_MEMTAG_APPLICATION);
     GDF_MemCopy(bucket[idx].val, value, hashmap->v_stride);
+    hashmap->num_entries++;
 
     return true;
 }
@@ -132,7 +102,20 @@ void GDF_HashmapRemove(GDF_HashMap hashmap, void* key)
     if (key == NULL)
         return;
 
-    // TODO!
+    HashMapEntry* bucket = hashmap->bucket;
+    u32 start_idx = __get_idx(hashmap, key);
+
+    for (u32 i = 0, idx; i < hashmap->capacity && bucket[(
+        (idx = (start_idx + i) % hashmap->capacity) 
+    )].key != NULL; i++)
+    {
+        if (memcmp(bucket[idx].key, key, hashmap->k_stride) == 0)
+        {
+            __free_mapentry(&bucket[idx]);
+            hashmap->num_entries--;
+            return;
+        } 
+    }
 }
 
 HashMapEntry* GDF_HashmapIter(GDF_HashMap hashmap)

@@ -156,8 +156,14 @@ int main(int argc, char *argv[]) {
     
     char path[400];
     GDF_GetAbsolutePath(build_options->src_dir, path);
+    char extern_path[400];
+    GDF_GetAbsolutePath("extern", extern_path);
     // ----
     get_cfile_names(path, c_files);
+    // grab from extern dir
+    // THIS NEEDS A HUGE REWORK.
+    get_cfile_names(extern_path, strrchr(c_files, '|') + 1);
+    LOG_DEBUG("%s", c_files);
 
     // compare files with the stored hashes
     // or just rebuild if the hash doesnt exist
