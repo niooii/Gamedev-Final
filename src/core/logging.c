@@ -5,28 +5,47 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include "core/collections/hashmap.h"
+#include "core/os/thread.h"
 
 #define BUF_SIZE 32768
 static char* OUT_MSG;   
 static char* PREPENDED_OUT_MSG;
 static bool INITIALIZED = false;
+static GDF_HashMap thread_info_map = NULL;
 
 const char* level_strings[6] = 
 {
-    "[FATAL]: ",
-    "[ERROR]: ",
-    "[WARN]:  ",
-    "[INFO]:  ",
-    "[DEBUG]: ",
-    "[TRACE]: ",
+    "FATAL: ",
+    "ERROR: ",
+    "WARN:  ",
+    "INFO:  ",
+    "DEBUG: ",
+    "TRACE: ",
 };
 
-bool GDF_InitLogging() 
+typedef struct ThreadLoggingInfo {
+    const char* thread_name;
+} ThreadLoggingInfo;
+
+bool GDF_InitThreadLogging(const char* thread_name) 
 {
     OUT_MSG = GDF_Malloc(BUF_SIZE, GDF_MEMTAG_STRING);
     PREPENDED_OUT_MSG = GDF_Malloc(BUF_SIZE, GDF_MEMTAG_STRING);
+    
+    if (thread_info_map == NULL)
+    {
+        thread_info_map = GDF_HashmapCreate(u32, ThreadLoggingInfo, false);
+    }
 
-    LOG_INFO("Logging system initialized!");
+    ThreadLoggingInfo info = {
+        .thread_name = thread_name
+    };
+    
+    u32 thread_id = GDF_GetCurrentThreadId();
+    GDF_HashmapInsert(thread_info_map, &thread_id, &info);
+
+    LOG_INFO("Logging initialized for thread %s...", thread_name);
     
     // TODO! create log file.
     INITIALIZED = true;
@@ -53,8 +72,10 @@ void log_output(log_level level, const char* message, ...)
     va_start(arg_ptr, message);
     vsnprintf(OUT_MSG, BUF_SIZE, message, arg_ptr);
     va_end(arg_ptr);
+    u32 thread_id = GDF_GetCurrentThreadId();
+    ThreadLoggingInfo* info = GDF_HashmapGet(thread_info_map, &thread_id);
 
-    sprintf(PREPENDED_OUT_MSG, "%s%s\n", level_strings[level], OUT_MSG);
+    sprintf(PREPENDED_OUT_MSG, "[THREAD %s] %s %s\n", info->thread_name, level_strings[level], OUT_MSG);
 
     GDF_WriteConsole(PREPENDED_OUT_MSG, level);
 }

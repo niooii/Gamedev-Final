@@ -26,12 +26,12 @@ typedef enum log_level {
     LOG_LEVEL_TRACE
 } log_level;
 
-bool GDF_InitLogging();
+bool GDF_InitThreadLogging();
 void GDF_ShutdownLogging();
 
 // #define  __declspec(dllexport)
 
- void log_output(log_level level, const char* message, ...);
+void log_output(log_level level, const char* message, ...);
 
 // should be available wherever lol unlucky
 #define LOG_FATAL(message, ...) log_output(LOG_LEVEL_FATAL, message, ##__VA_ARGS__);

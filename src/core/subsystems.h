@@ -21,10 +21,6 @@ static u32 _flags;
 static bool GDF_InitSubsystems(u32 flags)
 {
     _flags = flags;
-    if (!GDF_InitMemory())
-        return false;
-    if (!GDF_InitLogging())
-        return false;
     GDF_InitIO();
     if (!GDF_InitInfo())
         return false;
