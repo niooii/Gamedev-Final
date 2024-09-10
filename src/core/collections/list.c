@@ -67,12 +67,13 @@ void* __list_remove_at(void* list, u64 index, void* dest) {
     u64 length = GDF_LIST_GetLength(list);
     u64 stride = GDF_LIST_GetStride(list);
     if (index >= length) {
-        LOG_ERR("Invalid index. List len: %i, index: %index", length, index);
+        LOG_ERR("Invalid index. List len: %i, index: %i", length, index);
         return list;
     }
 
     u64 addr = (u64)list;
-    GDF_MemCopy(dest, (void*)(addr + (index * stride)), stride);
+    if (dest != NULL)
+        GDF_MemCopy(dest, (void*)(addr + (index * stride)), stride);
 
     // If not on the last element, snip out the entry and copy the rest inward.
     if (index != length - 1) {

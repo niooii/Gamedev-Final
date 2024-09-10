@@ -60,6 +60,8 @@ void* __list_insert_at(void* list, u64 index, void* value_ptr);
         list = __list_insert_at(list, index, &temp);     \
     }
 
+// Removes an element at an index from the list. 
+// out_val_p must be a valid pointer, or may be NULL if the removed value is to be ignored.
 #define GDF_LIST_Remove(list, index, out_val_p) \
     __list_remove_at(list, index, out_val_p)
 

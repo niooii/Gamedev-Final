@@ -59,7 +59,7 @@ int main()
     {
         LOG_INFO("1 key: %d, val: %d", *((int*)iter1->key), *((int*)iter1->val));
     }
-    GDF_HashmapRemove(map, &key1);
+    GDF_HashmapRemove(map, &key1, NULL);
     HashMapEntry* iter2 = GDF_HashmapIter(map);
     GDF_ASSERT(iter2 != NULL)
     for (; iter2 != NULL; GDF_HashmapIterNext(&iter2))

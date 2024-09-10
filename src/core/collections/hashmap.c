@@ -97,10 +97,13 @@ void* GDF_HashmapGet(GDF_HashMap hashmap, void* key)
     return NULL;
 }
 
-void GDF_HashmapRemove(GDF_HashMap hashmap, void* key)
+void GDF_HashmapRemove(GDF_HashMap hashmap, void* key, void* out_val_p)
 {
     if (key == NULL)
+    {
+        out_val_p = NULL;
         return;
+    }
 
     HashMapEntry* bucket = hashmap->bucket;
     u32 start_idx = __get_idx(hashmap, key);
@@ -111,11 +114,17 @@ void GDF_HashmapRemove(GDF_HashMap hashmap, void* key)
     {
         if (memcmp(bucket[idx].key, key, hashmap->k_stride) == 0)
         {
+            if (out_val_p != NULL)
+            {
+                GDF_MemCopy(out_val_p, bucket[idx].val, hashmap->v_stride);
+            }
             __free_mapentry(&bucket[idx]);
             hashmap->num_entries--;
             return;
         } 
     }
+    out_val_p = NULL;
+    return;
 }
 
 HashMapEntry* GDF_HashmapIter(GDF_HashMap hashmap)
