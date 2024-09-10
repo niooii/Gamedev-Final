@@ -146,6 +146,7 @@
         "server.h": "c",
         "superfasthash.h": "c",
         "compare": "c",
-        "tuple": "c"
+        "tuple": "c",
+        "hashmap.h": "c"
     },
 }

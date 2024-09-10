@@ -38,12 +38,19 @@ int main()
     // }
 
     // test map impl
-    GDF_HashMap test_map = GDF_HashmapCreate(int, int, false);
-    int testval1 = 200400;
-    int testkey1 = 24;
-    GDF_HashmapInsert(test_map, &testkey1, &testval1);
-    int* testval1_p = GDF_HashmapGet(test_map, &testkey1);
-    printf("got val: %d\n", *testval1_p);
+    GDF_HashMap map = GDF_HashmapCreate(int, int, false);
+    int key1 = 24;
+    int val1 = 200400;
+    GDF_ASSERT(GDF_HashmapInsert(map, &key1, &val1));
+    int* val1_p = GDF_HashmapGet(map, &key1);
+    LOG_INFO("got val1: %d", *val1_p);
+    int key2 = 223434;
+    int val2 = 343435;
+    GDF_ASSERT(GDF_HashmapInsert(map, &key2, &val2));
+    int* val2_p = GDF_HashmapGet(map, &key2);
+    // should fail, duplicate key
+    GDF_ASSERT(!GDF_HashmapInsert(map, &key2, &val1));
+    LOG_INFO("got val2: %d", *val2_p);
     return 1;
 
     GDF_InitApp();
