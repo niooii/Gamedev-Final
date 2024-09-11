@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core.h"
-#include "os/misc.h"
+#include "os/sysinfo.h"
 #include "os/io.h"
 #include "os/window.h"
 #include "os/socket.h"

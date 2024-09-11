@@ -2,7 +2,7 @@
 #include "core.h"
 #include "core/logging.h"
 #include "core/os/window.h"
-#include "core/os/misc.h"
+#include "core/os/sysinfo.h"
 #include "core/os/io.h"
 #include "core/subsystems.h"
 #include "core/serde/serde.h"

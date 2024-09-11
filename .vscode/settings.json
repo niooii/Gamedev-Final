@@ -147,6 +147,7 @@
         "superfasthash.h": "c",
         "compare": "c",
         "tuple": "c",
-        "hashmap.h": "c"
+        "hashmap.h": "c",
+        "timeb.h": "c"
     },
 }

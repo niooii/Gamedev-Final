@@ -5,8 +5,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <stdarg.h>
+#include <sys/timeb.h>
+#include <sys/types.h>
 #include "core/collections/hashmap.h"
 #include "core/os/thread.h"
+#include "core/os/sysinfo.h"
 
 #define BUF_SIZE 32768
 static char* OUT_MSG;   
@@ -74,8 +77,11 @@ void log_output(log_level level, const char* message, ...)
     va_end(arg_ptr);
     u32 thread_id = GDF_GetCurrentThreadId();
     ThreadLoggingInfo* info = GDF_HashmapGet(thread_info_map, &thread_id);
-
-    sprintf(PREPENDED_OUT_MSG, "[THREAD %s] %s %s\n", info->thread_name, level_strings[level], OUT_MSG);
+    GDF_DateTime datetime;
+    GDF_GetSystemTime(&datetime);
+    char timebuf[80];
+    sprintf(timebuf, "%u:%u.%u", datetime.minute, datetime.second, datetime.milli);
+    sprintf(PREPENDED_OUT_MSG, "[THREAD %s at %s] %s %s\n", info->thread_name, timebuf, level_strings[level], OUT_MSG);
 
     GDF_WriteConsole(PREPENDED_OUT_MSG, level);
 }

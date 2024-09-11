@@ -1,7 +1,7 @@
 #ifndef COMPILE_BUILDER
 
 #include "game/game.h"
-#include "core/os/misc.h"
+#include "core/os/sysinfo.h"
 #include "app.h"
 #include "core/asserts.h"
 #include "core/subsystems.h"
@@ -71,7 +71,6 @@ int main()
         LOG_INFO("2 key: %d, val: %d", *((int*)iter2->key), *((int*)iter2->val));
     }
     LOG_INFO("tests finish");
-    return 1;
 
     GDF_InitApp();
     f64 time_ran_for = GDF_RunApp();

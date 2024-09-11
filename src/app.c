@@ -100,7 +100,8 @@ bool GDF_InitApp()
         return false;
     }
 
-    GDF_DisplayInfo display_info = GDF_GetDisplayInfo();
+    GDF_DisplayInfo display_info;
+    GDF_GetDisplayInfo(&display_info);
     MAIN_WINDOW = GDF_CreateWindow(GDF_WIN_CENTERED, GDF_WIN_CENTERED, display_info.screen_width * 0.45, display_info.screen_height * 0.5, "A GDF");
     if (MAIN_WINDOW != NULL)
         LOG_INFO("Created window.");

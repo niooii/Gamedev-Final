@@ -1,4 +1,4 @@
-#include "misc.h"
+#include "sysinfo.h"
 
 #ifdef OS_LINUX
 
