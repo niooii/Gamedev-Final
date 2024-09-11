@@ -80,8 +80,8 @@ void log_output(log_level level, const char* message, ...)
     GDF_DateTime datetime;
     GDF_GetSystemTime(&datetime);
     char timebuf[80];
-    sprintf(timebuf, "%u:%u.%u", datetime.minute, datetime.second, datetime.milli);
-    sprintf(PREPENDED_OUT_MSG, "[THREAD %s at %s] %s %s\n", info->thread_name, timebuf, level_strings[level], OUT_MSG);
+    sprintf(timebuf, "%02u:%02u:%02u.%03u", datetime.hour, datetime.minute, datetime.second, datetime.milli);
+    sprintf(PREPENDED_OUT_MSG, "[THREAD \"%s\" | %s] %s %s\n", info->thread_name, timebuf, level_strings[level], OUT_MSG);
 
     GDF_WriteConsole(PREPENDED_OUT_MSG, level);
 }

@@ -148,6 +148,7 @@
         "compare": "c",
         "tuple": "c",
         "hashmap.h": "c",
-        "timeb.h": "c"
+        "timeb.h": "c",
+        "carr.h": "c"
     },
 }

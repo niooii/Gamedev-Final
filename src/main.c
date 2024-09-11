@@ -11,6 +11,7 @@
 
 unsigned long server_thread_wrapper(void* args)
 {
+    GDF_InitThreadLogging("Server");
     WorldServer ctx;
     WorldServerStartInfo start_info = {
         .max_clients = 20,
@@ -24,7 +25,7 @@ int main()
 {
     if (!GDF_InitMemory())
         return false;
-    if (!GDF_InitThreadLogging("MAIN"))
+    if (!GDF_InitThreadLogging("Main"))
         return false;
     GDF_InitSubsystems(GDF_SUBSYSTEM_WINDOWING | GDF_SUBSYSTEM_EVENTS | GDF_SUBSYSTEM_INPUT | GDF_SUBSYSTEM_NET);
     
