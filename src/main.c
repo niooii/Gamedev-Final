@@ -8,6 +8,7 @@
 #include "core/os/thread.h"
 #include "game/server.h"
 #include "core/collections/hashmap.h"
+#include "core/collections/carr.h"
 
 unsigned long server_thread_wrapper(void* args)
 {
@@ -41,7 +42,27 @@ int main()
     // {
     //     printf("CONNECTED!!!!\n");
     // }
+    // test carr impl
+    GDF_CArray arr = GDF_CArrayCreate(f64, 2000000);
+    GDF_Stopwatch* benchmarker = GDF_Stopwatch_Create();
+    u32 r_iterations = 0;
+    for (int i = 0; i < 2000000; i++)
+    {
+        f64* entry = GDF_CArrayWriteNext(arr);
+        *entry = i;
+    }
+    LOG_INFO("write ops took %lf seconds..", GDF_Stopwatch_TimeElasped(benchmarker));
 
+    GDF_Stopwatch_Reset(benchmarker);
+    int sum;
+    for (const f64* fp = GDF_CArrayReadNext(arr); fp != NULL; fp = GDF_CArrayReadNext(arr))
+    {
+        r_iterations++;
+        sum+=*fp;
+    }
+    LOG_INFO("read ops took %lf seconds..", GDF_Stopwatch_TimeElasped(benchmarker));
+    LOG_INFO("read iters: %u", r_iterations);
+    return 1;
     // test map impl
     GDF_HashMap map = GDF_HashmapCreate(int, int, false);
     int key1 = 24;

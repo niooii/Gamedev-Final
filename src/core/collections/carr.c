@@ -6,6 +6,7 @@ typedef struct GDF_CArray_T {
     u32 capacity;
     u32 stride;
     void* data;
+    bool* ready;
 } GDF_CArray_T;
 
 GDF_CArray __create_carray(u32 stride, u32 capacity)
@@ -15,15 +16,29 @@ GDF_CArray __create_carray(u32 stride, u32 capacity)
     buf->next_write_idx = 0;
     buf->capacity = capacity;
     buf->stride = stride;
+    buf->ready = GDF_Malloc(sizeof(bool) * capacity, GDF_MEMTAG_APPLICATION);
     buf->data = GDF_Malloc(stride * capacity, GDF_MEMTAG_APPLICATION);
+    
     return buf;
 }
 
 void* GDF_CArrayWriteNext(GDF_CArray arr)
 {
-    // TODO!
+    arr->ready[arr->next_write_idx] = true;
+    void* data = &arr->data[arr->next_write_idx];
+    // Wrap around index
+    arr->next_write_idx = (arr->next_write_idx + 1) % arr->capacity;
+    return data;
 }
+
 const void const* GDF_CArrayReadNext(GDF_CArray arr)
 {
-    // TODO!
+    bool* ready = &arr->ready[arr->next_read_idx];
+    if (!*ready)
+        return NULL;
+    *ready = false;
+    const void const* data = &arr->data[arr->next_read_idx];
+    // Wrap around index
+    arr->next_read_idx = (arr->next_read_idx + 1) % arr->capacity;
+    return data;
 }
