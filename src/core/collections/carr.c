@@ -42,3 +42,8 @@ const void* const GDF_CArrayReadNext(GDF_CArray arr)
     arr->next_read_idx = (arr->next_read_idx + 1) % arr->capacity;
     return data;
 }
+
+void* GDF_CArrayGetData(GDF_CArray arr)
+{
+    return arr->data;
+}

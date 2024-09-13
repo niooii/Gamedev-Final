@@ -59,13 +59,12 @@ unsigned long flushing_thread_fn(void*)
             // TODO! optimized IO
             GDF_LockMutex(entries_mutex);
             for (
-                LogEntry* entry = GDF_CArrayReadNext(entries); 
+                const LogEntry* entry = GDF_CArrayReadNext(entries); 
                 entry != NULL; 
                 entry = GDF_CArrayReadNext(entries)
             )
             {
-                // TODO! shit doesnt even work LOL
-                GDF_WriteConsole(entry->message, 0);
+                GDF_WriteConsole(entry->message, entry->level);
             }
             GDF_ReleaseMutex(entries_mutex);
         }
@@ -80,16 +79,12 @@ bool GDF_InitLogging()
     ti_map = GDF_HashmapCreate(u32, ThreadLoggingInfo, false);
 
     int i = 0;
-    for (
-        LogEntry* entry = GDF_CArrayWriteNext(entries); 
-        i < CYCLIC_BUFFER_CAPACITY; 
-        entry = GDF_CArrayWriteNext(entries), i++
-    )
+    LogEntry* data = GDF_CArrayGetData(entries);
+    for (int i = 0; i < CYCLIC_BUFFER_CAPACITY; i++)
     {
-        entry->level = 0;
         // max thread name 128 chars long.. no way right
-        entry->thread_name = GDF_Malloc(128, GDF_MEMTAG_STRING);
-        entry->message = GDF_Malloc(MAX_MSG_LEN, GDF_MEMTAG_STRING);
+        (data+i)->thread_name = GDF_Malloc(128, GDF_MEMTAG_STRING);
+        (data+i)->message = GDF_Malloc(MAX_MSG_LEN, GDF_MEMTAG_STRING);
     }
 
     printf("FINISH INIT...");

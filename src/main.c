@@ -28,9 +28,7 @@ int main()
         return false;
     if (!GDF_InitLogging() || !GDF_InitThreadLogging("Main"))
         return false;
-    printf("AM I");
     LOG_INFO("hi chat");
-    printf("COOKED?");
     GDF_InitSubsystems(GDF_SUBSYSTEM_WINDOWING | GDF_SUBSYSTEM_EVENTS | GDF_SUBSYSTEM_INPUT | GDF_SUBSYSTEM_NET);
     
     // TODO! eventually move to either a dedicated server start or creating a world. 
