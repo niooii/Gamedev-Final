@@ -28,6 +28,7 @@ WORLDSERVER_EXIT_CODE listen_for_connections(WorldServer* ctx)
 
 unsigned long client_accepting_thread_wrapper(void* args)
 {
+    GDF_InitThreadLogging("ClientListener");
     WorldServer* ctx = (WorldServer*)args;
     listen_for_connections(ctx);
 }
@@ -66,7 +67,7 @@ WORLDSERVER_EXIT_CODE world_server_run(WorldServer* ctx)
 
         // TODO! heavy processing stuff
         int a;
-        for (int i = 0; i < 480000000; i++)
+        for (int i = 0; i < 4800000; i++)
         {
             a++;
         }
@@ -75,7 +76,13 @@ WORLDSERVER_EXIT_CODE world_server_run(WorldServer* ctx)
         f64 t = GDF_Stopwatch_TimeElasped(world->world_update_stopwatch);
         f64 period = 1.f/(world->ticks_per_sec);
         if (t < period)
+        {
             GDF_ThreadSleep(1000.f * (period - t));
+        }
+        else
+        {
+            LOG_WARN("Server fell behind by %0.3lfs...", t - period);
+        }
         
         LOG_INFO("UPDATE");
     }

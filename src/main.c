@@ -32,17 +32,17 @@ int main()
     GDF_InitSubsystems(GDF_SUBSYSTEM_WINDOWING | GDF_SUBSYSTEM_EVENTS | GDF_SUBSYSTEM_INPUT | GDF_SUBSYSTEM_NET);
     
     // TODO! eventually move to either a dedicated server start or creating a world. 
-    // GDF_Thread server_thread = GDF_CreateThread(server_thread_wrapper, NULL);
-    // GDF_Socket client = GDF_MakeSocket();
+    GDF_Thread server_thread = GDF_CreateThread(server_thread_wrapper, NULL);
+    GDF_Socket client = GDF_MakeSocket();
 
-    // if (!GDF_SocketConnect(client, "127.0.0.1", SERVER_PORT))
-    // {
-    //     LOG_ERR("FALIED TO CONNECT");
-    // }
-    // else
-    // {
-    //     printf("CONNECTED!!!!\n");
-    // }
+    if (!GDF_SocketConnect(client, "127.0.0.1", SERVER_PORT))
+    {
+        LOG_ERR("FALIED TO CONNECT");
+    }
+    else
+    {
+        LOG_INFO("CONNECTED!!!!\n");
+    }
     // test carr impl
     GDF_CArray arr = GDF_CArrayCreate(f64, 2000000);
     GDF_Stopwatch* benchmarker = GDF_Stopwatch_Create();

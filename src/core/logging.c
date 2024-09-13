@@ -67,7 +67,7 @@ unsigned long flushing_thread_fn(void*)
                 snprintf(
                     buf, 
                     MAX_MSG_LEN, 
-                    "[THREAD \"%s\" | %02d:%02d:%02d:%03d] %s %s\n",
+                    "[%s @ %02d:%02d:%02d.%03d] %s %s\n",
                     entry->thread_name,
                     entry->time.hour,
                     entry->time.minute,
@@ -99,8 +99,6 @@ bool GDF_InitLogging()
         (data+i)->message = GDF_Malloc(MAX_MSG_LEN, GDF_MEMTAG_STRING);
     }
 
-    printf("FINISH INIT...");
-
     flushing_thread = GDF_CreateThread(flushing_thread_fn, NULL);
 
     INITIALIZED = true;
@@ -126,7 +124,8 @@ bool GDF_InitThreadLogging(const char* thread_name)
     GDF_LockMutex(ti_mutex);
     GDF_HashmapInsert(ti_map, &thread_id, &info);
     GDF_ReleaseMutex(ti_mutex);
-
+    
+    // printf("init thread id: %d, name: %s\n", thread_id, thread_name);
     return true;
 }
 
@@ -151,6 +150,21 @@ void log_output(log_level level, const char* message, ...)
         LOG_FATAL("so mutex lock grabbing failed gg");
     }
     LogEntry* entry = GDF_CArrayWriteNext(entries);
+
+    u32 thread_id = GDF_GetCurrentThreadId();
+    GDF_LockMutex(ti_mutex);
+    ThreadLoggingInfo* info = (ThreadLoggingInfo*)GDF_HashmapGet(ti_map, &thread_id);
+    if (info == NULL)
+    {
+        printf("Failed thread id: %d\n", thread_id);
+        printf("Message: %s", message);
+        GDF_ReleaseMutex(entries_mutex);
+        GDF_ReleaseMutex(ti_mutex);
+        return;
+    }
+    entry->thread_name = info->thread_name;
+    GDF_ReleaseMutex(ti_mutex);
+
     entry->level = level;
     __builtin_va_list arg_ptr;
     va_start(arg_ptr, message);
@@ -158,11 +172,6 @@ void log_output(log_level level, const char* message, ...)
     va_end(arg_ptr);
 
     GDF_GetSystemTime(&entry->time);
-
-    u32 thread_id = GDF_GetCurrentThreadId();
-    GDF_LockMutex(ti_mutex);
-    entry->thread_name = ((ThreadLoggingInfo*)GDF_HashmapGet(ti_map, &thread_id))->thread_name;
-    GDF_ReleaseMutex(ti_mutex);
 
     // TODO! this could fail too
     GDF_ReleaseMutex(entries_mutex);
