@@ -24,9 +24,7 @@ unsigned long server_thread_wrapper(void* args)
 
 int main()
 {
-    if (!GDF_InitMemory())
-        return false;
-    if (!GDF_InitThreadLogging("Main"))
+    if (!GDF_InitMemory() || !GDF_InitLogging() || !GDF_InitThreadLogging("Main"))
         return false;
     GDF_InitSubsystems(GDF_SUBSYSTEM_WINDOWING | GDF_SUBSYSTEM_EVENTS | GDF_SUBSYSTEM_INPUT | GDF_SUBSYSTEM_NET);
     

@@ -26,6 +26,7 @@ typedef enum log_level {
     LOG_LEVEL_TRACE
 } log_level;
 
+bool GDF_InitLogging();
 bool GDF_InitThreadLogging(const char* thread_name);
 void GDF_ShutdownLogging();
 
