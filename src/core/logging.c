@@ -12,14 +12,18 @@
 #include "core/os/thread.h"
 #include "core/os/sysinfo.h"
 
-#define BUF_SIZE 32768
-#define CYCLIC_BUFFER_CAPACITY 8192
+#define MAX_MSG_LEN 16384
+#define CYCLIC_BUFFER_CAPACITY 2048
+
+// holy globals
 static char* OUT_MSG;   
 static char* PREPENDED_OUT_MSG;
 static bool INITIALIZED = false;
-static GDF_HashMap thread_info_map = NULL;
+static GDF_HashMap ti_map = NULL;
+static GDF_Mutex ti_mutex = NULL;
 static GDF_CArray entries = NULL;
 static GDF_Mutex entries_mutex = NULL;
+static GDF_Thread flushing_thread = NULL;
 
 const char* level_strings[6] = 
 {
@@ -42,11 +46,58 @@ typedef struct ThreadLoggingInfo {
     const char* thread_name;
 } ThreadLoggingInfo;
 
+unsigned long flushing_thread_fn(void*)
+{
+    GDF_Stopwatch* stopwatch = GDF_Stopwatch_Create();
+
+    while(1)
+    {
+        // TODO! create timer abstraction to run functions periodically
+        // if (GDF_Stopwatch_TimeElasped(stopwatch) > 0)
+        // {
+        //     // TODO! optimized IO
+        //     GDF_LockMutex(entries_mutex);
+        //     for (
+        //         LogEntry* entry = GDF_CArrayWriteNext(entries); 
+        //         entry->message == NULL; 
+        //         entry = GDF_CArrayWriteNext(entries)
+        //     )
+        //     {
+        //         printf("%s", entry->message);
+        //     }
+        //     GDF_ReleaseMutex(entries_mutex);
+        // }
+    }
+}
+
 bool GDF_InitLogging()
 {
     entries_mutex = GDF_CreateMutex();
     entries = GDF_CArrayCreate(LogEntry, CYCLIC_BUFFER_CAPACITY);
-    thread_info_map = GDF_HashmapCreate(u32, ThreadLoggingInfo, false);
+    ti_mutex = GDF_CreateMutex();
+    ti_map = GDF_HashmapCreate(u32, ThreadLoggingInfo, false);
+
+    int i = 0;
+    for (
+        LogEntry* entry = GDF_CArrayWriteNext(entries); 
+        i < CYCLIC_BUFFER_CAPACITY; 
+        entry = GDF_CArrayWriteNext(entries), i++
+    )
+    {
+        printf("old addr: %lu\n", (u64)entry->message);
+        entry->level = 0;
+        // max thread name 128 chars long.. no way right
+        entry->thread_name = GDF_Malloc(128, GDF_MEMTAG_STRING);;
+        entry->message = GDF_Malloc(MAX_MSG_LEN, GDF_MEMTAG_STRING);
+        printf("new addr: %lu\n", (u64)entry->message);
+    }
+
+    printf("FINISH INIT...");
+
+    // flushing_thread = GDF_CreateThread(flushing_thread_fn, NULL);
+
+    INITIALIZED = true;
+
     return true;
 }
 
@@ -58,18 +109,17 @@ bool GDF_InitThreadLogging(const char* thread_name)
      * Separpate thread will be obtaining the cyclic array lock at regular intervals,
      * and reading everything and printing it, aka flushing the entry buffer.
      */
-    OUT_MSG = GDF_Malloc(BUF_SIZE, GDF_MEMTAG_STRING);
-    PREPENDED_OUT_MSG = GDF_Malloc(BUF_SIZE, GDF_MEMTAG_STRING);
     
     ThreadLoggingInfo info = {
         .thread_name = thread_name
     };
     
     u32 thread_id = GDF_GetCurrentThreadId();
-    GDF_HashmapInsert(thread_info_map, &thread_id, &info);
+    
+    GDF_LockMutex(ti_mutex);
+    GDF_HashmapInsert(ti_map, &thread_id, &info);
+    GDF_ReleaseMutex(ti_mutex);
 
-    // TODO! create log file.
-    INITIALIZED = true;
     return true;
 }
 
@@ -87,7 +137,6 @@ void log_output(log_level level, const char* message, ...)
     {
         return;
     }
-    memset(OUT_MSG, 0, BUF_SIZE);
 
     // Get mutex lock
     if (!GDF_LockMutex(entries_mutex))
@@ -96,24 +145,20 @@ void log_output(log_level level, const char* message, ...)
     }
     LogEntry* entry = GDF_CArrayWriteNext(entries);
     entry->level = level;
-    entry->message = message;
-    GDF_GetSystemTime(&entry->time);
-    // TODO! this could fail too
-    GDF_ReleaseMutex(entries_mutex);
-
     __builtin_va_list arg_ptr;
     va_start(arg_ptr, message);
-    vsnprintf(OUT_MSG, BUF_SIZE, message, arg_ptr);
+    vsnprintf(entry->message, MAX_MSG_LEN, message, arg_ptr);
     va_end(arg_ptr);
-    u32 thread_id = GDF_GetCurrentThreadId();
-    ThreadLoggingInfo* info = GDF_HashmapGet(thread_info_map, &thread_id);
-    GDF_DateTime datetime;
-    GDF_GetSystemTime(&datetime);
-    char timebuf[80];
-    sprintf(timebuf, "%02u:%02u:%02u.%03u", datetime.hour, datetime.minute, datetime.second, datetime.milli);
-    sprintf(PREPENDED_OUT_MSG, "[THREAD \"%s\" | %s] %s %s\n", info->thread_name, timebuf, level_strings[level], OUT_MSG);
 
-    GDF_WriteConsole(PREPENDED_OUT_MSG, level);
+    GDF_GetSystemTime(&entry->time);
+
+    u32 thread_id = GDF_GetCurrentThreadId();
+    GDF_LockMutex(ti_mutex);
+    entry->thread_name = GDF_HashmapGet(ti_map, &thread_id);
+    GDF_ReleaseMutex(ti_mutex);
+
+    // TODO! this could fail too
+    GDF_ReleaseMutex(entries_mutex);
 }
 
 void report_assertion_failure(const char* expression, const char* message, const char* file, i32 line) 

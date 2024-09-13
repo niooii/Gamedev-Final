@@ -276,6 +276,8 @@ bool vk_pipelines_create_blocks(vk_renderer_context* context)
             &context->block_pipeline.wireframe_handle
         )
     );
+
+    return true;
 }
 
 // bool vk_pipelines_create_lighting(vk_renderer_context* context)
@@ -461,4 +463,6 @@ bool vk_pipelines_create_grid(vk_renderer_context* context)
             &context->grid_pipeline.handle
         )
     );
+
+    return true;
 }

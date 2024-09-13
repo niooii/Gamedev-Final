@@ -149,6 +149,7 @@
         "tuple": "c",
         "hashmap.h": "c",
         "timeb.h": "c",
-        "carr.h": "c"
+        "carr.h": "c",
+        "sysinfo.h": "c"
     },
 }
