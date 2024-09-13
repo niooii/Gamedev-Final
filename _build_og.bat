@@ -15,7 +15,7 @@ SET assembly=build
 @REM add back -g flag for debugging
 SET compilerFlags=-g -Wvarargs -Wall -Wno-missing-braces -Wno-macro-redefined -O0
 REM -Wall -Werrorrr
-SET includeFlags=-Isrc -I%VULKAN_SDK%/Include
+SET includeFlags=-Isrc -I%VULKAN_SDK%/Include -Iextern
 SET linkerFlags=-luser32 -lvulkan-1 -L%VULKAN_SDK%/Lib
 @REM SET defines=-D_DEBUG -D_CRT_SECURE_NO_WARNINGS -DCOMPILE_BUILDER -DGDF_RELEASE
 SET defines=-D_DEBUG -D_CRT_SECURE_NO_WARNINGS -DCOMPILE_BUILDER

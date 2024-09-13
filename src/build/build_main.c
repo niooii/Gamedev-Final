@@ -39,6 +39,10 @@ bool get_cfile_names(const char *sDir, char* cfile_names);
 static u32 files_compiled = 0;
 
 int main(int argc, char *argv[]) {
+    if (!GDF_InitMemory())
+        return false;
+    if (!GDF_InitLogging() || !GDF_InitThreadLogging("Main"))
+        return false;
     GDF_InitSubsystems(0);
     // paths of all c files separated by token '|'
     char* c_files = GDF_Malloc(CFILES_STR_LEN, GDF_MEMTAG_STRING);
