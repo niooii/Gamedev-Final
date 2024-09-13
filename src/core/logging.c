@@ -49,11 +49,11 @@ typedef struct ThreadLoggingInfo {
 unsigned long flushing_thread_fn(void*)
 {
     GDF_Stopwatch* stopwatch = GDF_Stopwatch_Create();
-
+    char* buf = GDF_Malloc(MAX_MSG_LEN, GDF_MEMTAG_STRING);
     while(1)
     {
         // TODO! create timer abstraction to run functions periodically
-        if (GDF_Stopwatch_TimeElasped(stopwatch) > 0.05)
+        if (GDF_Stopwatch_TimeElasped(stopwatch) > 0.1)
         {
             GDF_Stopwatch_Reset(stopwatch);
             // TODO! optimized IO
@@ -64,7 +64,19 @@ unsigned long flushing_thread_fn(void*)
                 entry = GDF_CArrayReadNext(entries)
             )
             {
-                GDF_WriteConsole(entry->message, entry->level);
+                snprintf(
+                    buf, 
+                    MAX_MSG_LEN, 
+                    "[THREAD \"%s\" | %02d:%02d:%02d:%03d] %s %s\n",
+                    entry->thread_name,
+                    entry->time.hour,
+                    entry->time.minute,
+                    entry->time.second,
+                    entry->time.milli,
+                    level_strings[entry->level],
+                    entry->message
+                );
+                GDF_WriteConsole(buf, entry->level);
             }
             GDF_ReleaseMutex(entries_mutex);
         }
@@ -149,7 +161,7 @@ void log_output(log_level level, const char* message, ...)
 
     u32 thread_id = GDF_GetCurrentThreadId();
     GDF_LockMutex(ti_mutex);
-    entry->thread_name = GDF_HashmapGet(ti_map, &thread_id);
+    entry->thread_name = ((ThreadLoggingInfo*)GDF_HashmapGet(ti_map, &thread_id))->thread_name;
     GDF_ReleaseMutex(ti_mutex);
 
     // TODO! this could fail too
