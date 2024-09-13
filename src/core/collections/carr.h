@@ -17,4 +17,4 @@ void* GDF_CArrayWriteNext(GDF_CArray arr);
 // Returns a pointer to the next element of the array for reading.
 // If the next element has not been returned from CArrayWriteNext yet,
 // this function will return NULL.
-const void const* GDF_CArrayReadNext(GDF_CArray arr);
+const void* const GDF_CArrayReadNext(GDF_CArray arr);

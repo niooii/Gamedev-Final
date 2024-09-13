@@ -25,19 +25,19 @@ GDF_CArray __create_carray(u32 stride, u32 capacity)
 void* GDF_CArrayWriteNext(GDF_CArray arr)
 {
     arr->ready[arr->next_write_idx] = true;
-    void* data = &arr->data[arr->next_write_idx];
+    void* data = &arr->data[arr->next_write_idx * arr->stride];
     // Wrap around index
     arr->next_write_idx = (arr->next_write_idx + 1) % arr->capacity;
     return data;
 }
 
-const void const* GDF_CArrayReadNext(GDF_CArray arr)
+const void* const GDF_CArrayReadNext(GDF_CArray arr)
 {
     bool* ready = &arr->ready[arr->next_read_idx];
     if (!*ready)
         return NULL;
     *ready = false;
-    const void const* data = &arr->data[arr->next_read_idx];
+    const void const* data = &arr->data[arr->next_read_idx * arr->stride];
     // Wrap around index
     arr->next_read_idx = (arr->next_read_idx + 1) % arr->capacity;
     return data;

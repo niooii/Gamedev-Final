@@ -53,20 +53,22 @@ unsigned long flushing_thread_fn(void*)
     while(1)
     {
         // TODO! create timer abstraction to run functions periodically
-        // if (GDF_Stopwatch_TimeElasped(stopwatch) > 0)
-        // {
-        //     // TODO! optimized IO
-        //     GDF_LockMutex(entries_mutex);
-        //     for (
-        //         LogEntry* entry = GDF_CArrayWriteNext(entries); 
-        //         entry->message == NULL; 
-        //         entry = GDF_CArrayWriteNext(entries)
-        //     )
-        //     {
-        //         printf("%s", entry->message);
-        //     }
-        //     GDF_ReleaseMutex(entries_mutex);
-        // }
+        if (GDF_Stopwatch_TimeElasped(stopwatch) > 0.05)
+        {
+            GDF_Stopwatch_Reset(stopwatch);
+            // TODO! optimized IO
+            GDF_LockMutex(entries_mutex);
+            for (
+                LogEntry* entry = GDF_CArrayReadNext(entries); 
+                entry != NULL; 
+                entry = GDF_CArrayReadNext(entries)
+            )
+            {
+                // TODO! shit doesnt even work LOL
+                GDF_WriteConsole(entry->message, 0);
+            }
+            GDF_ReleaseMutex(entries_mutex);
+        }
     }
 }
 
@@ -84,17 +86,15 @@ bool GDF_InitLogging()
         entry = GDF_CArrayWriteNext(entries), i++
     )
     {
-        printf("old addr: %lu\n", (u64)entry->message);
         entry->level = 0;
         // max thread name 128 chars long.. no way right
-        entry->thread_name = GDF_Malloc(128, GDF_MEMTAG_STRING);;
+        entry->thread_name = GDF_Malloc(128, GDF_MEMTAG_STRING);
         entry->message = GDF_Malloc(MAX_MSG_LEN, GDF_MEMTAG_STRING);
-        printf("new addr: %lu\n", (u64)entry->message);
     }
 
     printf("FINISH INIT...");
 
-    // flushing_thread = GDF_CreateThread(flushing_thread_fn, NULL);
+    flushing_thread = GDF_CreateThread(flushing_thread_fn, NULL);
 
     INITIALIZED = true;
 
