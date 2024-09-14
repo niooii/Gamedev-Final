@@ -53,7 +53,7 @@ unsigned long flushing_thread_fn(void*)
     while(1)
     {
         // TODO! create timer abstraction to run functions periodically
-        if (GDF_Stopwatch_TimeElasped(stopwatch) > 0.1)
+        if (GDF_Stopwatch_TimeElasped(stopwatch) > 0.2)
         {
             GDF_Stopwatch_Reset(stopwatch);
             // TODO! optimized IO

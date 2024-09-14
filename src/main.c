@@ -50,6 +50,7 @@ int main()
     for (int i = 0; i < 2000000; i++)
     {
         f64* entry = GDF_CArrayWriteNext(arr);
+        LOG_WARN("%d", i);
         *entry = i;
     }
     LOG_INFO("write ops took %lf seconds..", GDF_Stopwatch_TimeElasped(benchmarker));
