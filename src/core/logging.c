@@ -46,39 +46,45 @@ typedef struct ThreadLoggingInfo {
     const char* thread_name;
 } ThreadLoggingInfo;
 
+static char* FORMAT_BUF;
+
+void flush_log_buffer()
+{
+    // TODO! optimized IO
+    GDF_LockMutex(entries_mutex);
+    for (
+        const LogEntry* entry = GDF_CArrayReadNext(entries); 
+        entry != NULL; 
+        entry = GDF_CArrayReadNext(entries)
+    )
+    {
+        snprintf(
+            FORMAT_BUF, 
+            MAX_MSG_LEN, 
+            "[%s @ %02d:%02d:%02d.%03d] %s %s\n",
+            entry->thread_name,
+            entry->time.hour,
+            entry->time.minute,
+            entry->time.second,
+            entry->time.milli,
+            level_strings[entry->level],
+            entry->message
+        );
+        GDF_WriteConsole(FORMAT_BUF, entry->level);
+    }
+    GDF_ReleaseMutex(entries_mutex);
+}
+
 unsigned long flushing_thread_fn(void*)
 {
     GDF_Stopwatch* stopwatch = GDF_Stopwatch_Create();
-    char* buf = GDF_Malloc(MAX_MSG_LEN, GDF_MEMTAG_STRING);
     while(1)
     {
         // TODO! create timer abstraction to run functions periodically
         if (GDF_Stopwatch_TimeElasped(stopwatch) > 0.2)
         {
             GDF_Stopwatch_Reset(stopwatch);
-            // TODO! optimized IO
-            GDF_LockMutex(entries_mutex);
-            for (
-                const LogEntry* entry = GDF_CArrayReadNext(entries); 
-                entry != NULL; 
-                entry = GDF_CArrayReadNext(entries)
-            )
-            {
-                snprintf(
-                    buf, 
-                    MAX_MSG_LEN, 
-                    "[%s @ %02d:%02d:%02d.%03d] %s %s\n",
-                    entry->thread_name,
-                    entry->time.hour,
-                    entry->time.minute,
-                    entry->time.second,
-                    entry->time.milli,
-                    level_strings[entry->level],
-                    entry->message
-                );
-                GDF_WriteConsole(buf, entry->level);
-            }
-            GDF_ReleaseMutex(entries_mutex);
+            flush_log_buffer();
         }
     }
 }
@@ -89,6 +95,7 @@ bool GDF_InitLogging()
     entries = GDF_CArrayCreate(LogEntry, CYCLIC_BUFFER_CAPACITY);
     ti_mutex = GDF_CreateMutex();
     ti_map = GDF_HashmapCreate(u32, ThreadLoggingInfo, false);
+    FORMAT_BUF = GDF_Malloc(MAX_MSG_LEN, GDF_MEMTAG_STRING);
 
     int i = 0;
     LogEntry* data = GDF_CArrayGetData(entries);
