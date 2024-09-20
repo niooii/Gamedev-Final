@@ -2,7 +2,7 @@
 
 WORLDSERVER_EXIT_CODE listen_for_connections(WorldServer* ctx)
 {
-    GDF_Socket* server_socket = GDF_MakeSocket();
+    GDF_Socket server_socket = GDF_MakeSocket();
     if (!GDF_SocketListen(server_socket, SERVER_PORT))
     {
         return WORLDSERVER_SOCKET_ERR;
@@ -36,7 +36,7 @@ unsigned long client_accepting_thread_wrapper(void* args)
 bool world_server_init(WorldServerStartInfo* start_info, WorldServer* ctx)
 {
     ctx->clients_mutex = GDF_CreateMutex();
-    ctx->clients = GDF_Malloc(sizeof(ClientInfo) * start_info->max_clients, GDF_MEMTAG_GAME);
+    ctx->clients = GDF_LIST_Reserve(ClientInfo, ctx->max_clients);
     // TODO! load world properly
     WorldCreateInfo world_create_info = {
         .ticks_per_sec = 5,

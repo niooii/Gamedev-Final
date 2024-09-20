@@ -3,6 +3,8 @@
 #include "core/os/socket.h"
 #include "core/os/thread.h"
 #include "world/world.h"
+#include "core/collections/hashmap.h"
+#include "core/collections/list.h"
 
 // NOT MINECRFT CLONE I SWEAR
 #define SERVER_PORT 25567
@@ -32,7 +34,10 @@ typedef struct ClientInfo {
 typedef struct WorldServer {
     World world;
     GDF_Mutex clients_mutex;
+    // GDF_List of clients for fast broadcasting
     ClientInfo* clients;
+    // Map of uid -> ClientInfo for quick access.
+    GDF_HashMap client_map;
     bool alive;
     bool initialized;
     u8 max_clients;

@@ -89,6 +89,7 @@ bool GDF_InitLogging()
     entries = GDF_CArrayCreate(LogEntry, CYCLIC_BUFFER_CAPACITY);
     ti_mutex = GDF_CreateMutex();
     ti_map = GDF_HashmapCreate(u32, ThreadLoggingInfo, false);
+    FORMAT_BUF = GDF_Malloc(MAX_MSG_LEN, GDF_MEMTAG_STRING);
 
     int i = 0;
     LogEntry* data = GDF_CArrayGetData(entries);
