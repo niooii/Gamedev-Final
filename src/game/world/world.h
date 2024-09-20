@@ -12,7 +12,7 @@ typedef struct World {
     Chunk* chunks;
     u8 chunk_simulate_distance;
     u16 ticks_per_sec;
-    GDF_Stopwatch* world_update_stopwatch;
+    GDF_Stopwatch world_update_stopwatch;
 } World;
 
 typedef struct WorldCreateInfo {

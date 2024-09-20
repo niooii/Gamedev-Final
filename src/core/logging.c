@@ -48,14 +48,14 @@ typedef struct ThreadLoggingInfo {
 
 unsigned long flushing_thread_fn(void*)
 {
-    GDF_Stopwatch* stopwatch = GDF_Stopwatch_Create();
+    GDF_Stopwatch stopwatch = GDF_StopwatchCreate();
     char* buf = GDF_Malloc(MAX_MSG_LEN, GDF_MEMTAG_STRING);
     while(1)
     {
         // TODO! create timer abstraction to run functions periodically
-        if (GDF_Stopwatch_TimeElasped(stopwatch) > 0.1)
+        if (GDF_StopwatchElasped(stopwatch) > 0.1)
         {
-            GDF_Stopwatch_Reset(stopwatch);
+            GDF_StopwatchReset(stopwatch);
             // TODO! optimized IO
             GDF_LockMutex(entries_mutex);
             for (
