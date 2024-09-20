@@ -2,10 +2,7 @@
 
 #include "core.h"
 
-// typedef struct ThreadPool *ThreadPool_T;
+typedef struct GDF_Threadpool_T* GDF_Threadpool;
 
-// bool GDF_THREADPOOL_Create(ThreadPool* pool);
-// // Assumes thread safety
-// bool GDF_THREADPOOL_AddWork(ThreadPool pool, void (*CallbackFn)());
-
-// bool GDF_THREADPOOL_Destroy(ThreadPool* pool);
+GDF_Threadpool GDF_CreateThreadpool();
+void GDF_ThreadpoolSubmit(GDF_Threadpool pool, u64);

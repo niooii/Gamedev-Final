@@ -150,6 +150,7 @@
         "hashmap.h": "c",
         "timeb.h": "c",
         "carr.h": "c",
-        "sysinfo.h": "c"
+        "sysinfo.h": "c",
+        "thread.h": "c"
     },
 }

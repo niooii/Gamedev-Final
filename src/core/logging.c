@@ -18,6 +18,7 @@
 // holy globals
 static char* OUT_MSG;   
 static char* PREPENDED_OUT_MSG;
+static char* FORMAT_BUF;
 static bool INITIALIZED = false;
 static GDF_HashMap ti_map = NULL;
 static GDF_Mutex ti_mutex = NULL;
@@ -46,10 +47,35 @@ typedef struct ThreadLoggingInfo {
     const char* thread_name;
 } ThreadLoggingInfo;
 
+void __flush_log_buffer()
+{
+    GDF_LockMutex(entries_mutex);
+    for (
+        const LogEntry* entry = GDF_CArrayReadNext(entries); 
+        entry != NULL; 
+        entry = GDF_CArrayReadNext(entries)
+    )
+    {
+        snprintf(
+            FORMAT_BUF, 
+            MAX_MSG_LEN, 
+            "[%s @ %02d:%02d:%02d.%03d] %s %s\n",
+            entry->thread_name,
+            entry->time.hour,
+            entry->time.minute,
+            entry->time.second,
+            entry->time.milli,
+            level_strings[entry->level],
+            entry->message
+        );
+        GDF_WriteConsole(FORMAT_BUF, entry->level);
+    }
+    GDF_ReleaseMutex(entries_mutex);
+}
+
 unsigned long flushing_thread_fn(void*)
 {
     GDF_Stopwatch stopwatch = GDF_StopwatchCreate();
-    char* buf = GDF_Malloc(MAX_MSG_LEN, GDF_MEMTAG_STRING);
     while(1)
     {
         // TODO! create timer abstraction to run functions periodically
@@ -57,28 +83,7 @@ unsigned long flushing_thread_fn(void*)
         {
             GDF_StopwatchReset(stopwatch);
             // TODO! optimized IO
-            GDF_LockMutex(entries_mutex);
-            for (
-                const LogEntry* entry = GDF_CArrayReadNext(entries); 
-                entry != NULL; 
-                entry = GDF_CArrayReadNext(entries)
-            )
-            {
-                snprintf(
-                    buf, 
-                    MAX_MSG_LEN, 
-                    "[%s @ %02d:%02d:%02d.%03d] %s %s\n",
-                    entry->thread_name,
-                    entry->time.hour,
-                    entry->time.minute,
-                    entry->time.second,
-                    entry->time.milli,
-                    level_strings[entry->level],
-                    entry->message
-                );
-                GDF_WriteConsole(buf, entry->level);
-            }
-            GDF_ReleaseMutex(entries_mutex);
+            __flush_log_buffer();
         }
     }
 }
