@@ -105,6 +105,15 @@ bool GDF_INPUT_IsKeyDown(GDF_KEYCODE key)
     return state.keyboard_current.key_states[key] == true;
 }
 
+bool GDF_INPUT_IsKeyPressed(GDF_KEYCODE key) 
+{
+    if (!initialized) 
+    {
+        return false;
+    }
+    return state.keyboard_current.key_states[key] && !state.keyboard_previous.key_states[key];
+}
+
 bool GDF_INPUT_WasKeyDown(GDF_KEYCODE key) 
 {
     if (!initialized) 

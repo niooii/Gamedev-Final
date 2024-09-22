@@ -13,7 +13,7 @@
 #include "core/os/sysinfo.h"
 
 #define MAX_MSG_LEN 16384
-#define CYCLIC_BUFFER_CAPACITY 2048
+#define CYCLIC_BUFFER_CAPACITY 1024
 
 // holy globals
 static char* OUT_MSG;   
@@ -81,7 +81,7 @@ unsigned long flushing_thread_fn(void*)
     while(1)
     {
         // TODO! create timer abstraction to run functions periodically
-        if (GDF_Stopwatch_TimeElasped(stopwatch) > 0.2)
+        if (GDF_Stopwatch_TimeElasped(stopwatch) > 0.05)
         {
             GDF_Stopwatch_Reset(stopwatch);
             flush_log_buffer();

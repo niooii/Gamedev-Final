@@ -74,34 +74,35 @@ bool GDF_GAME_Update(f32 dt)
     {
         camera->pos.y -= move_speed * dt;
     }
-    if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_UP))
+    if (GDF_INPUT_IsKeyPressed(GDF_KEYCODE_SPACE))
     {
-        camera->pitch -= dt;
-        LOG_DEBUG("TURNING CAMERA YES %f", camera->pitch);
-    }
-    if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_DOWN))
-    {
-        camera->pitch += dt;
-        LOG_DEBUG("TURNING CAMERA YES %f", camera->pitch);
-    }
-    if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_LEFT))
-    {
-        camera->yaw += dt;
-        LOG_DEBUG("TURNING CAMERA YES %f", camera->yaw);
-    }
-    if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_RIGHT))
-    {
-        camera->yaw -= dt;
-        LOG_DEBUG("TURNING CAMERA YES %f", camera->yaw);
+        LOG_INFO("PRESSED>...");
     }
     i32 dx;
     i32 dy;
     GDF_INPUT_GetMouseDelta(&dx, &dy);
     camera->yaw -= dx * 0.4;
     camera->pitch -= dy * 0.4;
+    // wrap around yaw
+    if (camera->yaw > 180)
+    {
+        camera->yaw = -180 + (camera->yaw - 180);
+    }
+    else if (camera->yaw < -180)
+    {
+        camera->yaw = 180 + (camera->yaw + 180);
+    }
     // TODO! weird behavior when not clamped: when pitch passes -90 or 90, scene flips??
     camera->pitch = CLAMP(camera->pitch, -89, 89);
     camera_recalc_view_matrix(camera);
+    LOG_DEBUG(
+        "xyz: (%f, %f, %f), yaw/pitch: (%f, %f)", 
+        camera->pos.x, 
+        camera->pos.y,
+        camera->pos.z,
+        camera->yaw,
+        camera->pitch
+    );
     return true;
 }
 

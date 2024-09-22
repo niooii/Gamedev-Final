@@ -152,7 +152,11 @@ void GDF_ShutdownInput();
 void GDF_INPUT_Update(f64 delta_time);
 
 // keyboard input
+// Returns true if the key is pressed down on the frame this was called.
 bool GDF_INPUT_IsKeyDown(GDF_KEYCODE key);
+// Only returns true on the frame the key was pressed down on. 
+// For continuous input, use IsKeyDown.
+bool GDF_INPUT_IsKeyPressed(GDF_KEYCODE key);
 bool GDF_INPUT_WasKeyDown(GDF_KEYCODE key);
 
 // mouse input
