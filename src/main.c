@@ -46,26 +46,26 @@ int main()
     //     LOG_INFO("CONNECTED!!!!\n");
     // }
     // test carr impl
-    GDF_CArray arr = GDF_CArrayCreate(f64, 2000000);
-    GDF_Stopwatch benchmarker = GDF_StopwatchCreate();
-    u32 r_iterations = 0;
-    for (int i = 0; i < 2000000; i++)
-    {
-        f64* entry = GDF_CArrayWriteNext(arr);
-        LOG_WARN("%d", i);
-        *entry = i;
-    }
-    LOG_INFO("write ops took %lf seconds..", GDF_StopwatchElasped(benchmarker));
+    // GDF_CArray arr = GDF_CArrayCreate(f64, 2000000);
+    // GDF_Stopwatch benchmarker = GDF_StopwatchCreate();
+    // u32 r_iterations = 0;
+    // for (int i = 0; i < 2000000; i++)
+    // {
+    //     f64* entry = GDF_CArrayWriteNext(arr);
+    //     LOG_WARN("%d", i);
+    //     *entry = i;
+    // }
+    // LOG_INFO("write ops took %lf seconds..", GDF_StopwatchElasped(benchmarker));
 
-    GDF_StopwatchReset(benchmarker);
-    int sum;
-    for (const f64* fp = GDF_CArrayReadNext(arr); fp != NULL; fp = GDF_CArrayReadNext(arr))
-    {
-        r_iterations++;
-        sum+=*fp;
-    }
-    LOG_INFO("read ops took %lf seconds..", GDF_StopwatchElasped(benchmarker));
-    LOG_INFO("read iters: %u", r_iterations);
+    // GDF_StopwatchReset(benchmarker);
+    // int sum;
+    // for (const f64* fp = GDF_CArrayReadNext(arr); fp != NULL; fp = GDF_CArrayReadNext(arr))
+    // {
+    //     r_iterations++;
+    //     sum+=*fp;
+    // }
+    // LOG_INFO("read ops took %lf seconds..", GDF_StopwatchElasped(benchmarker));
+    // LOG_INFO("read iters: %u", r_iterations);
     // return 1;
     // test map impl
     // GDF_HashMap map = GDF_HashmapCreate(int, int, false);
