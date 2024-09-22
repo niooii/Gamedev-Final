@@ -33,7 +33,6 @@ bool app_on_event(u16 event_code, void *sender, void *listener_instance, GDF_Eve
                 GDF_EVENT_Fire(GDF_EVENT_INTERNAL_APP_QUIT, NULL, tmp_ctx);
                 return true;
             }
-<<<<<<< HEAD
             switch (key_code) {
                 case GDF_KEYCODE_GRAVE:
                 {
@@ -42,11 +41,6 @@ bool app_on_event(u16 event_code, void *sender, void *listener_instance, GDF_Eve
                     GDF_INPUT_SetMouseLockState(state);
                     LOG_DEBUG("TOGGLE MOUSE LOCK");
                 }
-=======
-            switch (key_code)
-            {
-                
->>>>>>> 677566846b902e7f530c0723741fbcc2aaecfa19
             }
             break;
         }
@@ -209,28 +203,8 @@ f64 GDF_RunApp()
             GDF_ThreadSleep((u64)(wait_secs * 1000));
         }
 
-<<<<<<< HEAD
         GDF_Game* game_instance = GDF_GAME_GetInstance();
         GDF_GAME_Update(dt);
-=======
-        // TODO! remove later
-        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_A))
-        {
-            yes(-1 * dt);
-        }
-        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_D))
-        {
-            yes(dt);
-        }
-        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_W))
-        {
-            no(dt);
-        }
-        if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_S))
-        {
-            no(-1 * dt);
-        }
->>>>>>> 677566846b902e7f530c0723741fbcc2aaecfa19
 
         GDF_INPUT_Update(dt);
 
