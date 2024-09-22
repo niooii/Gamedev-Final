@@ -7,6 +7,8 @@
 typedef struct GDF_Camera {
     vec3 pos;
     // IN DEGREES
+    // hello me from 2 months ago, please use radians. everything uses radians. 
+    // pleqase use radians. thank you.
     f32 pitch;
     // IN DEGREES
     f32 yaw;

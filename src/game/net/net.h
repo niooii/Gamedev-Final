@@ -1,6 +1,6 @@
 #pragma once
 #include "core.h"
-#include "engine/core/os/socket.h"
+#include "core/os/socket.h"
 
 typedef struct GDF_TcpConnection {
     void* internals;

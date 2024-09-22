@@ -4,13 +4,13 @@
             "name": "Linux",
             "includePath": [
                 "${workspaceFolder}/src/**",
+                "${workspaceFolder}/exten/**",
                 "${VULKAN_SDK}/include"
             ],
             "defines": [
                 "_DEBUG",
                 "UNICODE",
-                "_UNICODE",
-                "GDFEXPORT"
+                "_UNICODE"
             ],
             "compilerPath": "/usr/bin/clang",
             "cStandard": "c17",
@@ -21,6 +21,7 @@
             "name": "Win32",
             "includePath": [
                 "${workspaceFolder}/src/**",
+                "${workspaceFolder}/extern/**",
                 "${VULKAN_SDK}/include"
             ],
             "defines": [

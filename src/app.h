@@ -1,11 +1,11 @@
 #pragma once
 #include "core.h"
-#include "engine/core/logging.h"
-#include "engine/core/os/window.h"
-#include "engine/core/os/misc.h"
-#include "engine/core/os/io.h"
-#include "engine/core/subsystems.h"
-#include "engine/core/serde/serde.h"
+#include "core/logging.h"
+#include "core/os/window.h"
+#include "core/os/sysinfo.h"
+#include "core/os/io.h"
+#include "core/subsystems.h"
+#include "core/serde/serde.h"
 #include "client/client_settings.h"
 #include "engine/render/renderer.h"
 

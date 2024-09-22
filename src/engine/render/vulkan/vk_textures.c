@@ -1,8 +1,8 @@
 #include "vk_textures.h"
 #define STB_IMAGE_IMPLEMENTATION
-#include "engine/external/stb_image.h"
-#include "engine/core/containers/list.h"
-#include "engine/core/os/io.h"
+#include "stb_image.h"
+#include "core/collections/list.h"
+#include "core/os/io.h"
 #include "vk_utils.h"
 #include "vk_buffers.h"
 

@@ -1,14 +1,8 @@
 #include "app.h"
-<<<<<<< HEAD
-#include "engine/core/containers/list.h"
-#include "engine/core/input.h"
-#include "engine/math/math.h"
-#include "engine/core/os/thread.h"
-=======
-#include "core/containers/list.h"
+#include "core/collections/list.h"
 #include "core/input.h"
-#include "render/vulkan/vk_renderer.h"
->>>>>>> 677566846b902e7f530c0723741fbcc2aaecfa19
+#include "engine/math/math.h"
+#include "core/os/thread.h"
 
 typedef struct AppState {
     bool is_running;
@@ -16,12 +10,12 @@ typedef struct AppState {
     i16 width;
     i16 height;
     f64 last_time;
-    GDF_Stopwatch* stopwatch;
+    GDF_Stopwatch stopwatch;
 } AppState;
 
 static bool INITIALIZED = false;
 static AppState APP_STATE;
-static GDF_Window* MAIN_WINDOW;
+static GDF_Window MAIN_WINDOW;
 static bool mouse_lock_toggle = false;
 
 // is gonna be registered for a bunch of events
@@ -113,7 +107,8 @@ bool GDF_InitApp()
         return false;
     }
 
-    GDF_DisplayInfo display_info = GDF_GetDisplayInfo();
+    GDF_DisplayInfo display_info;
+    GDF_GetDisplayInfo(&display_info);
     MAIN_WINDOW = GDF_CreateWindow(GDF_WIN_CENTERED, GDF_WIN_CENTERED, display_info.screen_width * 0.45, display_info.screen_height * 0.5, "A GDF");
     if (MAIN_WINDOW != NULL)
         LOG_INFO("Created window.");
@@ -150,7 +145,7 @@ bool GDF_InitApp()
     camera_recalc_matrices(&camera);
     renderer_set_camera(&camera);
 
-    APP_STATE.stopwatch = GDF_Stopwatch_Create();
+    APP_STATE.stopwatch = GDF_StopwatchCreate();
 
     INITIALIZED = true;
 
@@ -180,19 +175,19 @@ f64 GDF_RunApp()
         return -1;
     }
 
-    GDF_Stopwatch* running_timer = GDF_Stopwatch_Create();
+    GDF_Stopwatch running_timer = GDF_StopwatchCreate();
     u8 frame_count = 0;
     u32 fps = 2222;
     f64 secs_per_frame = 1.0/fps;
-    GDF_Stopwatch* frame_timer = GDF_Stopwatch_Create();
+    GDF_Stopwatch frame_timer = GDF_StopwatchCreate();
 
     while(APP_STATE.is_running) 
     {
         GDF_PumpMessages();
 
-        f64 current_time = GDF_Stopwatch_TimeElasped(APP_STATE.stopwatch);
+        f64 current_time = GDF_StopwatchElasped(APP_STATE.stopwatch);
         f64 dt = (current_time - APP_STATE.last_time);
-        GDF_Stopwatch_Reset(frame_timer);
+        GDF_StopwatchReset(frame_timer);
 
         // just testing input
         if (GDF_INPUT_IsButtonDown(GDF_MBUTTON_LEFT))
@@ -204,7 +199,7 @@ f64 GDF_RunApp()
         packet.delta_time = dt;
         renderer_draw_frame(&packet);
 
-        f64 frame_time = GDF_Stopwatch_TimeElasped(frame_timer);
+        f64 frame_time = GDF_StopwatchElasped(frame_timer);
         
         // wait a certain amount of time after each frame to cap fps
         // TODO! add uncap fps option probably "bool uncap_fps" or some shit
@@ -244,10 +239,10 @@ f64 GDF_RunApp()
     }
 
     // CLEAN UP STUFF
-    f64 time_ran_for = GDF_Stopwatch_TimeElasped(running_timer);
+    f64 time_ran_for = GDF_StopwatchElasped(running_timer);
     // destroy resources
-    GDF_Stopwatch_Destroy(APP_STATE.stopwatch);
-    GDF_Stopwatch_Destroy(running_timer);
+    GDF_StopwatchDestroy(APP_STATE.stopwatch);
+    GDF_StopwatchDestroy(running_timer);
 
     GDF_DestroyRenderer();
 

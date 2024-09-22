@@ -1,6 +1,6 @@
 #include "math.h"
 
-#include "engine/core/os/misc.h"
+#include "core/os/sysinfo.h"
 #include <math.h>
 
 static bool RAND_SEEDED = FALSE;

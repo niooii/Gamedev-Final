@@ -2,7 +2,7 @@
 
 WORLDSERVER_EXIT_CODE listen_for_connections(WorldServer* ctx)
 {
-    GDF_Socket* server_socket = GDF_MakeSocket();
+    GDF_Socket server_socket = GDF_MakeSocket();
     if (!GDF_SocketListen(server_socket, SERVER_PORT))
     {
         return WORLDSERVER_SOCKET_ERR;
@@ -28,6 +28,7 @@ WORLDSERVER_EXIT_CODE listen_for_connections(WorldServer* ctx)
 
 unsigned long client_accepting_thread_wrapper(void* args)
 {
+    GDF_InitThreadLogging("ClientListener");
     WorldServer* ctx = (WorldServer*)args;
     listen_for_connections(ctx);
 }
@@ -35,7 +36,7 @@ unsigned long client_accepting_thread_wrapper(void* args)
 bool world_server_init(WorldServerStartInfo* start_info, WorldServer* ctx)
 {
     ctx->clients_mutex = GDF_CreateMutex();
-    ctx->clients = GDF_Malloc(sizeof(ClientInfo) * start_info->max_clients, GDF_MEMTAG_GAME);
+    ctx->clients = GDF_LIST_Reserve(ClientInfo, ctx->max_clients);
     // TODO! load world properly
     WorldCreateInfo world_create_info = {
         .ticks_per_sec = 5,
@@ -60,22 +61,28 @@ WORLDSERVER_EXIT_CODE world_server_run(WorldServer* ctx)
     while (ctx->alive)                             
     {
         World* world = &ctx->world;
-        GDF_Stopwatch_Reset(world->world_update_stopwatch);
+        GDF_StopwatchReset(world->world_update_stopwatch);
         // Broadcast tick event
         // TODO! packet serialization
 
         // TODO! heavy processing stuff
         int a;
-        for (int i = 0; i < 480000000; i++)
+        for (int i = 0; i < 4800000; i++)
         {
             a++;
         }
 
         // Updating world finish, wait for next tick
-        f64 t = GDF_Stopwatch_TimeElasped(world->world_update_stopwatch);
+        f64 t = GDF_StopwatchElasped(world->world_update_stopwatch);
         f64 period = 1.f/(world->ticks_per_sec);
         if (t < period)
+        {
             GDF_ThreadSleep(1000.f * (period - t));
+        }
+        else
+        {
+            LOG_WARN("Server fell behind by %0.3lfs...", t - period);
+        }
         
         LOG_INFO("UPDATE");
     }

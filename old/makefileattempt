@@ -1,0 +1,49 @@
+# OS specific stuff
+ifeq ($(OS),Windows_NT)
+    DETECTED_OS := Windows
+    RM := rmdir /S /Q
+    MKDIR := if not exist "$(call FixPath,$1)" mkdir "$(call FixPath,$1)"
+    FixPath = $(subst /,\,$1)
+    LINKER_FLAGS := -luser32 -L$(VULKAN_SDK)/Lib -lvulkan-1
+    EXE := .exe
+else
+    DETECTED_OS := $(shell uname -s)
+    RM := rm -rf
+    MKDIR := mkdir -p "$(@D)"
+    FixPath = $1
+    LINKER_FLAGS :=
+    EXE :=
+endif
+CC := clang
+
+# DIRS
+SRC_DIR := src
+EXTERN_DIR := extern
+BUILD_DIR := build
+
+SRC_FILES := $(wildcard $(SRC_DIR)/*.c) $(wildcard $(SRC_DIR)/**/*.c)
+EXTERN_FILES := $(wildcard $(EXTERN_DIR)/*.c)
+ALL_C_FILES := $(SRC_FILES) $(EXTERN_FILES)
+OBJ_FILES := $(patsubst %.c,$(BUILD_DIR)/obj/%.o,$(ALL_C_FILES))
+
+TARGET := gdf$(EXE)
+
+CFLAGS := -Wall -Wextra 
+INCLUDE_FLAGS := -I$(SRC_DIR) -I$(EXTERN_DIR) -I$(VULKAN_SDK)/Include
+
+all: $(TARGET)
+
+$(TARGET): $(OBJ_FILES)
+	$(CC) $(CFLAGS) $(LINKER_FLAGS) $(INCLUDE_FLAGS) -o $@ $^
+
+$(BUILD_DIR)/obj/%.o: %.c
+	$(call MKDIR,$(@D)) 
+	$(CC) $(CFLAGS) $(INCLUDE_FLAGS) -c $^ -o $@ 
+
+$(BUILD_DIR):
+	$(MKDIR) $(call FixPath,$(BUILD_DIR))
+
+clean:
+	$(RM) $(call FixPath,$(BUILD_DIR)/*.o) $(call FixPath,$(BUILD_DIR)/$(TARGET))
+
+.PHONY: all clean

@@ -7,11 +7,11 @@
 #include <sys/stat.h>
 #include <direct.h>
 #include "io.h"
-#include "engine/core/subsystems.h"
+#include "core/subsystems.h"
 #include "md5.h"
 #include "build_options.h"
 #include "checksums.h"
-#include "engine/core/serde/serde.h"
+#include "core/serde/serde.h"
 
 #define NUM_CFILES 500
 #define CFILES_STR_LEN NUM_CFILES * MAX_PATH_LEN
@@ -39,6 +39,10 @@ bool get_cfile_names(const char *sDir, char* cfile_names);
 static u32 files_compiled = 0;
 
 int main(int argc, char *argv[]) {
+    if (!GDF_InitMemory())
+        return false;
+    if (!GDF_InitLogging() || !GDF_InitThreadLogging("Main"))
+        return false;
     GDF_InitSubsystems(0);
     // paths of all c files separated by token '|'
     char* c_files = GDF_Malloc(CFILES_STR_LEN, GDF_MEMTAG_STRING);
@@ -53,7 +57,7 @@ int main(int argc, char *argv[]) {
 
     bool success = false;
 
-    GDF_Stopwatch* stopwatch = GDF_Stopwatch_Create();
+    GDF_Stopwatch stopwatch = GDF_Stopwatch_Create();
 
     // create a bunch of files and load build options
     GDF_MakeDir(BUILD_PATH);
@@ -156,8 +160,14 @@ int main(int argc, char *argv[]) {
     
     char path[400];
     GDF_GetAbsolutePath(build_options->src_dir, path);
+    char extern_path[400];
+    GDF_GetAbsolutePath("extern", extern_path);
     // ----
     get_cfile_names(path, c_files);
+    // grab from extern dir
+    // THIS NEEDS A HUGE REWORK.
+    get_cfile_names(extern_path, strrchr(c_files, '|') + 1);
+    LOG_DEBUG("%s", c_files);
 
     // compare files with the stored hashes
     // or just rebuild if the hash doesnt exist
@@ -351,7 +361,7 @@ int main(int argc, char *argv[]) {
     
     if (success)
     {
-        f64 sec_elapsed = GDF_Stopwatch_TimeElasped(stopwatch);
+        f64 sec_elapsed = GDF_StopwatchElasped(stopwatch);
         if (files_compiled > 0)
         {
             LOG_INFO("Compiled %d files in %lf seconds.", files_compiled, sec_elapsed);
@@ -369,7 +379,7 @@ int main(int argc, char *argv[]) {
 
     if (should_run_post_build)
     {
-        GDF_Stopwatch_Reset(stopwatch);
+        GDF_StopwatchReset(stopwatch);
         // run post build routine
         LOG_INFO("Running post-build routine...");
         if (strlen(build_options->post_build_command) == 0)
@@ -378,18 +388,18 @@ int main(int argc, char *argv[]) {
         }
         else if (system(build_options->post_build_command) != 0)
         {
-            LOG_ERR("Post-build routine failed in %lf seconds.", GDF_Stopwatch_TimeElasped(stopwatch));
+            LOG_ERR("Post-build routine failed in %lf seconds.", GDF_StopwatchElasped(stopwatch));
             GDF_WriteFile(LAST_BUILD_STATUS_PATH, BUILD_STATUS_POST_BUILD_FAIL);
             GDF_Free(build_options);
             return 1;
         }
 
-        LOG_INFO("Post-build routine finished in %lf seconds.", GDF_Stopwatch_TimeElasped(stopwatch));
+        LOG_INFO("Post-build routine finished in %lf seconds.", GDF_StopwatchElasped(stopwatch));
 
         return 0;
     }
 
-    f64 sec_elapsed = GDF_Stopwatch_TimeElasped(stopwatch);
+    f64 sec_elapsed = GDF_StopwatchElasped(stopwatch);
     LOG_ERR("Build failed in %lf seconds.", sec_elapsed);
     LOG_ERR("Failed to build \"%s.exe\"", build_options->executable_name);
     GDF_Free(build_options);
