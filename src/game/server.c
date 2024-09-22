@@ -61,7 +61,7 @@ WORLDSERVER_EXIT_CODE world_server_run(WorldServer* ctx)
     while (ctx->alive)                             
     {
         World* world = &ctx->world;
-        GDF_Stopwatch_Reset(world->world_update_stopwatch);
+        GDF_StopwatchReset(world->world_update_stopwatch);
         // Broadcast tick event
         // TODO! packet serialization
 
@@ -73,7 +73,7 @@ WORLDSERVER_EXIT_CODE world_server_run(WorldServer* ctx)
         }
 
         // Updating world finish, wait for next tick
-        f64 t = GDF_Stopwatch_TimeElasped(world->world_update_stopwatch);
+        f64 t = GDF_StopwatchElasped(world->world_update_stopwatch);
         f64 period = 1.f/(world->ticks_per_sec);
         if (t < period)
         {

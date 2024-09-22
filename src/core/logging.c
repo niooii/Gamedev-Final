@@ -18,6 +18,7 @@
 // holy globals
 static char* OUT_MSG;   
 static char* PREPENDED_OUT_MSG;
+static char* FORMAT_BUF;
 static bool INITIALIZED = false;
 static GDF_HashMap ti_map = NULL;
 static GDF_Mutex ti_mutex = NULL;
@@ -46,11 +47,8 @@ typedef struct ThreadLoggingInfo {
     const char* thread_name;
 } ThreadLoggingInfo;
 
-static char* FORMAT_BUF;
-
-void flush_log_buffer()
+void __flush_log_buffer()
 {
-    // TODO! optimized IO
     GDF_LockMutex(entries_mutex);
     for (
         const LogEntry* entry = GDF_CArrayReadNext(entries); 
@@ -77,14 +75,15 @@ void flush_log_buffer()
 
 unsigned long flushing_thread_fn(void*)
 {
-    GDF_Stopwatch* stopwatch = GDF_Stopwatch_Create();
+    GDF_Stopwatch stopwatch = GDF_StopwatchCreate();
     while(1)
     {
         // TODO! create timer abstraction to run functions periodically
         if (GDF_Stopwatch_TimeElasped(stopwatch) > 0.05)
         {
-            GDF_Stopwatch_Reset(stopwatch);
-            flush_log_buffer();
+            GDF_StopwatchReset(stopwatch);
+            // TODO! optimized IO
+            __flush_log_buffer();
         }
     }
 }

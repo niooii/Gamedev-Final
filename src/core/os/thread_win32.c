@@ -13,6 +13,10 @@ typedef struct GDF_Thread_T {
     u32 id;
 } GDF_Thread_T;
 
+typedef struct GDF_Semaphore_T {
+    HANDLE sm_handle;
+} GDF_Semaphore_T; 
+
 GDF_Thread GDF_CreateThread(unsigned long thread_fn(void*), void* args) {
     GDF_Thread thread = GDF_Malloc(sizeof(GDF_Thread_T), GDF_MEMTAG_APPLICATION);
     u32 creation_flags = 0;
@@ -63,6 +67,25 @@ bool GDF_ReleaseMutex(GDF_Mutex mutex)
 {
     ReleaseMutex(mutex->mutex_handle);
     return true;
+}
+
+GDF_Semaphore GDF_CreateSemaphore()
+{
+    HANDLE handle = CreateSemaphore(NULL, 0, 1, NULL);
+    GDF_Semaphore sm = GDF_Malloc(sizeof(GDF_Semaphore_T), GDF_MEMTAG_APPLICATION);
+    sm->sm_handle = handle;
+
+    return sm;
+}
+
+bool GDF_WaitSemaphore(GDF_Semaphore semaphore)
+{
+    WaitForSingleObject(semaphore->sm_handle, INFINITE);
+}
+
+bool GDF_SignalSemaphore(GDF_Semaphore semaphore)
+{
+    ReleaseSemaphore(semaphore->sm_handle, 1, NULL);
 }
 
 #endif

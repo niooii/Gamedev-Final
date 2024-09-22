@@ -22,6 +22,8 @@ unsigned long server_thread_wrapper(void* args)
     return 0;
 }
 
+static GDF_Semaphore tsm;
+
 int main()
 {
     if (!GDF_InitMemory())
@@ -30,7 +32,7 @@ int main()
         return false;
     LOG_INFO("hi chat");
     GDF_InitSubsystems(GDF_SUBSYSTEM_WINDOWING | GDF_SUBSYSTEM_EVENTS | GDF_SUBSYSTEM_INPUT | GDF_SUBSYSTEM_NET);
-    
+
     // TODO! eventually move to either a dedicated server start or creating a world. 
     // GDF_Thread server_thread = GDF_CreateThread(server_thread_wrapper, NULL);
     // GDF_Socket client = GDF_MakeSocket();
@@ -44,39 +46,26 @@ int main()
     //     LOG_INFO("CONNECTED!!!!\n");
     // }
     // test carr impl
-    // GDF_CArray arr = GDF_CArrayCreate(f64, 2000000);
-    // GDF_Stopwatch* benchmarker = GDF_Stopwatch_Create();
-    // u32 r_iterations = 0;
-    // for (int i = 0; i < 2000; i++) 
-    // {
-    //     GDF_WriteConsole("wow caht\n", 0);
-    // }
-    // LOG_INFO("writeconsole took %lf seconds", GDF_Stopwatch_TimeElasped(benchmarker));
-    // GDF_ThreadSleep(2000);
-    // GDF_Stopwatch_Reset(benchmarker);
-    // for (int i = 0; i < 2000; i++) 
-    // {
-    //     printf("wow caht\n");
-    // }
-    // LOG_INFO("printf took %lf seconds", GDF_Stopwatch_TimeElasped(benchmarker));
+    GDF_CArray arr = GDF_CArrayCreate(f64, 2000000);
+    GDF_Stopwatch benchmarker = GDF_StopwatchCreate();
+    u32 r_iterations = 0;
+    for (int i = 0; i < 2000000; i++)
+    {
+        f64* entry = GDF_CArrayWriteNext(arr);
+        LOG_WARN("%d", i);
+        *entry = i;
+    }
+    LOG_INFO("write ops took %lf seconds..", GDF_StopwatchElasped(benchmarker));
 
-    // for (int i = 0; i < 2000000; i++)
-    // {
-    //     f64* entry = GDF_CArrayWriteNext(arr);
-    //     // LOG_WARN("%d", i);
-    //     *entry = i;
-    // }
-    // LOG_INFO("write ops took %lf seconds..", GDF_Stopwatch_TimeElasped(benchmarker));
-
-    // GDF_Stopwatch_Reset(benchmarker);
-    // int sum;
-    // for (const f64* fp = GDF_CArrayReadNext(arr); fp != NULL; fp = GDF_CArrayReadNext(arr))
-    // {
-    //     r_iterations++;
-    //     sum+=*fp;
-    // }
-    // LOG_INFO("read ops took %lf seconds..", GDF_Stopwatch_TimeElasped(benchmarker));
-    // LOG_INFO("read iters: %u", r_iterations);
+    GDF_StopwatchReset(benchmarker);
+    int sum;
+    for (const f64* fp = GDF_CArrayReadNext(arr); fp != NULL; fp = GDF_CArrayReadNext(arr))
+    {
+        r_iterations++;
+        sum+=*fp;
+    }
+    LOG_INFO("read ops took %lf seconds..", GDF_StopwatchElasped(benchmarker));
+    LOG_INFO("read iters: %u", r_iterations);
     // return 1;
     // test map impl
     // GDF_HashMap map = GDF_HashmapCreate(int, int, false);

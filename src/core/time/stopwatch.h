@@ -2,17 +2,15 @@
 
 #include "core.h"
 
-typedef struct GDF_Stopwatch {
-    f64 start_time;
-} GDF_Stopwatch;
+typedef struct GDF_Stopwatch_T* GDF_Stopwatch;
 
 // Stopwatch is created in "resumed" state.
-GDF_Stopwatch* GDF_Stopwatch_Create();
+GDF_Stopwatch GDF_StopwatchCreate();
 // in seconds
-f64 GDF_Stopwatch_TimeElasped(GDF_Stopwatch* stopwatch);
-f64 GDF_Stopwatch_Reset(GDF_Stopwatch* stopwatch);
+f64 GDF_StopwatchElasped(GDF_Stopwatch stopwatch);
+f64 GDF_StopwatchReset(GDF_Stopwatch stopwatch);
 // TODO!
-void GDF_Stopwatch_Pause(GDF_Stopwatch* stopwatch);
+void GDF_StopwatchPause(GDF_Stopwatch stopwatch);
 // TODO!
-void GDF_Stopwatch_Resume(GDF_Stopwatch* stopwatch);
-void GDF_Stopwatch_Destroy(GDF_Stopwatch* stopwatch);
+void GDF_StopwatchResume(GDF_Stopwatch stopwatch);
+void GDF_StopwatchDestroy(GDF_Stopwatch stopwatch);
