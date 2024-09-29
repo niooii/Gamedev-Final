@@ -68,6 +68,11 @@ void* GDF_Malloc(u64 size, GDF_MEMTAG tag)
     return block;
 }
 
+void* GDF_Realloc(void* block, u64 size)
+{
+    return realloc(block, size);
+}
+
 void GDF_Free(void* block) 
 {
     free(block);

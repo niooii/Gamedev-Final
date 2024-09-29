@@ -8,7 +8,7 @@ typedef struct GDF_HashMap_T {
     bool string_keys;
     u32 num_entries;
     u32 capacity;
-    HashMapEntry* bucket;
+    HashmapEntry* bucket;
 } GDF_HashMap_T;
 
 static FORCEINLINE u32 __get_idx(GDF_HashMap hashmap, void* key)
@@ -16,7 +16,34 @@ static FORCEINLINE u32 __get_idx(GDF_HashMap hashmap, void* key)
     return SuperFastHash((const char*)key, hashmap->k_stride) % hashmap->capacity;
 }
 
-static FORCEINLINE void __free_mapentry(HashMapEntry* map_entry)
+static HashmapEntry* __iter_first(HashmapEntry* bucket, u32 capacity) 
+{
+    for (int i = 0; i < capacity; i++)
+    {
+        if (bucket[i].key != NULL)
+            return bucket + i;
+    }
+    
+    return NULL;
+}
+
+static bool __iter_next(HashmapEntry* bucket, HashmapEntry** iter, u32 capacity) 
+{
+    u32 idx = ((*iter) - bucket) + 1;
+    for (; idx < capacity; idx++)
+    {
+        if (bucket[idx].key != NULL)
+        {
+            *iter = bucket + idx;
+            return true;
+        }
+    }
+
+    *iter = NULL;
+    return false;
+}
+
+static FORCEINLINE void __free_mapentry(HashmapEntry* map_entry)
 {
     GDF_Free(map_entry->key);
     map_entry->key = NULL;
@@ -33,7 +60,7 @@ GDF_HashMap __hashmap_create(u32 k_stride, u32 v_stride, bool string_keys)
     map->num_entries = 0;
     map->capacity = 32;
 
-    map->bucket = GDF_Malloc(sizeof(HashMapEntry) * map->capacity, GDF_MEMTAG_APPLICATION);
+    map->bucket = GDF_Malloc(sizeof(HashmapEntry) * map->capacity, GDF_MEMTAG_APPLICATION);
 
     return map;
 }
@@ -45,14 +72,34 @@ bool GDF_HashmapInsert(GDF_HashMap hashmap, void* key, void* value)
     // TODO! when num entries is almost (0.75 or 0.5)x at capacity, alloc new array
     // and rehash all entries.
 
+    HashmapEntry* bucket = hashmap->bucket;
+
     // Check if map needs to be expanded
     if (hashmap->num_entries + 1 >= (hashmap->capacity / 2))
     {
-        // TODO! Expand map
-        // if ()
+        u32 new_capacity = hashmap->capacity * 2;
+        HashmapEntry* new_bucket = GDF_Malloc(sizeof(HashmapEntry) * new_capacity, GDF_MEMTAG_COLLECTION);
+
+        LOG_DEBUG("REHASHING ALL ENTRIES...");
+
+        // Rehash all entries
+        HashmapEntry* old_entries_iter = GDF_HashmapIter(hashmap);
+        for (
+            ; 
+            old_entries_iter != NULL; 
+            old_entries_iter = GDF_HashmapIterNext(&old_entries_iter)
+        ) 
+        {
+            // TODO!
+            
+        }
+
+        LOG_DEBUG("REHASH DONE.");
+        GDF_Free(hashmap->bucket);
+        hashmap->bucket = new_bucket;
+        hashmap->capacity = new_capacity;
     }
 
-    HashMapEntry* bucket = hashmap->bucket;
     // Find next free index to insert in
     u32 start_idx = __get_idx(hashmap, key);
     u32 idx;
@@ -80,7 +127,7 @@ void* GDF_HashmapGet(GDF_HashMap hashmap, void* key)
     if (key == NULL)
         return NULL;
     
-    HashMapEntry* bucket = hashmap->bucket;
+    HashmapEntry* bucket = hashmap->bucket;
     u32 start_idx = __get_idx(hashmap, key);
 
     // Linear probing, wrap around until something is found or nothing is found.
@@ -105,7 +152,7 @@ void GDF_HashmapRemove(GDF_HashMap hashmap, void* key, void* out_val_p)
         return;
     }
 
-    HashMapEntry* bucket = hashmap->bucket;
+    HashmapEntry* bucket = hashmap->bucket;
     u32 start_idx = __get_idx(hashmap, key);
 
     for (u32 i = 0, idx; i < hashmap->capacity && bucket[(
@@ -127,35 +174,12 @@ void GDF_HashmapRemove(GDF_HashMap hashmap, void* key, void* out_val_p)
     return;
 }
 
-HashMapEntry* GDF_HashmapIter(GDF_HashMap hashmap)
+HashmapEntry* GDF_HashmapIter(GDF_HashMap hashmap)
 {
-    if (hashmap->num_entries == 0) 
-        return NULL;
-
-    for (int i = 0; i < hashmap->capacity; i++)
-    {
-        if (hashmap->bucket[i].key != NULL)
-            return &hashmap->bucket[i];
-    }
-
-    return NULL;
+    return __iter_first(hashmap->bucket, hashmap->capacity);
 }
 
-bool GDF_HashmapIterNext(HashMapEntry** iter)
+bool GDF_HashmapIterNext(HashmapEntry** iter)
 {
-    GDF_HashMap hashmap = (*iter)->owner;
-
-    u32 idx = ((*iter) - hashmap->bucket) + 1;
-    HashMapEntry* bucket = hashmap->bucket;
-    for (; idx < hashmap->capacity; idx++)
-    {
-        if (bucket[idx].key != NULL)
-        {
-            *iter = &bucket[idx];
-            return true;
-        }
-    }
-
-    *iter = NULL;
-    return false;
+    return __iter_next((*iter)->owner->bucket, iter, (*iter)->owner->capacity);
 }

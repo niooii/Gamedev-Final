@@ -4,11 +4,11 @@
 
 typedef struct GDF_HashMap_T* GDF_HashMap;
 
-typedef struct HashMapEntry {
+typedef struct HashmapEntry {
     void* key;
     void* val;
     GDF_HashMap owner;
-} HashMapEntry;
+} HashmapEntry;
 
 GDF_HashMap __hashmap_create(u32 k_stride, u32 v_stride, bool string_keys);
 #define GDF_HashmapCreate(k_type, v_type, string_keys) \
@@ -29,9 +29,9 @@ void GDF_HashmapRemove(GDF_HashMap hashmap, void* key, void* out_val_p);
 // Advance with GDF_HashmapIterNext. Functions like a linked list.
 // returns NULL if the map is empty.
 // Modifying a key will result in undefined behavior.
-HashMapEntry* GDF_HashmapIter(GDF_HashMap hashmap);
+HashmapEntry* GDF_HashmapIter(GDF_HashMap hashmap);
 // Advances the "iterator" by finding the next element in the hashmap.
 // Returns true on a successful advance, returns false on end.
 // Similarly sets curr to NULL on end.
 // If a hashmap is modified while an iterator is still being used, behavior is undefined.
-bool GDF_HashmapIterNext(HashMapEntry** iter);
+bool GDF_HashmapIterNext(HashmapEntry** iter);

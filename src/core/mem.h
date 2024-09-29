@@ -15,7 +15,7 @@ typedef enum GDF_MEMTAG {
     // For temporary use. Should be assigned one of the below or have a new tag created.
     GDF_MEMTAG_UNKNOWN,
     GDF_MEMTAG_ARRAY,
-    GDF_MEMTAG_LIST,
+    GDF_MEMTAG_COLLECTION,
     GDF_MEMTAG_DICT,
     GDF_MEMTAG_RING_QUEUE,
     GDF_MEMTAG_BST,
@@ -42,6 +42,8 @@ void GDF_ShutdownMemory();
 
 // memory allocated with this is automatically zero'd
 void* GDF_Malloc(u64 size, GDF_MEMTAG tag);
+
+void* GDF_Realloc(void* block, u64 size);
 
 void GDF_Free(void* block);
 

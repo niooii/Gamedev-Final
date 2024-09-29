@@ -68,35 +68,39 @@ int main()
     // LOG_INFO("read iters: %u", r_iterations);
     // return 1;
     // test map impl
-    // GDF_HashMap map = GDF_HashmapCreate(int, int, false);
-    // int key1 = 24;
-    // int val1 = 200400;
-    // GDF_ASSERT(GDF_HashmapInsert(map, &key1, &val1));
-    // int* val1_p = GDF_HashmapGet(map, &key1);
-    // LOG_INFO("got val1: %d", *val1_p);
-    // int key2 = 223434;
-    // int val2 = 343435;
-    // GDF_ASSERT(GDF_HashmapInsert(map, &key2, &val2));
-    // int* val2_p = GDF_HashmapGet(map, &key2);
+    GDF_HashMap map = GDF_HashmapCreate(int, int, false);
+    int key1 = 24;
+    int val1 = 200400;
+    GDF_ASSERT(GDF_HashmapInsert(map, &key1, &val1));
+    int* val1_p = GDF_HashmapGet(map, &key1);
+    LOG_INFO("got val1: %d", *val1_p);
+    int key2 = 223434;
+    int val2 = 343435;
+    GDF_ASSERT(GDF_HashmapInsert(map, &key2, &val2));
+    int* val2_p = GDF_HashmapGet(map, &key2);
     // // should fail, duplicate key
-    // GDF_ASSERT(!GDF_HashmapInsert(map, &key2, &val1));
-    // LOG_INFO("got val2: %d", *val2_p);
+    GDF_ASSERT(!GDF_HashmapInsert(map, &key2, &val1));
+    LOG_INFO("got val2: %d", *val2_p);
 
     // key iteration test
-    // HashMapEntry* iter1 = GDF_HashmapIter(map);
-    // GDF_ASSERT(iter1 != NULL)
-    // for (; iter1 != NULL; GDF_HashmapIterNext(&iter1))
-    // {
-    //     LOG_INFO("1 key: %d, val: %d", *((int*)iter1->key), *((int*)iter1->val));
-    // }
-    // GDF_HashmapRemove(map, &key1, NULL);
-    // HashMapEntry* iter2 = GDF_HashmapIter(map);
-    // GDF_ASSERT(iter2 != NULL)
-    // for (; iter2 != NULL; GDF_HashmapIterNext(&iter2))
-    // {
-    //     LOG_INFO("2 key: %d, val: %d", *((int*)iter2->key), *((int*)iter2->val));
-    // }
-    // LOG_INFO("tests finish");
+    HashmapEntry* iter1 = GDF_HashmapIter(map);
+    GDF_ASSERT(iter1 != NULL)
+    LOG_WARN("Testing first iteration (2 elements)...");
+    for (; iter1 != NULL; GDF_HashmapIterNext(&iter1))
+    {
+        LOG_INFO("key: %d, val: %d", *((int*)iter1->key), *((int*)iter1->val));
+    }
+    GDF_HashmapRemove(map, &key1, NULL);
+    HashmapEntry* iter2 = GDF_HashmapIter(map);
+    GDF_ASSERT(iter2 != NULL)
+    LOG_WARN("Testing second iteration (1 element)...");
+    for (; iter2 != NULL; GDF_HashmapIterNext(&iter2))
+    {
+        LOG_INFO("key: %d, val: %d", *((int*)iter2->key), *((int*)iter2->val));
+    }
+    LOG_INFO("tests finish");
+    GDF_ThreadSleep(1000);
+    return 0;
 
     GDF_InitApp();
     f64 time_ran_for = GDF_RunApp();
