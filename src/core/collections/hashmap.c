@@ -11,9 +11,9 @@ typedef struct GDF_HashMap_T {
     HashmapEntry* bucket;
 } GDF_HashMap_T;
 
-static FORCEINLINE u32 __get_idx(GDF_HashMap hashmap, void* key)
+static FORCEINLINE u32 __get_idx(void* key, u32 key_size, u32 map_capacity)
 {
-    return SuperFastHash((const char*)key, hashmap->k_stride) % hashmap->capacity;
+    return SuperFastHash((const char*)key, key_size) % map_capacity;
 }
 
 static HashmapEntry* __iter_first(HashmapEntry* bucket, u32 capacity) 
