@@ -1,3 +1,6 @@
+# Please ignore the readme. 
+### thank you
+
 <<<<<<< HEAD
 ﻿# Gamedev-Final
 
