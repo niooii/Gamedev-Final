@@ -16,6 +16,20 @@ static FORCEINLINE u32 __get_idx(void* key, u32 key_size, u32 map_capacity)
     return SuperFastHash((const char*)key, key_size) % map_capacity;
 }
 
+// Inserts key and value at the given index or linearly probes for an
+// empty slot.
+static FORCEINLINE HashmapEntry* __insert(
+    u32 idx, 
+    void* key,
+    u32 key_size,
+    void* val,
+    u32 val_size,
+    HashmapEntry* bucket
+)
+{
+    // TODO!
+}
+
 static HashmapEntry* __iter_first(HashmapEntry* bucket, u32 capacity) 
 {
     for (int i = 0; i < capacity; i++)
