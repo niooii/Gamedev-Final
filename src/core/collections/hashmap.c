@@ -83,15 +83,14 @@ bool GDF_HashmapInsert(GDF_HashMap hashmap, void* key, void* value)
         LOG_DEBUG("REHASHING ALL ENTRIES...");
 
         // Rehash all entries
-        HashmapEntry* old_entries_iter = GDF_HashmapIter(hashmap);
-        for (
-            ; 
-            old_entries_iter != NULL; 
-            old_entries_iter = GDF_HashmapIterNext(&old_entries_iter)
-        ) 
+        for (u32 i = 0; i < hashmap->capacity; i++) 
         {
-            // TODO!
+            if (bucket[i].key != NULL) 
+                continue;
+
+            u32 idx = __get_idx(bucket[i].key, hashmap->k_stride, new_capacity);
             
+            // TODO!
         }
 
         LOG_DEBUG("REHASH DONE.");
@@ -101,7 +100,7 @@ bool GDF_HashmapInsert(GDF_HashMap hashmap, void* key, void* value)
     }
 
     // Find next free index to insert in
-    u32 start_idx = __get_idx(hashmap, key);
+    u32 start_idx = __get_idx(key, hashmap->k_stride, hashmap->capacity);
     u32 idx;
     for (u32 i = 0; i < hashmap->capacity && bucket[(
         (idx = (start_idx + i) % hashmap->capacity) 
@@ -128,7 +127,7 @@ void* GDF_HashmapGet(GDF_HashMap hashmap, void* key)
         return NULL;
     
     HashmapEntry* bucket = hashmap->bucket;
-    u32 start_idx = __get_idx(hashmap, key);
+    u32 start_idx = __get_idx(key, hashmap->k_stride, hashmap->capacity);
 
     // Linear probing, wrap around until something is found or nothing is found.
     for (u32 i = 0, idx; i < hashmap->capacity && bucket[(
@@ -153,7 +152,7 @@ void GDF_HashmapRemove(GDF_HashMap hashmap, void* key, void* out_val_p)
     }
 
     HashmapEntry* bucket = hashmap->bucket;
-    u32 start_idx = __get_idx(hashmap, key);
+    u32 start_idx = __get_idx(key, hashmap->k_stride, hashmap->capacity);
 
     for (u32 i = 0, idx; i < hashmap->capacity && bucket[(
         (idx = (start_idx + i) % hashmap->capacity) 
