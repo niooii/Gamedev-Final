@@ -18,16 +18,34 @@ static FORCEINLINE u32 __get_idx(void* key, u32 key_size, u32 map_capacity)
 
 // Inserts key and value at the given index or linearly probes for an
 // empty slot.
+// Returns the slot modified.
+// TODO! this should return NULL if anything went wrong.
 static FORCEINLINE HashmapEntry* __insert(
-    u32 idx, 
+    u32 start_idx, 
     void* key,
     u32 key_size,
     void* val,
     u32 val_size,
+    u32 capacity,
     HashmapEntry* bucket
 )
 {
-    // TODO!
+    u32 idx;
+    for (u32 i = 0; i < capacity && bucket[(
+        (idx = (start_idx + i) % capacity) 
+    )].key != NULL; i++)
+    {
+        // Check if we have a duplicate key.
+        if (memcmp(bucket[idx].key, key, key_size) == 0)
+            return false;
+    }
+    
+    bucket[idx].key = GDF_Malloc(key_size, GDF_MEMTAG_APPLICATION);
+    GDF_MemCopy(bucket[idx].key, key, key_size);
+    bucket[idx].val = GDF_Malloc(val_size, GDF_MEMTAG_APPLICATION);
+    GDF_MemCopy(bucket[idx].val, val, val_size);
+
+    return bucket + idx;
 }
 
 static HashmapEntry* __iter_first(HashmapEntry* bucket, u32 capacity) 
@@ -97,14 +115,25 @@ bool GDF_HashmapInsert(GDF_HashMap hashmap, void* key, void* value)
         LOG_DEBUG("REHASHING ALL ENTRIES...");
 
         // Rehash all entries
+        // TODO! TESTING NEEDED.
         for (u32 i = 0; i < hashmap->capacity; i++) 
         {
             if (bucket[i].key != NULL) 
                 continue;
 
-            u32 idx = __get_idx(bucket[i].key, hashmap->k_stride, new_capacity);
+            u32 start_idx = __get_idx(bucket[i].key, hashmap->k_stride, new_capacity);
             
-            // TODO!
+            HashmapEntry* entry = __insert(
+                start_idx,
+                key,
+                hashmap->k_stride,
+                value,
+                hashmap->v_stride,
+                new_capacity,
+                new_bucket
+            );
+
+            entry->owner = hashmap;
         }
 
         LOG_DEBUG("REHASH DONE.");
@@ -115,21 +144,23 @@ bool GDF_HashmapInsert(GDF_HashMap hashmap, void* key, void* value)
 
     // Find next free index to insert in
     u32 start_idx = __get_idx(key, hashmap->k_stride, hashmap->capacity);
-    u32 idx;
-    for (u32 i = 0; i < hashmap->capacity && bucket[(
-        (idx = (start_idx + i) % hashmap->capacity) 
-    )].key != NULL; i++)
-    {
-        // Check if we have a duplicate key.
-        if (memcmp(bucket[idx].key, key, hashmap->k_stride) == 0)
-            return false;
-    }
     
-    bucket[idx].owner = hashmap;
-    bucket[idx].key = GDF_Malloc(hashmap->k_stride, GDF_MEMTAG_APPLICATION);
-    GDF_MemCopy(bucket[idx].key, key, hashmap->k_stride);
-    bucket[idx].val = GDF_Malloc(hashmap->v_stride, GDF_MEMTAG_APPLICATION);
-    GDF_MemCopy(bucket[idx].val, value, hashmap->v_stride);
+    HashmapEntry* entry = __insert(
+        start_idx,
+        key,
+        hashmap->k_stride,
+        value,
+        hashmap->v_stride,
+        hashmap->capacity,
+        hashmap->bucket
+    );
+
+    if (entry == NULL)
+    {
+        return false;
+    }
+
+    entry->owner = hashmap;
     hashmap->num_entries++;
 
     return true;
