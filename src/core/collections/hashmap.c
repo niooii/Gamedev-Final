@@ -48,6 +48,9 @@ static FORCEINLINE HashmapEntry* __insert(
     return bucket + idx;
 }
 
+// Assumes the entry is properly allocated.
+static FORCEINLINE void __dealloc_entry(Hashmap)
+
 static HashmapEntry* __iter_first(HashmapEntry* bucket, u32 capacity) 
 {
     for (int i = 0; i < capacity; i++)
