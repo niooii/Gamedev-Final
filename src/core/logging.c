@@ -8,21 +8,30 @@
 #include <sys/timeb.h>
 #include <sys/types.h>
 #include "core/collections/hashmap.h"
-#include "core/collections/carr.h"
 #include "core/os/thread.h"
 #include "core/os/sysinfo.h"
 
 #define MAX_MSG_LEN 16384
-#define CYCLIC_BUFFER_CAPACITY 1024
+#define ENTRIES_BUFFER_CAPACITY 1024
+
+typedef struct LogEntry {
+    GDF_DateTime time;
+    char* message;
+    char* thread_name;
+    log_level level;
+} LogEntry;
 
 // holy globals
 static char* OUT_MSG;   
 static char* PREPENDED_OUT_MSG;
 static char* FORMAT_BUF;
 static bool INITIALIZED = false;
+static LogEntry* entries = NULL;
+// index based, start from 0
+static u32 next_free_entry = 0;
 static GDF_HashMap ti_map = NULL;
+// Sync
 static GDF_Mutex ti_mutex = NULL;
-static GDF_CArray entries = NULL;
 static GDF_Mutex entries_mutex = NULL;
 static GDF_Thread flushing_thread = NULL;
 
@@ -36,13 +45,6 @@ const char* level_strings[6] =
     "TRACE: ",
 };
 
-typedef struct LogEntry {
-    GDF_DateTime time;
-    char* message;
-    char* thread_name;
-    log_level level;
-} LogEntry;
-
 typedef struct ThreadLoggingInfo {
     const char* thread_name;
 } ThreadLoggingInfo;
@@ -50,12 +52,9 @@ typedef struct ThreadLoggingInfo {
 void __flush_log_buffer()
 {
     GDF_LockMutex(entries_mutex);
-    for (
-        const LogEntry* entry = GDF_CArrayReadNext(entries); 
-        entry != NULL; 
-        entry = GDF_CArrayReadNext(entries)
-    )
+    for (u32 i = 0; i < next_free_entry; i++)
     {
+        const LogEntry* const entry = entries + i;
         snprintf(
             FORMAT_BUF, 
             MAX_MSG_LEN, 
@@ -70,6 +69,7 @@ void __flush_log_buffer()
         );
         GDF_WriteConsole(FORMAT_BUF, entry->level);
     }
+    next_free_entry = 0;
     GDF_ReleaseMutex(entries_mutex);
 }
 
@@ -91,18 +91,17 @@ unsigned long flushing_thread_fn(void*)
 bool GDF_InitLogging()
 {
     entries_mutex = GDF_CreateMutex();
-    entries = GDF_CArrayCreate(LogEntry, CYCLIC_BUFFER_CAPACITY);
+    entries = GDF_Malloc(sizeof(LogEntry) * ENTRIES_BUFFER_CAPACITY, GDF_MEMTAG_APPLICATION);
     ti_mutex = GDF_CreateMutex();
     ti_map = GDF_HashmapCreate(u32, ThreadLoggingInfo, false);
     FORMAT_BUF = GDF_Malloc(MAX_MSG_LEN, GDF_MEMTAG_STRING);
 
     int i = 0;
-    LogEntry* data = GDF_CArrayGetData(entries);
-    for (int i = 0; i < CYCLIC_BUFFER_CAPACITY; i++)
+    for (int i = 0; i < ENTRIES_BUFFER_CAPACITY; i++)
     {
         // max thread name 128 chars long.. no way right
-        (data+i)->thread_name = GDF_Malloc(128, GDF_MEMTAG_STRING);
-        (data+i)->message = GDF_Malloc(MAX_MSG_LEN, GDF_MEMTAG_STRING);
+        (entries+i)->thread_name = GDF_Malloc(128, GDF_MEMTAG_STRING);
+        (entries+i)->message = GDF_Malloc(MAX_MSG_LEN, GDF_MEMTAG_STRING);
     }
 
     flushing_thread = GDF_CreateThread(flushing_thread_fn, NULL);
@@ -150,12 +149,12 @@ void log_output(log_level level, const char* message, ...)
         return;
     }
 
-    // Get mutex lock
-    if (!GDF_LockMutex(entries_mutex))
+    // TODO! BAD BAD BAD
+    if (next_free_entry >= ENTRIES_BUFFER_CAPACITY)
     {
-        LOG_FATAL("so mutex lock grabbing failed gg");
+        __flush_log_buffer();
+        next_free_entry = 0;
     }
-    LogEntry* entry = GDF_CArrayWriteNext(entries);
 
     u32 thread_id = GDF_GetCurrentThreadId();
     GDF_LockMutex(ti_mutex);
@@ -168,6 +167,13 @@ void log_output(log_level level, const char* message, ...)
         GDF_ReleaseMutex(ti_mutex);
         return;
     }
+    
+    // Get entries mutex lock
+    if (!GDF_LockMutex(entries_mutex))
+    {
+        LOG_FATAL("so mutex lock grabbing failed gg");
+    }
+    LogEntry* entry = &entries[next_free_entry++];
     entry->thread_name = info->thread_name;
     GDF_ReleaseMutex(ti_mutex);
 

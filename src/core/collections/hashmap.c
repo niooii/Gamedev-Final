@@ -48,9 +48,6 @@ static FORCEINLINE HashmapEntry* __insert(
     return bucket + idx;
 }
 
-// Assumes the entry is properly allocated.
-static FORCEINLINE void __dealloc_entry(Hashmap)
-
 static HashmapEntry* __iter_first(HashmapEntry* bucket, u32 capacity) 
 {
     for (int i = 0; i < capacity; i++)
@@ -121,20 +118,21 @@ bool GDF_HashmapInsert(GDF_HashMap hashmap, void* key, void* value)
         // TODO! TESTING NEEDED.
         for (u32 i = 0; i < hashmap->capacity; i++) 
         {
-            if (bucket[i].key != NULL) 
+            if (bucket[i].key == NULL) 
                 continue;
 
             u32 start_idx = __get_idx(bucket[i].key, hashmap->k_stride, new_capacity);
             
             HashmapEntry* entry = __insert(
                 start_idx,
-                key,
+                bucket[i].key,
                 hashmap->k_stride,
-                value,
+                bucket[i].val,
                 hashmap->v_stride,
                 new_capacity,
                 new_bucket
             );
+            __free_mapentry(bucket + i);
 
             entry->owner = hashmap;
         }

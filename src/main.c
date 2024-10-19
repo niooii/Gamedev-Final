@@ -91,6 +91,11 @@ int main()
         LOG_INFO("key: %d, val: %d", *((int*)iter1->key), *((int*)iter1->val));
     }
     GDF_HashmapRemove(map, &key1, NULL);
+    for (u32 i = 1; i < 3300; i++)
+    {
+        int v = rand() % 200;
+        GDF_HashmapInsert(map, &i, &v);
+    }
     HashmapEntry* iter2 = GDF_HashmapIter(map);
     GDF_ASSERT(iter2 != NULL)
     LOG_WARN("Testing second iteration (1 element)...");
