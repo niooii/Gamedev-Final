@@ -95,14 +95,14 @@ bool GDF_GAME_Update(f32 dt)
     // TODO! weird behavior when not clamped: when pitch passes -90 or 90, scene flips??
     camera->pitch = CLAMP(camera->pitch, -89, 89);
     camera_recalc_view_matrix(camera);
-    LOG_DEBUG(
-        "xyz: (%f, %f, %f), yaw/pitch: (%f, %f)", 
-        camera->pos.x, 
-        camera->pos.y,
-        camera->pos.z,
-        camera->yaw,
-        camera->pitch
-    );
+    // LOG_DEBUG(
+    //     "xyz: (%f, %f, %f), yaw/pitch: (%f, %f)", 
+    //     camera->pos.x, 
+    //     camera->pos.y,
+    //     camera->pos.z,
+    //     camera->yaw,
+    //     camera->pitch
+    // );
     return true;
 }
 

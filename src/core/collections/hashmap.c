@@ -97,6 +97,12 @@ GDF_HashMap __hashmap_create(u32 k_stride, u32 v_stride, bool string_keys)
     return map;
 }
 
+// TODO!
+bool GDF_HashmapDestroy(GDF_HashMap hashmap)
+{
+    return false;    
+}
+
 bool GDF_HashmapInsert(GDF_HashMap hashmap, void* key, void* value)
 {
     if (key == NULL)
@@ -111,8 +117,6 @@ bool GDF_HashmapInsert(GDF_HashMap hashmap, void* key, void* value)
     {
         u32 new_capacity = hashmap->capacity * 2;
         HashmapEntry* new_bucket = GDF_Malloc(sizeof(HashmapEntry) * new_capacity, GDF_MEMTAG_COLLECTION);
-
-        LOG_DEBUG("REHASHING ALL ENTRIES...");
 
         // Rehash all entries
         // TODO! TESTING NEEDED.
@@ -137,7 +141,6 @@ bool GDF_HashmapInsert(GDF_HashMap hashmap, void* key, void* value)
             entry->owner = hashmap;
         }
 
-        LOG_DEBUG("REHASH DONE.");
         GDF_Free(hashmap->bucket);
         hashmap->bucket = new_bucket;
         hashmap->capacity = new_capacity;

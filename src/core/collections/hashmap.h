@@ -14,6 +14,8 @@ GDF_HashMap __hashmap_create(u32 k_stride, u32 v_stride, bool string_keys);
 #define GDF_HashmapCreate(k_type, v_type, string_keys) \
     __hashmap_create(sizeof(k_type), sizeof(v_type), string_keys)
 
+bool GDF_HashmapDestroy(GDF_HashMap hashmap);
+
 // The key and value are memcpy'd on insertion.
 // Returns true on success, and false on duplicate key.
 // Returns false if the requested key is NULL. 
