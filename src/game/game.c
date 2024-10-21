@@ -4,6 +4,7 @@
 #include "engine/math/math_types.h"
 
 static GDF_Game* GAME;
+static PhysicsComponent* player_comp;
 
 bool GDF_GAME_Init()
 {
@@ -26,9 +27,11 @@ bool GDF_GAME_Init()
         .ticks_per_sec = 20,
     };
     world_create(GAME->world, &world_info);
+    player_comp = physics_create_component(GAME->world->physics);
     return true;
 }
 
+// TODO!
 bool GDF_GAME_Update(f32 dt)
 {
     // quick camera input test stuff 
@@ -52,32 +55,33 @@ bool GDF_GAME_Update(f32 dt)
 
     if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_W))
     {
-        vec3_add_to(&camera->pos, forward_vec);
+        vec3_add_to(&player_comp->pos, forward_vec);
     }
     if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_S))
     {
-        vec3_add_to(&camera->pos, vec3_negated(forward_vec));
+        vec3_add_to(&player_comp->pos, vec3_negated(forward_vec));
     }
     if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_A))
     {
-        vec3_add_to(&camera->pos, vec3_negated(right_vec));
+        vec3_add_to(&player_comp->pos, vec3_negated(right_vec));
     }
     if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_D))
     {
-        vec3_add_to(&camera->pos, right_vec);
+        vec3_add_to(&player_comp->pos, right_vec);
     }
     if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_SPACE))
     {
-        camera->pos.y += move_speed * dt;
+        player_comp->vel.y = move_speed;
     }
     if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_LSHIFT))
     {
-        camera->pos.y -= move_speed * dt;
+        player_comp->vel.y = -move_speed;
     }
     if (GDF_INPUT_IsKeyPressed(GDF_KEYCODE_SPACE))
     {
         LOG_INFO("PRESSED>...");
     }
+    camera->pos = player_comp->pos;
     i32 dx;
     i32 dy;
     GDF_INPUT_GetMouseDelta(&dx, &dy);
@@ -95,14 +99,9 @@ bool GDF_GAME_Update(f32 dt)
     // TODO! weird behavior when not clamped: when pitch passes -90 or 90, scene flips??
     camera->pitch = CLAMP(camera->pitch, -89, 89);
     camera_recalc_view_matrix(camera);
-    // LOG_DEBUG(
-    //     "xyz: (%f, %f, %f), yaw/pitch: (%f, %f)", 
-    //     camera->pos.x, 
-    //     camera->pos.y,
-    //     camera->pos.z,
-    //     camera->yaw,
-    //     camera->pitch
-    // );
+    world_update(GAME->world, dt);
+    // LOG_DEBUG("pos: %f %f %f", player_comp->pos.x, player_comp->pos.y, player_comp->pos.z);
+    // LOG_DEBUG("vel: %f %f %f", player_comp->vel.x, player_comp->vel.y, player_comp->vel.z);
     return true;
 }
 

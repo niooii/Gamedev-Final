@@ -2,6 +2,11 @@
 
 void world_create(World* out_world, WorldCreateInfo* create_info)
 {
+    PhysicsCreateInfo physics_info = {
+        .gravity = {0, -9.81, 0},
+        .gravity_active = true
+    };
+    out_world->physics = physics_init(physics_info);
     out_world->chunk_simulate_distance = create_info->chunk_simulate_distance;
     i32 chunk_sim_distance = out_world->chunk_simulate_distance;
     out_world->ticks_per_sec = create_info->ticks_per_sec;
@@ -21,7 +26,12 @@ void world_create(World* out_world, WorldCreateInfo* create_info)
     }
 }
 
+void world_update(World* world, f64 dt)
+{
+    physics_update(world->physics, dt);
+}
+
 void world_tick(World* world)
 {
-    LOG_INFO("something update world");
+    LOG_INFO("something tick world");
 }

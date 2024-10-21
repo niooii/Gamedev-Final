@@ -21,7 +21,12 @@ PhysicsEngine physics_init(PhysicsCreateInfo create_info)
 
 PhysicsComponent* physics_create_component(PhysicsEngine engine)
 {
-    PhysicsComponent component;
+    PhysicsComponent component = {
+        .aabb = 0,
+        .accel = 0,
+        .pos = 0,
+        .vel = 0
+    };
     GDF_LIST_Push(engine->components, component);
 
     return &engine->components[GDF_LIST_GetLength(engine->components) - 1];
@@ -41,9 +46,9 @@ bool physics_update(PhysicsEngine engine, f64 dt)
 
         net_accel = vec3_add(comp->accel, effective_gravity);
         
-        comp->pos.x = comp->vel.x * dt + 0.5f * net_accel.x * dt * dt;
-        comp->pos.y = comp->vel.y * dt + 0.5f * net_accel.y * dt * dt;
-        comp->pos.z = comp->vel.z * dt + 0.5f * net_accel.z * dt * dt;
+        comp->pos.x += comp->vel.x * dt + 0.5f * net_accel.x * dt * dt;
+        comp->pos.y += comp->vel.y * dt + 0.5f * net_accel.y * dt * dt;
+        comp->pos.z += comp->vel.z * dt + 0.5f * net_accel.z * dt * dt;
         
         comp->vel.x = comp->vel.x + net_accel.x * dt;
         comp->vel.y = comp->vel.y + net_accel.y * dt;

@@ -46,6 +46,21 @@ int main()
     {
         LOG_INFO("CONNECTED!!!!\n");
     }
+    // test physics impl
+    // PhysicsCreateInfo info = {
+    //     .gravity = {0, -9.81, 0},
+    //     .gravity_active = true
+    // };
+    // PhysicsEngine physics = physics_init(info);
+    // f64 time = GDF_GetAbsoluteTime();
+    // PhysicsComponent* comp = physics_create_component(physics);
+    // while (true)
+    // {
+    //     f64 dt = GDF_GetAbsoluteTime() - time;
+    //     time = GDF_GetAbsoluteTime();
+    //     physics_update(physics, dt);
+    //     LOG_DEBUG("pos: %f, %f, %f", comp->pos.x, comp->pos.y, comp->pos.z);
+    // }
     // test carr impl
     // GDF_CArray arr = GDF_CArrayCreate(f64, 2000000);
     // GDF_Stopwatch benchmarker = GDF_StopwatchCreate();
