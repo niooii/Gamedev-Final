@@ -55,19 +55,19 @@ bool GDF_GAME_Update(f32 dt)
 
     if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_W))
     {
-        vec3_add_to(&player_comp->pos, forward_vec);
+        aabb_translate(&player_comp->aabb, forward_vec);
     }
     if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_S))
     {
-        vec3_add_to(&player_comp->pos, vec3_negated(forward_vec));
+        aabb_translate(&player_comp->aabb, vec3_negated(forward_vec));
     }
     if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_A))
     {
-        vec3_add_to(&player_comp->pos, vec3_negated(right_vec));
+        aabb_translate(&player_comp->aabb, vec3_negated(right_vec));
     }
     if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_D))
     {
-        vec3_add_to(&player_comp->pos, right_vec);
+        aabb_translate(&player_comp->aabb, right_vec);
     }
     if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_SPACE))
     {
@@ -81,7 +81,8 @@ bool GDF_GAME_Update(f32 dt)
     {
         LOG_INFO("PRESSED>...");
     }
-    camera->pos = player_comp->pos;
+    // LOG_INFO("VEL: %f %f %f", player_comp->vel.x, player_comp->vel.y, player_comp->vel.z);
+    camera->pos = player_comp->aabb.max;
     i32 dx;
     i32 dy;
     GDF_INPUT_GetMouseDelta(&dx, &dy);

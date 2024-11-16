@@ -25,7 +25,7 @@ typedef struct Chunk {
     bool pending_render_update;
 } Chunk;
 
-bool chunk_create(Chunk* out_chunk);
+bool chunk_init(Chunk* out_chunk);
 ChunkBlock* GDF_CHUNK_GetBlock(
     Chunk* out_chunk, 
     u8 block_x, 

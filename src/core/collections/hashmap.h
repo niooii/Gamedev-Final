@@ -1,8 +1,16 @@
 #pragma once
 
 #include "core.h"
+#include "superfasthash.h"
+
+static FORCEINLINE u32 superfasthash_wrapper(const u8* data, u32 len) 
+{
+    return (u32)SuperFastHash((const char*)data, (int) len);
+}
 
 typedef struct GDF_HashMap_T* GDF_HashMap;
+
+#define GDF_HashMap(key, type) GDF_HashMap
 
 typedef struct HashmapEntry {
     void* key;
@@ -10,9 +18,13 @@ typedef struct HashmapEntry {
     GDF_HashMap owner;
 } HashmapEntry;
 
-GDF_HashMap __hashmap_create(u32 k_stride, u32 v_stride, bool string_keys);
+GDF_HashMap __hashmap_create(u32 k_stride, u32 v_stride, u32 (*hash_func)(const u8* data, u32 len), bool string_keys);
+
 #define GDF_HashmapCreate(k_type, v_type, string_keys) \
-    __hashmap_create(sizeof(k_type), sizeof(v_type), string_keys)
+    __hashmap_create(sizeof(k_type), sizeof(v_type), NULL, string_keys)
+
+#define GDF_HashmapWithHasher(k_type, v_type, hash_func, string_keys) \
+    __hashmap_create(sizeof(k_type), sizeof(v_type), hash_func, string_keys)
 
 bool GDF_HashmapDestroy(GDF_HashMap hashmap);
 

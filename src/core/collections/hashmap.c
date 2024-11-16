@@ -9,11 +9,12 @@ typedef struct GDF_HashMap_T {
     u32 num_entries;
     u32 capacity;
     HashmapEntry* bucket;
+    u32 (*hash_func)(const u8* data, u32 len);
 } GDF_HashMap_T;
 
-static FORCEINLINE u32 __get_idx(void* key, u32 key_size, u32 map_capacity)
+static FORCEINLINE u32 __get_idx(void* key, GDF_HashMap map)
 {
-    return SuperFastHash((const char*)key, key_size) % map_capacity;
+    return map->hash_func((const u8*)key, map->k_stride) % map->capacity;
 }
 
 // Inserts key and value at the given index or linearly probes for an
@@ -83,7 +84,7 @@ static FORCEINLINE void __free_mapentry(HashmapEntry* map_entry)
     map_entry->val = NULL;
 }
 
-GDF_HashMap __hashmap_create(u32 k_stride, u32 v_stride, bool string_keys)
+GDF_HashMap __hashmap_create(u32 k_stride, u32 v_stride, u32 (*hash_func)(const u8* data, u32 len), bool string_keys)
 {
     GDF_HashMap map = GDF_Malloc(sizeof(GDF_HashMap_T), GDF_MEMTAG_APPLICATION);
     map->k_stride = k_stride;
@@ -91,6 +92,13 @@ GDF_HashMap __hashmap_create(u32 k_stride, u32 v_stride, bool string_keys)
     map->string_keys = string_keys;
     map->num_entries = 0;
     map->capacity = 32;
+
+    if (hash_func == NULL)
+    {
+        hash_func = superfasthash_wrapper;
+    }
+
+    map->hash_func = hash_func;
 
     map->bucket = GDF_Malloc(sizeof(HashmapEntry) * map->capacity, GDF_MEMTAG_APPLICATION);
 
@@ -125,7 +133,7 @@ bool GDF_HashmapInsert(GDF_HashMap hashmap, void* key, void* value)
             if (bucket[i].key == NULL) 
                 continue;
 
-            u32 start_idx = __get_idx(bucket[i].key, hashmap->k_stride, new_capacity);
+            u32 start_idx = __get_idx(key, hashmap);
             
             HashmapEntry* entry = __insert(
                 start_idx,
@@ -147,7 +155,7 @@ bool GDF_HashmapInsert(GDF_HashMap hashmap, void* key, void* value)
     }
 
     // Find next free index to insert in
-    u32 start_idx = __get_idx(key, hashmap->k_stride, hashmap->capacity);
+    u32 start_idx = __get_idx(key, hashmap);
     
     HashmapEntry* entry = __insert(
         start_idx,
@@ -176,7 +184,7 @@ void* GDF_HashmapGet(GDF_HashMap hashmap, void* key)
         return NULL;
     
     HashmapEntry* bucket = hashmap->bucket;
-    u32 start_idx = __get_idx(key, hashmap->k_stride, hashmap->capacity);
+    u32 start_idx = __get_idx(key, hashmap);
 
     // Linear probing, wrap around until something is found or nothing is found.
     for (u32 i = 0, idx; i < hashmap->capacity && bucket[(
@@ -201,7 +209,7 @@ void GDF_HashmapRemove(GDF_HashMap hashmap, void* key, void* out_val_p)
     }
 
     HashmapEntry* bucket = hashmap->bucket;
-    u32 start_idx = __get_idx(key, hashmap->k_stride, hashmap->capacity);
+    u32 start_idx = __get_idx(key, hashmap);
 
     for (u32 i = 0, idx; i < hashmap->capacity && bucket[(
         (idx = (start_idx + i) % hashmap->capacity) 

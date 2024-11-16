@@ -3,7 +3,7 @@
 #include "core/collections/list.h"
 
 typedef struct Physics_T {
-    PhysicsComponent* components;
+    PhysicsComponent** components;
     
     vec3 gravity;
     bool gravity_active; 
@@ -12,7 +12,7 @@ typedef struct Physics_T {
 PhysicsEngine physics_init(PhysicsCreateInfo create_info)
 {
     PhysicsEngine physics = GDF_Malloc(sizeof(Physics_T), GDF_MEMTAG_APPLICATION);
-    physics->components = GDF_LIST_Reserve(PhysicsComponent, 32);
+    physics->components = GDF_LIST_Reserve(PhysicsComponent*, 32);
     physics->gravity = create_info.gravity;
     physics->gravity_active = create_info.gravity_active;
 
@@ -21,15 +21,10 @@ PhysicsEngine physics_init(PhysicsCreateInfo create_info)
 
 PhysicsComponent* physics_create_component(PhysicsEngine engine)
 {
-    PhysicsComponent component = {
-        .aabb = 0,
-        .accel = 0,
-        .pos = 0,
-        .vel = 0
-    };
+    PhysicsComponent* component = GDF_Malloc(sizeof(PhysicsComponent), GDF_MEMTAG_UNKNOWN);
     GDF_LIST_Push(engine->components, component);
 
-    return &engine->components[GDF_LIST_GetLength(engine->components) - 1];
+    return component;
 }
 
 // TODO! collision
@@ -42,13 +37,18 @@ bool physics_update(PhysicsEngine engine, f64 dt)
     u32 len = GDF_LIST_GetLength(engine->components);
     for (u32 i = 0; i < len; i++)
     {
-        PhysicsComponent* comp = engine->components + i;
+        PhysicsComponent* comp = engine->components[i];
 
         net_accel = vec3_add(comp->accel, effective_gravity);
+        LOG_INFO("A: %f %f %f", net_accel.x, net_accel.y, net_accel.z);
         
-        comp->pos.x += comp->vel.x * dt + 0.5f * net_accel.x * dt * dt;
-        comp->pos.y += comp->vel.y * dt + 0.5f * net_accel.y * dt * dt;
-        comp->pos.z += comp->vel.z * dt + 0.5f * net_accel.z * dt * dt;
+        vec3 deltas = vec3_new(
+            comp->vel.x * dt + 0.5f * net_accel.x * dt * dt,
+            comp->vel.y * dt + 0.5f * net_accel.y * dt * dt,
+            comp->vel.z * dt + 0.5f * net_accel.z * dt * dt
+        );
+
+        aabb_translate(&comp->aabb, deltas);
         
         comp->vel.x = comp->vel.x + net_accel.x * dt;
         comp->vel.y = comp->vel.y + net_accel.y * dt;

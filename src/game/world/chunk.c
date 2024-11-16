@@ -1,6 +1,6 @@
 #include "chunk.h"
 
-bool chunk_create(Chunk* out_chunk)
+bool chunk_init(Chunk* out_chunk)
 {
     out_chunk->block_arr = GDF_Malloc(MAX_CHUNK_XZ * MAX_CHUNK_Y * sizeof(ChunkBlock), GDF_MEMTAG_GAME);
     out_chunk->block_list = GDF_LIST_Reserve(ChunkBlock*, 2048);

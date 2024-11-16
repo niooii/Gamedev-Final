@@ -7,7 +7,6 @@
 typedef struct Physics_T* PhysicsEngine;
 
 typedef struct PhysicsComponent {
-    vec3 pos;
     vec3 vel;
     vec3 accel;
 
