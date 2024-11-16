@@ -39,6 +39,8 @@ void* GDF_HashmapGet(GDF_HashMap hashmap, void* key);
 // out_val_p must be a valid pointer, or may be NULL if the removed value is to be ignored.
 // Additionally, out_val_p will be set to NULL if no element exists.
 void GDF_HashmapRemove(GDF_HashMap hashmap, void* key, void* out_val_p);
+// The amount of elements present in the hashmap.
+u32 GDF_HashmapLen(GDF_HashMap hashmap);
 // Returns a pointer to the first element in the hashmap (unordered).
 // Advance with GDF_HashmapIterNext. Functions like a linked list.
 // returns NULL if the map is empty.

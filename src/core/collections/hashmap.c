@@ -133,7 +133,7 @@ bool GDF_HashmapInsert(GDF_HashMap hashmap, void* key, void* value)
             if (bucket[i].key == NULL) 
                 continue;
 
-            u32 start_idx = __get_idx(key, hashmap);
+            u32 start_idx = __get_idx(bucket[i].key, hashmap);
             
             HashmapEntry* entry = __insert(
                 start_idx,
@@ -228,6 +228,11 @@ void GDF_HashmapRemove(GDF_HashMap hashmap, void* key, void* out_val_p)
     }
     out_val_p = NULL;
     return;
+}
+
+u32 GDF_HashmapLen(GDF_HashMap hashmap)
+{
+    return hashmap->num_entries;
 }
 
 HashmapEntry* GDF_HashmapIter(GDF_HashMap hashmap)

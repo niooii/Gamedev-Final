@@ -8,7 +8,7 @@ uint32_t chunk_hash(const u8* data, u32 len) {
     const u32 p2 = 19349663u;
     const u32 p3 = 83492791u;
 
-    LOG_DEBUG("Hashing chunk at coords: (%d, %d, %d)", coord->x, coord->y, coord->z);
+    LOG_DEBUG("Hashing chunk at coords: (%d, %d, %d)\n", coord->x, coord->y, coord->z);
     
     u32 h1 = (u32)(coord->x) * p1;
     u32 h2 = (u32)(coord->y) * p2;
@@ -32,16 +32,24 @@ void world_create(World* out_world, WorldCreateInfo* create_info)
     out_world->world_update_stopwatch = GDF_StopwatchCreate();
 
     // Create da chunks
-    for (i32 chunk_x = -chunk_sim_distance; chunk_x <= chunk_sim_distance; chunk_x++)
+    for (i32 chunk_x = -5; chunk_x <= 5; chunk_x++)
     {
-        for (i32 chunk_y = -chunk_sim_distance; chunk_y <= chunk_sim_distance; chunk_y++)
+        for (i32 chunk_y = -5; chunk_y <= 5; chunk_y++)
         {
-            for (i32 chunk_z = -chunk_sim_distance; chunk_z <= chunk_sim_distance; chunk_z++)
+            for (i32 chunk_z = -5; chunk_z <= 5; chunk_z++)
             {
-                // chunk_create()
+                ChunkCoord c = {
+                    .x = chunk_x,
+                    .y = chunk_y,
+                    .z = chunk_z
+                };
+                Chunk ch = {};
+                GDF_HashmapInsert(out_world->chunks, &c, &ch);
             }
         }
     }
+
+    LOG_DEBUG("amount entries: %d", GDF_HashmapLen(out_world->chunks));
 }
 
 void world_update(World* world, f64 dt)

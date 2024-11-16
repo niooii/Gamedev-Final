@@ -152,6 +152,7 @@
         "carr.h": "c",
         "sysinfo.h": "c",
         "thread.h": "c",
-        "physics.h": "c"
+        "physics.h": "c",
+        "world.h": "c"
     },
 }

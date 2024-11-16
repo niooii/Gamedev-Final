@@ -56,18 +56,22 @@ bool GDF_GAME_Update(f32 dt)
     if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_W))
     {
         aabb_translate(&player_comp->aabb, forward_vec);
+        // vec3_add_to(&player_comp->vel, forward_vec);
     }
     if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_S))
     {
         aabb_translate(&player_comp->aabb, vec3_negated(forward_vec));
+        // vec3_add_to(&player_comp->vel, vec3_negated(forward_vec));
     }
     if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_A))
     {
         aabb_translate(&player_comp->aabb, vec3_negated(right_vec));
+        // vec3_add_to(&player_comp->vel, vec3_negated(right_vec));
     }
     if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_D))
     {
         aabb_translate(&player_comp->aabb, right_vec);
+        // vec3_add_to(&player_comp->vel, right_vec);
     }
     if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_SPACE))
     {
