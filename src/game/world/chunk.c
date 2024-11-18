@@ -42,11 +42,11 @@ bool chunk_setblock(
     block->chunk_z = chunk_block_info->block_z;
 
     block->data.type = chunk_block_info->type;
-    if (!cube_textures_get_default(block->data.type, &block->data.textures))
-    {
-        LOG_ERR("No default textures for block type %u", block->data.type);
-        return false;
-    }
+    // if (!cube_textures_get_default(block->data.type, &block->data.textures))
+    // {
+    //     LOG_ERR("No default textures for block type %u", block->data.type);
+    //     return false;
+    // }
 
     GDF_LIST_Push(chunk->block_list, block);
 

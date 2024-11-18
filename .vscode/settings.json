@@ -153,6 +153,7 @@
         "sysinfo.h": "c",
         "thread.h": "c",
         "physics.h": "c",
-        "world.h": "c"
+        "world.h": "c",
+        "block.h": "c"
     },
 }

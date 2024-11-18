@@ -15,15 +15,20 @@ typedef enum BLOCKTYPE {
 } BLOCKTYPE;
 
 typedef struct BlockTextureIds {
-    u8 top;
-    u8 bottom;
-    u8 left;
-    u8 right;
-    u8 front;
-    u8 back;
+    u32 top;
+    u32 bottom;
+    u32 left;
+    u32 right;
+    u32 front;
+    u32 back;
 } BlockTextureIds;
 
-const extern BlockTextureIds block_texture_ids[];
+typedef struct StaticBlockLookupData {
+    BlockTextureIds tex_ids;
+} StaticBlockLookupData;
+
+const extern StaticBlockLookupData STATIC_BLOCK_LOOKUP_TABLE[];
+const extern u32 STATIC_BLOCK_LOOKUP_TABLE_SIZE;
 
 typedef struct BlockData {
     BLOCKTYPE type;

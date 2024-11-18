@@ -4,18 +4,32 @@
 
 bool vk_pipelines_create_blocks(vk_renderer_context* context)
 {
-    VkDescriptorSetLayoutBinding layout_bindings[1] = {
+    // Copy all static block data to a storage buffer
+    vk_buffer ssbo;
+    vk_buffers_create_storage(
+        context,
+        STATIC_BLOCK_LOOKUP_TABLE,
+        STATIC_BLOCK_LOOKUP_TABLE_SIZE,
+        &ssbo
+    );
+    VkDescriptorSetLayoutBinding layout_bindings[] = {
         {
             .binding = 0,
             .descriptorCount = 1,
             .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+            .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
+        },
+        {
+            .binding = 1,
+            .descriptorCount = 1,
+            .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
             .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
         }
     };
  
     VkDescriptorSetLayoutCreateInfo layout_create_info = {
         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-        .bindingCount = 1,
+        .bindingCount = sizeof(layout_bindings)/sizeof(VkDescriptorSetLayoutBinding),
         .pBindings = layout_bindings,
     };
 
@@ -77,27 +91,42 @@ bool vk_pipelines_create_blocks(vk_renderer_context* context)
     );
 
     // Update sets
+    // Fragment texture sampler 
+    VkDescriptorImageInfo image_info = {
+        .sampler = context->block_textures.sampler,
+        .imageView = context->block_textures.texture_array.view,
+        .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+    };
+    // SSBO for static block data for gpu lookups
+    VkDeviceSize offset = {0};
+    VkDescriptorBufferInfo buffer_info = {
+        .buffer = 
+        .offset = offset,
+        .range = VK_WHOLE_SIZE
+    };
+
+    VkWriteDescriptorSet descriptor_writes[1] = {
+        {
+            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+            .dstSet = context->block_pipeline.descriptor_sets[i],
+            .dstBinding = 0,
+            .dstArrayElement = 0,
+            .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+            .descriptorCount = 1,
+            .pImageInfo = &image_info
+        },
+        {
+            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+            .dstSet = context->block_pipeline.descriptor_sets[i],
+            .dstBinding = 1,
+            .dstArrayElement = 0,
+            .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+            .descriptorCount = 1,
+            .pBufferInfo = &buffer_info
+        }
+    };
     for (u32 i = 0; i < image_count; i++)
     {
-        // Fragment texture sampler 
-        VkDescriptorImageInfo image_info = {
-            .sampler = context->block_textures.sampler,
-            .imageView = context->block_textures.texture_array.view,
-            .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-        };
-
-        VkWriteDescriptorSet descriptor_writes[1] = {
-            {
-                .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-                .dstSet = context->block_pipeline.descriptor_sets[i],
-                .dstBinding = 0,
-                .dstArrayElement = 0,
-                .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                .descriptorCount = 1,
-                .pImageInfo = &image_info
-            }
-        };
-
         vkUpdateDescriptorSets(
             context->device.handle, 
             1, 
@@ -323,12 +352,6 @@ bool vk_pipelines_create_blocks(vk_renderer_context* context)
             context->device.allocator,
             &context->block_pipeline.wireframe_handle
         )
-    );
-
-    // Copy block_texture_ids[] from block.c to a storage buffer
-    // TODO!
-    vk_buffers_create_storage(
-        
     );
 
     return true;

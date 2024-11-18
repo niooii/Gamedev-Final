@@ -218,7 +218,6 @@ f64 GDF_RunApp()
     GDF_StopwatchDestroy(running_timer);
 
     GDF_DestroyRenderer();
-    printf("PLUH!!!");
 
     return time_ran_for;
 }
