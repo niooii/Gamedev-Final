@@ -13,6 +13,13 @@ bool vk_buffers_create(
     vk_buffer* out_buf
 );
 
+bool vk_buffers_create_storage(
+    vk_renderer_context* context,
+    void* data,
+    u32 data_size,
+    vk_buffer* out_buf
+);
+
 bool vk_buffers_create_vertex(
     vk_renderer_context* context,
     Vertex3d* vertices,

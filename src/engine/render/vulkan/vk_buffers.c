@@ -38,6 +38,39 @@ bool vk_buffers_create(
     return true;
 }
 
+bool vk_buffers_create_storage(
+    vk_renderer_context* context,
+    void* data,
+    u32 data_size,
+    vk_buffer* out_buf
+) 
+{
+    // TODO! this can be staging buffered since 
+    // i copy once and forget about it
+    if (
+        !vk_buffers_create(
+            context,
+            data_size,
+            VK_BUFFER_USAGE_STORAGE_BUFFER_BIT,
+            VK_MEMORY_PROPERTY_HOST_VISIBLE_BIT | VK_MEMORY_PROPERTY_HOST_COHERENT_BIT,
+            out_buf
+        )
+    )
+    {
+        return false;
+    }
+
+    {
+        void* _data;
+        VK_RETURN_FALSE_ASSERT(
+            vkMapMemory(context->device.handle, out_buf->memory, 0, data_size, 0, &_data)
+        );
+        GDF_MemCopy(_data, data, data_size);
+    }
+    vkUnmapMemory(context->device.handle, out_buf->memory);
+    return true;
+}
+
 bool vk_buffers_create_vertex(
     vk_renderer_context* context,
     Vertex3d* vertices,

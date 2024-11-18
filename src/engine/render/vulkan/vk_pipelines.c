@@ -1,5 +1,6 @@
 #include "vk_pipelines.h"
 #include "vk_utils.h"
+#include "vk_buffers.h"
 
 bool vk_pipelines_create_blocks(vk_renderer_context* context)
 {
@@ -11,7 +12,7 @@ bool vk_pipelines_create_blocks(vk_renderer_context* context)
             .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
         }
     };
-
+ 
     VkDescriptorSetLayoutCreateInfo layout_create_info = {
         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
         .bindingCount = 1,
@@ -326,6 +327,9 @@ bool vk_pipelines_create_blocks(vk_renderer_context* context)
 
     // Copy block_texture_ids[] from block.c to a storage buffer
     // TODO!
+    vk_buffers_create_storage(
+        
+    );
 
     return true;
 }
