@@ -1,6 +1,6 @@
 #include "renderer.h"
 #include "renderer_backend.h"
-
+#include <stdio.h>
 #include "core.h"
 #include "core/os/window.h"
 

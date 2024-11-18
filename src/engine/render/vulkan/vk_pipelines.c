@@ -3,15 +3,9 @@
 
 bool vk_pipelines_create_blocks(vk_renderer_context* context)
 {
-    VkDescriptorSetLayoutBinding ubo_layout_bindings[2] = {
+    VkDescriptorSetLayoutBinding layout_bindings[1] = {
         {
             .binding = 0,
-            .descriptorCount = 1,
-            .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-            .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
-        },
-        {
-            .binding = 1,
             .descriptorCount = 1,
             .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
             .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
@@ -20,8 +14,8 @@ bool vk_pipelines_create_blocks(vk_renderer_context* context)
 
     VkDescriptorSetLayoutCreateInfo layout_create_info = {
         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-        .bindingCount = 2,
-        .pBindings = ubo_layout_bindings,
+        .bindingCount = 1,
+        .pBindings = layout_bindings,
     };
 
     u32 image_count = context->swapchain.image_count;
@@ -72,7 +66,45 @@ bool vk_pipelines_create_blocks(vk_renderer_context* context)
         .descriptorSetCount = image_count
     };
 
-    // TODO! allocate sets
+    // Allocate sets
+    VK_ASSERT(
+        vkAllocateDescriptorSets(
+            context->device.handle,
+            &set_alloc_info,
+            context->block_pipeline.descriptor_sets
+        )
+    );
+
+    // Update sets
+    for (u32 i = 0; i < image_count; i++)
+    {
+        // Fragment texture sampler 
+        VkDescriptorImageInfo image_info = {
+            .sampler = context->block_textures.sampler,
+            .imageView = context->block_textures.texture_array.view,
+            .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
+        };
+
+        VkWriteDescriptorSet descriptor_writes[1] = {
+            {
+                .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+                .dstSet = context->block_pipeline.descriptor_sets[i],
+                .dstBinding = 0,
+                .dstArrayElement = 0,
+                .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                .descriptorCount = 1,
+                .pImageInfo = &image_info
+            }
+        };
+
+        vkUpdateDescriptorSets(
+            context->device.handle, 
+            1, 
+            descriptor_writes, 
+            0, 
+            NULL
+        );
+    }
 
     // Vertex input configuration
     VkVertexInputBindingDescription bindings = {
@@ -161,25 +193,40 @@ bool vk_pipelines_create_blocks(vk_renderer_context* context)
         .blendConstants = {0.0f, 0.0f, 0.0f, 0.0f}
     };
 
-    // TODO!
-    VkDescriptorSetLayout possible_layouts[] = {
-        context->ubo_set_layouts[0],
+    VkDescriptorSetLayout descriptor_layouts[2] = {
+        context->global_vp_ubo_layouts[0],
         context->block_pipeline.descriptor_layouts[0]
     };
+
+    /*
+    layout(push_constant) uniform PushConstants {
+        int chunk_world_x;
+        int chunk_world_y;
+        int chunk_world_z;
+    } push_constants;
+    */
+   
+    // VkPushConstantRange push_constant_ranges[1] = {
+    //     {
+    //         .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+    //         .offset = 0,
+    //         .size = sizeof(i32) * 3
+    //     },
+    // };
 
     VkPushConstantRange push_constant_ranges[1] = {
         {
             .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
             .offset = 0,
-            .size = sizeof(i32) * 3
+            .size = sizeof(mat4)
         },
     };
 
     // Pipeline layout
     VkPipelineLayoutCreateInfo layout_info = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-        .pSetLayouts = possible_layouts,
-        .setLayoutCount = sizeof(possible_layouts) / sizeof(VkDescriptorSetLayout),
+        .pSetLayouts = descriptor_layouts,
+        .setLayoutCount = sizeof(descriptor_layouts) / sizeof(VkDescriptorSetLayout),
         .pPushConstantRanges = push_constant_ranges,
         .pushConstantRangeCount = sizeof(push_constant_ranges) / sizeof(VkPushConstantRange)
     };
@@ -193,7 +240,7 @@ bool vk_pipelines_create_blocks(vk_renderer_context* context)
         )
     );
 
-    rasterizer_state.polygonMode = VK_POLYGON_MODE_LINE;
+    rasterizer_state.polygonMode = VK_POLYGON_MODE_FILL;
 
     // Create wireframe layout
     VK_ASSERT(
@@ -276,6 +323,9 @@ bool vk_pipelines_create_blocks(vk_renderer_context* context)
             &context->block_pipeline.wireframe_handle
         )
     );
+
+    // Copy block_texture_ids[] from block.c to a storage buffer
+    // TODO!
 
     return true;
 }
@@ -388,7 +438,7 @@ bool vk_pipelines_create_grid(vk_renderer_context* context)
     // Pipeline layout
     VkPipelineLayoutCreateInfo layout_info = {
         .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
-        .pSetLayouts = &context->ubo_set_layouts[0],
+        .pSetLayouts = &context->global_vp_ubo_layouts[0],
         .setLayoutCount = 1,
         .pPushConstantRanges = &push_constant_range,
         .pushConstantRangeCount = 1

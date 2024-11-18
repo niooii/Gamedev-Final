@@ -40,6 +40,6 @@ typedef struct Vertex3d {
     vec3 pos;
 } Vertex3d;
 
-typedef struct UniformBuffer {
+typedef struct ViewProjUB {
     mat4 view_projection;
-} UniformBuffer;
+} ViewProjUB;

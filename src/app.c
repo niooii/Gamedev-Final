@@ -114,7 +114,6 @@ bool GDF_InitApp()
     {
         GDF_HideConsole();
     }
-
     GDF_EVENT_Register(GDF_EVENT_INTERNAL_KEY_PRESSED, NULL, app_on_event);
     GDF_EVENT_Register(GDF_EVENT_INTERNAL_APP_QUIT, NULL, app_on_event);
     GDF_EVENT_Register(GDF_EVENT_INTERNAL_WINDOW_RESIZE, NULL, app_on_event);
@@ -219,6 +218,7 @@ f64 GDF_RunApp()
     GDF_StopwatchDestroy(running_timer);
 
     GDF_DestroyRenderer();
+    printf("PLUH!!!");
 
     return time_ran_for;
 }

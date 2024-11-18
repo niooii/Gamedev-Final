@@ -49,7 +49,7 @@ typedef struct ThreadLoggingInfo {
     const char* thread_name;
 } ThreadLoggingInfo;
 
-void __flush_log_buffer()
+void logging_flush_buffer()
 {
     GDF_LockMutex(entries_mutex);
     for (u32 i = 0; i < next_free_entry; i++)
@@ -83,7 +83,7 @@ unsigned long flushing_thread_fn(void*)
         {
             GDF_StopwatchReset(stopwatch);
             // TODO! optimized IO
-            __flush_log_buffer();
+            logging_flush_buffer();
         }
     }
 }
@@ -152,7 +152,7 @@ void log_output(log_level level, const char* message, ...)
     // TODO! BAD BAD BAD
     if (next_free_entry >= ENTRIES_BUFFER_CAPACITY)
     {
-        __flush_log_buffer();
+        logging_flush_buffer();
         next_free_entry = 0;
     }
 

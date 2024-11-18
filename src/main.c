@@ -124,12 +124,21 @@ int main()
     // GDF_ThreadSleep(1000);
     // return 0;
 
-    GDF_InitApp();
+    if (!GDF_InitApp())
+    {
+        LOG_ERR("gg this is tragic....\n");
+    }
     f64 time_ran_for = GDF_RunApp();
     if (time_ran_for != -1)
     {
-        LOG_INFO("App has been running for %lf seconds... Time to rest!", time_ran_for);
+        printf("App has been running for %lf seconds... Time to rest!", time_ran_for);
     }
+    else
+    {
+        printf("yikes....\n");
+        return 1;
+    }
+    logging_flush_buffer();
     GDF_ShutdownSubsystems();
     return 0;
 }

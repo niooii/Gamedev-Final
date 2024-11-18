@@ -6,7 +6,7 @@
 #include "vk_textures.h"
 #include "vk_game_renderer.h"
 #include "vk_pipelines.h"
-
+#include <stdio.h>
 static vk_renderer_context context;
 
 VKAPI_ATTR VkBool32 VKAPI_CALL __vk_dbg_callback(
@@ -686,6 +686,52 @@ static const u16 plane_indices[] = {
     0, 1, 2, 2, 3, 0
 };
 
+const vec3 cube_vertices[] = {
+    // front face
+    {-0.5f, -0.5f,  0.5f},
+    { 0.5f, -0.5f,  0.5f},
+    { 0.5f,  0.5f,  0.5f},
+    {-0.5f,  0.5f,  0.5f},
+    
+    // back face
+    { 0.5f, -0.5f, -0.5f},
+    {-0.5f, -0.5f, -0.5f},
+    {-0.5f,  0.5f, -0.5f},
+    { 0.5f,  0.5f, -0.5f},
+    
+    // top face
+    {-0.5f,  0.5f, -0.5f},
+    { 0.5f,  0.5f, -0.5f},
+    { 0.5f,  0.5f,  0.5f},
+    {-0.5f,  0.5f,  0.5f},
+    
+    // bottom face
+    {-0.5f, -0.5f, -0.5f},
+    { 0.5f, -0.5f, -0.5f},
+    { 0.5f, -0.5f,  0.5f},
+    {-0.5f, -0.5f,  0.5f},
+    
+    // right face
+    { 0.5f, -0.5f, -0.5f},
+    { 0.5f, -0.5f,  0.5f},
+    { 0.5f,  0.5f,  0.5f},
+    { 0.5f,  0.5f, -0.5f},
+    
+    // left face
+    {-0.5f, -0.5f,  0.5f},
+    {-0.5f, -0.5f, -0.5f},
+    {-0.5f,  0.5f, -0.5f},
+    {-0.5f,  0.5f,  0.5f}
+};
+const u16 cube_indices[] = {
+    0,  1,  2,  2,  3,  0,  // front
+    4,  5,  6,  6,  7,  4,  // back
+    8,  9,  10, 10, 11, 8,  // top
+    12, 13, 14, 14, 15, 12, // bottom
+    16, 17, 18, 18, 19, 16, // right
+    20, 21, 22, 22, 23, 20  // left
+};
+
 static void __create_global_vbos(vk_renderer_context* context) 
 {
     vk_buffers_create_vertex(
@@ -700,24 +746,36 @@ static void __create_global_vbos(vk_renderer_context* context)
         sizeof(plane_indices),
         &context->up_facing_plane_index_buffer
     );
+    vk_buffers_create_vertex(
+        context,
+        cube_vertices,
+        sizeof(cube_vertices),
+        &context->cube_vbo
+    );
+    vk_buffers_create_index(
+        context,
+        cube_indices,
+        sizeof(cube_indices),
+        &context->cube_index_buffer
+    );
 }
 
 // TODO! Remove later
 static u32 cube_transform_count = 50;
-static GDF_Transform* cube_transforms;
+static Transform* cube_transforms;
 // ===== FORWARD DECLARATIONS END =====
 bool vk_renderer_init(renderer_backend* backend, const char* application_name) 
 {
-    cube_transforms = GDF_LIST_Reserve(GDF_Transform, cube_transform_count);
+    cube_transforms = GDF_LIST_Reserve(Transform, cube_transform_count);
     for (u32 i = 0; i < cube_transform_count; i++)
     {
-        GDF_Transform* cube_transform = cube_transforms + i;
-        GDF_TRANSFORM_InitDefault(cube_transform);
+        Transform* cube_transform = cube_transforms + i;
+        transform_init_default(cube_transform);
         cube_transform->pos.x = -((f32)cube_transform_count) + 2 * i;
         cube_transform->pos.x += 0.5;
         cube_transform->pos.z += 0.5;
         LOG_INFO("pos: %f", cube_transform->pos.x);
-        GDF_TRANSFORM_RecalculateModelMatrix(cube_transform);
+        transform_recalc_model_matrix(cube_transform);
     }
     // TODO! custom allocator.
     context.device.allocator = 0;
@@ -998,7 +1056,7 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     /* ======================================== */
     /* ----- Create and allocate ubos & descriptor things ----- */
     /* ======================================== */
-    VkDeviceSize buffer_size = sizeof(UniformBuffer);
+    VkDeviceSize buffer_size = sizeof(ViewProjUB);
     context.uniform_buffers = GDF_LIST_Reserve(vk_uniform_buffer, image_count);
     // Create separate ubo for each swapchain image
     for (u32 i = 0; i < image_count; i++) 
@@ -1011,8 +1069,8 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     }
 
     // Create descriptor pool and allocate sets
-    context.ubo_descriptor_sets = GDF_LIST_Reserve(VkDescriptorSet, image_count);
-    context.ubo_set_layouts = GDF_LIST_Reserve(VkDescriptorSet, image_count);
+    context.global_vp_ubo_sets = GDF_LIST_Reserve(VkDescriptorSet, image_count);
+    context.global_vp_ubo_layouts = GDF_LIST_Reserve(VkDescriptorSet, image_count);
     VkDescriptorPoolSize pool_size = {
         .type = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
         .descriptorCount = image_count
@@ -1034,18 +1092,12 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
         )
     );
     
-    VkDescriptorSetLayoutBinding layout_bindings[2] = {
+    VkDescriptorSetLayoutBinding layout_bindings[1] = {
         {
             .binding = 0,
             .descriptorCount = 1,
             .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
             .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
-        },
-        {
-            .binding = 1,
-            .descriptorCount = 1,
-            .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-            .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT,
         }
     };
 
@@ -1053,7 +1105,7 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     {
         VkDescriptorSetLayoutCreateInfo layout_create_info = {
             .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-            .bindingCount = 2,
+            .bindingCount = sizeof(layout_bindings) / sizeof(VkDescriptorSetLayoutBinding),
             .pBindings = layout_bindings,
         };
         
@@ -1062,7 +1114,7 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
                 context.device.handle,
                 &layout_create_info,
                 context.device.allocator,
-                &context.ubo_set_layouts[i]
+                &context.global_vp_ubo_layouts[i]
             )
         );
     }
@@ -1071,13 +1123,13 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
         .descriptorPool = context.descriptor_pool,
         .descriptorSetCount = image_count,
-        .pSetLayouts = context.ubo_set_layouts
+        .pSetLayouts = context.global_vp_ubo_layouts
     };
 
     vkAllocateDescriptorSets(
         context.device.handle,
         &descriptor_sets_alloc_info,
-        context.ubo_descriptor_sets
+        context.global_vp_ubo_sets
     );
 
     // Update descriptor sets
@@ -1087,40 +1139,24 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
         VkDescriptorBufferInfo buffer_info = {
             .buffer = context.uniform_buffers[i].buffer.handle,
             .offset = 0,
-            .range = sizeof(UniformBuffer)
+            .range = sizeof(ViewProjUB)
         };
 
-        // Fragment texture sampler (geometry pass)
-        VkDescriptorImageInfo image_info = {
-            .sampler = context.block_textures.sampler,
-            .imageView = context.block_textures.texture_array.view,
-            .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
-        };
-
-        VkWriteDescriptorSet descriptor_writes[2] = {
+        VkWriteDescriptorSet descriptor_writes[1] = {
             {
                 .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-                .dstSet = context.ubo_descriptor_sets[i],
+                .dstSet = context.global_vp_ubo_sets[i],
                 .dstBinding = 0,
                 .dstArrayElement = 0,
                 .descriptorType = VK_DESCRIPTOR_TYPE_UNIFORM_BUFFER,
                 .descriptorCount = 1,
                 .pBufferInfo = &buffer_info
-            },
-            {
-                .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-                .dstSet = context.ubo_descriptor_sets[i],
-                .dstBinding = 1,
-                .dstArrayElement = 0,
-                .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-                .descriptorCount = 1,
-                .pImageInfo = &image_info
             }
         };
 
         vkUpdateDescriptorSets(
             context.device.handle, 
-            2, 
+            1, 
             descriptor_writes, 
             0, 
             NULL
@@ -1281,7 +1317,7 @@ void vk_renderer_destroy(renderer_backend* backend)
     {
         vkDestroyDescriptorSetLayout(
             device,
-            context.ubo_set_layouts[i],
+            context.global_vp_ubo_layouts[i],
             allocator
         );
         vkDestroyFence(
@@ -1455,7 +1491,7 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
 
     GDF_Camera* active_camera = backend->game->main_camera;
     // TODO! remove and extract updating ubo into another function
-    UniformBuffer ubo = {
+    ViewProjUB ubo = {
         .view_projection = active_camera->view_perspective
         // .proj = mat4_identity(),
     };

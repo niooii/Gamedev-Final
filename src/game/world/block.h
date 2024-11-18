@@ -7,71 +7,27 @@
 #define MAX_CHUNK_Y 32
 
 typedef enum BLOCKTYPE {
+    GDF_BLOCKTYPE_AIR,
     GDF_BLOCKTYPE_Grass,
     GDF_BLOCKTYPE_Dirt,
     GDF_BLOCKTYPE_Glass,
+    GDF_BLOCKTYPE_Stone,
 } BLOCKTYPE;
 
-typedef struct CubeTextureIds {
+typedef struct BlockTextureIds {
     u8 top;
     u8 bottom;
     u8 left;
     u8 right;
     u8 front;
     u8 back;
-} CubeTextureIds;
+} BlockTextureIds;
+
+const extern BlockTextureIds block_texture_ids[];
 
 typedef struct BlockData {
     BLOCKTYPE type;
-    CubeTextureIds textures;
 } BlockData;
-
-bool FORCEINLINE cube_textures_get_default(BLOCKTYPE block_type, CubeTextureIds* tex_ids)
-{
-    u8 top;
-    u8 bottom;
-    u8 left;
-    u8 right;
-    u8 front;
-    u8 back;
-    switch (block_type)
-    {
-        case GDF_BLOCKTYPE_Grass:
-        {
-            top = GDF_TEXTURE_INDEX_GRASS_TOP;
-            bottom = GDF_TEXTURE_INDEX_DIRT;
-            left = GDF_TEXTURE_INDEX_GRASS_SIDE;
-            right = GDF_TEXTURE_INDEX_GRASS_SIDE;
-            front = GDF_TEXTURE_INDEX_GRASS_SIDE;
-            back = GDF_TEXTURE_INDEX_GRASS_SIDE;
-            break;
-        }
-        case GDF_BLOCKTYPE_Dirt:
-        {
-            top = GDF_TEXTURE_INDEX_DIRT;
-            bottom = GDF_TEXTURE_INDEX_DIRT;
-            left = GDF_TEXTURE_INDEX_DIRT;
-            right = GDF_TEXTURE_INDEX_DIRT;
-            front = GDF_TEXTURE_INDEX_DIRT;
-            back = GDF_TEXTURE_INDEX_DIRT;
-            break;
-        }
-
-        default: 
-        {
-            return false;
-        }
-    }
-
-    tex_ids->top = top;
-    tex_ids->bottom = bottom;
-    tex_ids->left = left;
-    tex_ids->right = right;
-    tex_ids->front = front;
-    tex_ids->back = back;
-
-    return true;
-}
 
 typedef struct GDF_ChunkBlockCreateInfo {
     BLOCKTYPE type;

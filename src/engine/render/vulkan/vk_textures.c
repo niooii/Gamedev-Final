@@ -11,7 +11,7 @@ static const char* __texture_paths[GDF_TEXTURE_INDEX_MAX] = {
     [GDF_TEXTURE_INDEX_DIRT] = TEXTURES_FOLDER "dirt.png",
     [GDF_TEXTURE_INDEX_GRASS_TOP] = TEXTURES_FOLDER "grass_top.png",
     [GDF_TEXTURE_INDEX_GRASS_SIDE] = TEXTURES_FOLDER "grass_side.png",
-
+    [GDF_TEXTURE_INDEX_STONE] = TEXTURES_FOLDER "stone.png",
 };
 
 bool vk_block_textures_init(vk_renderer_context* context, vk_block_textures* out_textures)
@@ -20,82 +20,6 @@ bool vk_block_textures_init(vk_renderer_context* context, vk_block_textures* out
     vk_device* device = &context->device;
     out_textures->allocator = context->device.allocator;
     VkAllocationCallbacks* allocator = context->device.allocator;
-
-    // // Descriptor pool
-    // VkDescriptorPoolSize pool_sizes[] = {
-    //     {
-    //         .type = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-    //         .descriptorCount = context->swapchain.image_count
-    //     }
-    // };
-
-    // VkDescriptorPoolCreateInfo descriptor_pool_info = {
-    //     .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_POOL_CREATE_INFO,
-    //     .maxSets = context->swapchain.image_count,
-    //     .poolSizeCount = 1,
-    //     .pPoolSizes = pool_sizes
-    // };
-
-    // VK_RETURN_FALSE_ASSERT(
-    //     vkCreateDescriptorPool(
-    //         device->handle,
-    //         &descriptor_pool_info,
-    //         allocator,
-    //         &out_textures->descriptor_pool
-    //     )
-    // );
-
-    // VkDescriptorSetLayoutBinding bindings[] = {
-    //     {
-    //         .binding = 0,
-    //         .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-    //         .descriptorCount = 1,
-    //         .stageFlags = VK_SHADER_STAGE_FRAGMENT_BIT
-    //     }
-    // };
-
-    // VkDescriptorSetLayoutCreateInfo descriptor_set_layout_info = {
-    //     .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_LAYOUT_CREATE_INFO,
-    //     .bindingCount = 1,
-    //     .pBindings = bindings
-    // };
-
-    // // Create layouts (each frame in flight)
-    // out_textures->descriptor_set_layouts = GDF_LIST_Create(VkDescriptorSetLayout);
-    // for (u32 i = 0; i < context->swapchain.image_count; i++)
-    // {
-    //     VkDescriptorSetLayout layout;
-    //     VK_RETURN_FALSE_ASSERT(
-    //         vkCreateDescriptorSetLayout(
-    //             out_textures->device->handle, 
-    //             &descriptor_set_layout_info, 
-    //             out_textures->allocator,
-    //             &layout
-    //         )
-    //     );
-    //     GDF_LIST_Push(out_textures->descriptor_set_layouts, layout);
-    // }
-
-    // out_textures->descriptor_sets = GDF_LIST_Reserve(VkDescriptorSet, context->swapchain.image_count);
-
-    // VkDescriptorSetAllocateInfo alloc_info = {
-    //     .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-    //     .descriptorPool = out_textures->descriptor_pool,
-    //     .descriptorSetCount = GDF_LIST_GetLength(out_textures->descriptor_set_layouts),
-    //     .pSetLayouts = out_textures->descriptor_set_layouts
-    // };
-
-    // VK_RETURN_FALSE_ASSERT(
-    //     vkAllocateDescriptorSets(
-    //         device->handle,
-    //         &alloc_info,
-    //         out_textures->descriptor_sets
-    //     )
-    // );
-
-    // GDF_LIST_SetLength(out_textures->descriptor_sets, context->swapchain.image_count);
-
-    // LOG_DEBUG("Allocated descriptor sets for block textures");
 
     // assume each block texture is 16x16
     const u32 w = 16;

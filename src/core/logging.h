@@ -32,6 +32,8 @@ void GDF_ShutdownLogging();
 
 // #define  __declspec(dllexport)
 
+
+void logging_flush_buffer();
 void log_output(log_level level, const char* message, ...);
 
 // should be available wherever lol unlucky

@@ -8,8 +8,6 @@ uint32_t chunk_hash(const u8* data, u32 len) {
     const u32 p2 = 19349663u;
     const u32 p3 = 83492791u;
 
-    LOG_DEBUG("Hashing chunk at coords: (%d, %d, %d)\n", coord->x, coord->y, coord->z);
-    
     u32 h1 = (u32)(coord->x) * p1;
     u32 h2 = (u32)(coord->y) * p2;
     u32 h3 = (u32)(coord->z) * p3;

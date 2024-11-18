@@ -40,7 +40,6 @@ bool physics_update(PhysicsEngine engine, f64 dt)
         PhysicsComponent* comp = engine->components[i];
 
         net_accel = vec3_add(comp->accel, effective_gravity);
-        LOG_INFO("A: %f %f %f", net_accel.x, net_accel.y, net_accel.z);
         
         vec3 deltas = vec3_new(
             comp->vel.x * dt + 0.5f * net_accel.x * dt * dt,

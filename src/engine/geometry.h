@@ -9,9 +9,9 @@ typedef struct Transform {
     vec3 rot;
     vec3 scale;
     mat4 model_matrix;
-} GDF_Transform;
+} Transform;
 
-FORCEINLINE void GDF_TRANSFORM_RecalculateModelMatrix(GDF_Transform* transform)
+FORCEINLINE void transform_recalc_model_matrix(Transform* transform)
 {
     transform->model_matrix = mat4_mul(
         mat4_mul(
@@ -22,8 +22,8 @@ FORCEINLINE void GDF_TRANSFORM_RecalculateModelMatrix(GDF_Transform* transform)
     );
 }
 
-FORCEINLINE void GDF_TRANSFORM_InitDefault(GDF_Transform* out_transform)
+FORCEINLINE void transform_init_default(Transform* out_transform)
 {
     out_transform->scale = vec3_new(1,1,1);
-    GDF_TRANSFORM_RecalculateModelMatrix(out_transform);
+    transform_recalc_model_matrix(out_transform);
 }

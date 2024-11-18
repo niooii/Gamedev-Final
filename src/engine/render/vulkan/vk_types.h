@@ -210,12 +210,12 @@ typedef struct vk_renderer_context {
     // All vertex shaders will get input from these uniform buffers.
     vk_uniform_buffer* uniform_buffers;
     // This field is modified then copied over to vk_uniform_buffer[n].mapped_Data
-    UniformBuffer uniform_buffer_data;
+    ViewProjUB uniform_buffer_data;
     VkDescriptorPool descriptor_pool;
     // GDF_LIST
-    VkDescriptorSet* ubo_descriptor_sets;
+    VkDescriptorSet* global_vp_ubo_sets;
     // GDF_LIST
-    VkDescriptorSetLayout* ubo_set_layouts;
+    VkDescriptorSetLayout* global_vp_ubo_layouts;
 
     VkCommandPool persistent_command_pool;
     VkCommandPool transient_command_pool;
@@ -243,6 +243,8 @@ typedef struct vk_renderer_context {
 
     vk_buffer up_facing_plane_vbo;
     vk_buffer up_facing_plane_index_buffer;
+    vk_buffer cube_vbo;
+    vk_buffer cube_index_buffer;
 
     vk_block_textures block_textures;
 
