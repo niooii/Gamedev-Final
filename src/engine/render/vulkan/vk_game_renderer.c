@@ -3,7 +3,7 @@
 
 Transform random_ahh_cube;
 
-bool vk_draw_game(vk_renderer_context* context, renderer_backend* backend, u8 resource_idx, f32 dt)
+bool vk_draw_game(vk_renderer_context* context, Renderer* backend, u8 resource_idx, f32 dt)
 {
     // TODO! BEGONE
     transform_init_default(&random_ahh_cube);
@@ -17,17 +17,44 @@ bool vk_draw_game(vk_renderer_context* context, renderer_backend* backend, u8 re
     VkDeviceSize offsets[] = {0};
     
     // Render chunks
-    vkCmdBindPipeline(cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, context->block_pipeline.handle);
 
     VkDescriptorSet sets[2] = {
         context->global_vp_ubo_sets[resource_idx],
         context->block_pipeline.descriptor_sets[resource_idx]
     };
+
+    VkPipelineLayout block_pipeline_layout = VK_NULL_HANDLE;
+    VkPipelineLayout block_pipeline = VK_NULL_HANDLE;
+    switch (backend->render_mode) 
+    {
+        case GDF_RENDER_MODE_FULL:
+        {
+            block_pipeline = context->block_pipeline.handle;
+            block_pipeline_layout = context->block_pipeline.layout;
+            break;
+        }
+        case GDF_RENDER_MODE_WIREFRAME:
+        {
+            block_pipeline = context->block_pipeline.wireframe_handle;
+            block_pipeline_layout = context->block_pipeline.wireframe_layout;
+            break;
+        }
+        default:
+        LOG_FATAL("wyd lil bro");
+        logging_flush_buffer();
+        exit(1);
+    }
     
+    vkCmdBindPipeline(
+        cmd_buffer, 
+        VK_PIPELINE_BIND_POINT_GRAPHICS, 
+        block_pipeline
+    );
+
     vkCmdBindDescriptorSets(
         cmd_buffer,
         VK_PIPELINE_BIND_POINT_GRAPHICS,
-        context->block_pipeline.layout,
+        block_pipeline_layout,
         0,
         sizeof(sets) / sizeof(VkDescriptorSet),
         sets, 
@@ -37,10 +64,18 @@ bool vk_draw_game(vk_renderer_context* context, renderer_backend* backend, u8 re
 
     vkCmdBindVertexBuffers(cmd_buffer, 0, 1, &context->cube_vbo.handle, offsets);
     vkCmdBindIndexBuffer(cmd_buffer, context->cube_index_buffer.handle, 0, VK_INDEX_TYPE_UINT16);
+    struct PushConstantTemp {
+        mat4 model;
+        u32 block_type;
+    };
+    struct PushConstantTemp pct = {
+        .model = random_ahh_cube.model_matrix,
+        .block_type = GDF_BLOCKTYPE_Stone
+    };
     vkCmdPushConstants(
-        cmd_buffer, context->block_pipeline.layout, 
+        cmd_buffer, block_pipeline_layout, 
         VK_SHADER_STAGE_VERTEX_BIT,
-        0, sizeof(mat4), &random_ahh_cube.model_matrix
+        0, sizeof(struct PushConstantTemp), &pct
     );
 
     vkCmdDrawIndexed(cmd_buffer, 36, 1, 0, 0, 0);

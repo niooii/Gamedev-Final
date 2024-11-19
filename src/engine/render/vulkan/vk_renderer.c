@@ -145,18 +145,7 @@ bool __create_shader_modules(vk_renderer_context* context)
         return false;
     }
 
-    if (
-        !vk_utils_create_shader_module(
-            context, 
-            "resources/shaders/post_processing_base.vert.spv", 
-            &context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_POST_PROCESS_VERT]
-        )
-    ) 
-    {
-        LOG_ERR("Failed to create post processing pass vertex shader. exiting...");
-        return false;
-    }
-
+    
     if (
         !vk_utils_create_shader_module(
             context, 
@@ -184,8 +173,44 @@ bool __create_shader_modules(vk_renderer_context* context)
     if (
         !vk_utils_create_shader_module(
             context, 
+            "resources/shaders/post_processing_base.vert.spv", 
+            &context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_POST_PROCESS_VERT]
+        )
+    ) 
+    {
+        LOG_ERR("Failed to create post processing pass vertex shader. exiting...");
+        return false;
+    }
+
+    if (
+        !vk_utils_create_shader_module(
+            context, 
             "resources/shaders/post_processing_base.frag.spv", 
             &context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_POST_PROCESS_FRAG]
+        )
+    ) 
+    {
+        LOG_ERR("Failed to create post processing pass fragment shader. exiting...");
+        return false;
+    }
+
+    if (
+        !vk_utils_create_shader_module(
+            context, 
+            "resources/shaders/ui.vert.spv", 
+            &context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_UI_VERT]
+        )
+    ) 
+    {
+        LOG_ERR("Failed to create UI vertex shader. exiting...");
+        return false;
+    }
+
+    if (
+        !vk_utils_create_shader_module(
+            context, 
+            "resources/shaders/ui.frag.spv", 
+            &context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_UI_FRAG]
         )
     ) 
     {
@@ -338,7 +363,7 @@ void __filter_available_devices(vk_physical_device* phys_list)
     }
 }
 
-bool __create_swapchain_and_images(renderer_backend* backend, vk_renderer_context* context) 
+bool __create_swapchain_and_images(Renderer* backend, vk_renderer_context* context) 
 {
     // TODO! add a lot more checks during swapchain creation
     VkSwapchainCreateInfoKHR sc_create_info = {
@@ -571,7 +596,7 @@ void __destroy_swapchain_and_images(vk_renderer_context* context)
     }
 }
 
-bool __create_framebuffers(renderer_backend* backend, vk_renderer_context* context)
+bool __create_framebuffers(Renderer* backend, vk_renderer_context* context)
 {
     // Create framebuffers
     u32 image_count = context->swapchain.image_count;
@@ -623,7 +648,7 @@ void __destroy_framebuffers(vk_renderer_context* context)
         GDF_LIST_Destroy(context->swapchain.framebuffers);
 }
 
-bool __recreate_sized_resources(renderer_backend* backend, vk_renderer_context* context)
+bool __recreate_sized_resources(Renderer* backend, vk_renderer_context* context)
 {
     __destroy_framebuffers(context);
     __destroy_swapchain_and_images(context);
@@ -687,49 +712,24 @@ static const u16 plane_indices[] = {
 };
 
 const vec3 cube_vertices[] = {
-    // front face
-    {-0.5f, -0.5f,  0.5f},
-    { 0.5f, -0.5f,  0.5f},
-    { 0.5f,  0.5f,  0.5f},
-    {-0.5f,  0.5f,  0.5f},
-    
-    // back face
-    { 0.5f, -0.5f, -0.5f},
-    {-0.5f, -0.5f, -0.5f},
-    {-0.5f,  0.5f, -0.5f},
-    { 0.5f,  0.5f, -0.5f},
-    
-    // top face
-    {-0.5f,  0.5f, -0.5f},
-    { 0.5f,  0.5f, -0.5f},
-    { 0.5f,  0.5f,  0.5f},
-    {-0.5f,  0.5f,  0.5f},
-    
-    // bottom face
-    {-0.5f, -0.5f, -0.5f},
-    { 0.5f, -0.5f, -0.5f},
-    { 0.5f, -0.5f,  0.5f},
-    {-0.5f, -0.5f,  0.5f},
-    
-    // right face
-    { 0.5f, -0.5f, -0.5f},
-    { 0.5f, -0.5f,  0.5f},
-    { 0.5f,  0.5f,  0.5f},
-    { 0.5f,  0.5f, -0.5f},
-    
-    // left face
-    {-0.5f, -0.5f,  0.5f},
-    {-0.5f, -0.5f, -0.5f},
-    {-0.5f,  0.5f, -0.5f},
-    {-0.5f,  0.5f,  0.5f}
+    // Unique vertices of the cube
+    {-0.5f, -0.5f, -0.5f}, // left-bottom-back
+    { 0.5f, -0.5f, -0.5f}, // right-bottom-back
+    {-0.5f,  0.5f, -0.5f}, // left-top-back
+    { 0.5f,  0.5f, -0.5f}, // right-top-back
+    {-0.5f, -0.5f,  0.5f}, // left-bottom-front
+    { 0.5f, -0.5f,  0.5f}, // right-bottom-front
+    {-0.5f,  0.5f,  0.5f}, // left-top-front
+    { 0.5f,  0.5f,  0.5f}  // right-top-front
 };
+
 const u16 cube_indices[] = {
-    0,  1,  2,  2,  3,  0,  // front
-    4,  5,  6,  6,  7,  4,  // back
-    8,  9,  10, 10, 11, 8,  // top
-    12, 13, 14, 14, 15, 12, // bottom
-    16, 17, 18, 18, 19, 16, // right
-    20, 21, 22, 22, 23, 20  // left
+    4, 5, 7, 7, 6, 4, // front
+    1, 0, 2, 2, 3, 1, // back
+    6, 7, 3, 3, 2, 6, // top
+    0, 1, 5, 5, 4, 0, // bottom
+    5, 1, 3, 3, 7, 5, // right
+    0, 4, 6, 6, 2, 0  // left
 };
 
 static void __create_global_vbos(vk_renderer_context* context) 
@@ -764,7 +764,7 @@ static void __create_global_vbos(vk_renderer_context* context)
 static u32 cube_transform_count = 50;
 static Transform* cube_transforms;
 // ===== FORWARD DECLARATIONS END =====
-bool vk_renderer_init(renderer_backend* backend, const char* application_name) 
+bool vk_renderer_init(Renderer* backend, const char* application_name) 
 {
     cube_transforms = GDF_LIST_Reserve(Transform, cube_transform_count);
     for (u32 i = 0; i < cube_transform_count; i++)
@@ -1043,7 +1043,7 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     /* ----- Initialize block textures ----- */
     /* ======================================== */
     // TODO! texture loading outside of render initialization
-    if (!vk_block_textures_init(&context, &context.block_textures))
+    if (!vk_block_textures_init(&context, &context.block_pipeline.block_textures))
     {
         LOG_ERR("Failed to initialize block textures");
         return false;
@@ -1193,6 +1193,12 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
         return false;
     }
 
+    if (!vk_pipelines_create_ui(&context))
+    {
+        LOG_ERR("Failed to create UI rendering pipeline");
+        return false;
+    }
+
     LOG_DEBUG("Created graphics pipelines & renderpasses");
 
     if (!__create_framebuffers(backend, &context))
@@ -1260,7 +1266,7 @@ bool vk_renderer_init(renderer_backend* backend, const char* application_name)
     return true;
 }
 
-void vk_renderer_destroy(renderer_backend* backend) 
+void vk_renderer_destroy(Renderer* backend) 
 {
     vkDeviceWaitIdle(context.device.handle);
     VkDevice device = context.device.handle;
@@ -1416,12 +1422,12 @@ void vk_renderer_destroy(renderer_backend* backend)
     vkDestroyInstance(context.instance, context.device.allocator);
 }
 
-void vk_renderer_resize(renderer_backend* backend, u16 width, u16 height) 
+void vk_renderer_resize(Renderer* backend, u16 width, u16 height) 
 {
     context.pending_resize_event = true;
 }
 
-bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time) 
+bool vk_renderer_begin_frame(Renderer* backend, f32 delta_time) 
 {
     vk_device* device = &context.device;
 
@@ -1570,7 +1576,7 @@ bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time)
     return true;
 }
 
-bool vk_renderer_end_frame(renderer_backend* backend, f32 delta_time) 
+bool vk_renderer_end_frame(Renderer* backend, f32 delta_time) 
 {
     vk_device* device = &context.device;
     u32 resource_idx = context.current_frame % context.max_concurrent_frames;

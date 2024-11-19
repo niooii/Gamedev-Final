@@ -154,6 +154,7 @@
         "thread.h": "c",
         "physics.h": "c",
         "world.h": "c",
-        "block.h": "c"
+        "block.h": "c",
+        "textures.h": "c"
     },
 }

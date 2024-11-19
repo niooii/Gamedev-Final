@@ -34,6 +34,8 @@ typedef enum GDF_VK_SHADER_MODULE_INDEX {
     GDF_VK_SHADER_MODULE_INDEX_POST_PROCESS_FRAG,
     GDF_VK_SHADER_MODULE_INDEX_GRID_VERT,
     GDF_VK_SHADER_MODULE_INDEX_GRID_FRAG,
+    GDF_VK_SHADER_MODULE_INDEX_UI_VERT,
+    GDF_VK_SHADER_MODULE_INDEX_UI_FRAG,
 
     GDF_VK_SHADER_MODULE_INDEX_MAX,
 } GDF_VK_SHADER_MODULE_INDEX;
@@ -109,6 +111,15 @@ typedef struct vk_image {
 /* ===== ALL PIPELINES ===== */
 /* ======================================= */
 
+typedef struct vk_block_textures {
+    vk_device* device;
+    VkAllocationCallbacks* allocator;
+    
+    vk_image texture_array;
+    VkDeviceMemory texture_array_memory;
+    VkSampler sampler;
+} vk_block_textures;
+
 typedef struct vk_pipeline_block {
     VkPipeline handle;
     VkPipelineLayout layout;
@@ -122,12 +133,22 @@ typedef struct vk_pipeline_block {
     // Shader storage buffer, accessed through instancing.
     vk_buffer face_data_ssbo;
 
+    vk_block_textures block_textures;
+    vk_buffer block_lookup_ssbo;
     VkDescriptorPool descriptor_pool;
     // GDF_LIST
     VkDescriptorSet* descriptor_sets;
     // GDF_LIST
     VkDescriptorSetLayout* descriptor_layouts;
 } vk_pipeline_block;
+
+typedef struct vk_pipeline_ui {
+    VkPipeline handle;
+    VkPipelineLayout layout;
+    
+    VkShaderModule vert;
+    VkShaderModule frag;
+} vk_pipeline_ui;
 
 typedef struct vk_pipeline_grid {
     VkPipeline handle;
@@ -178,15 +199,6 @@ typedef struct vk_texture {
     vk_image image;
     const char* image_path;
 } vk_texture;
-
-typedef struct vk_block_textures {
-    vk_device* device;
-    VkAllocationCallbacks* allocator;
-    
-    vk_image texture_array;
-    VkDeviceMemory texture_array_memory;
-    VkSampler sampler;
-} vk_block_textures;
 
 typedef struct vk_renderer_context { 
     VkInstance instance;
@@ -245,8 +257,6 @@ typedef struct vk_renderer_context {
     vk_buffer up_facing_plane_index_buffer;
     vk_buffer cube_vbo;
     vk_buffer cube_index_buffer;
-
-    vk_block_textures block_textures;
 
     // GDF_LIST of visible chunk data.
     GpuChunkData* visible_chunks;

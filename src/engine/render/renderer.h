@@ -12,4 +12,6 @@ bool renderer_draw_frame(GDF_RenderPacket* packet);
 
 void renderer_set_camera(GDF_Camera* camera);
 
+Renderer* renderer_get_instance(); 
+
 // bool GDF_RENDERER_LoadTexture(const char* image_path, GDF_Texture* out_texture);

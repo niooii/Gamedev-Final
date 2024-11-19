@@ -5,7 +5,7 @@
 #include "core/os/window.h"
 
 // Backend render context.
-static renderer_backend* backend = NULL;
+static Renderer* backend = NULL;
 
 bool GDF_InitRenderer(GDF_RENDER_BACKEND_TYPE render_backend_type) 
 {
@@ -20,6 +20,11 @@ bool GDF_InitRenderer(GDF_RENDER_BACKEND_TYPE render_backend_type)
     }
 
     return true;
+}
+
+Renderer* renderer_get_instance()
+{
+    return backend;
 }
 
 void GDF_DestroyRenderer() 

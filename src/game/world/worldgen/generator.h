@@ -4,7 +4,6 @@
 #include "algos.h"
 #include "game/world/chunk.h"
 
-
 typedef struct GeneratorCreateInfo {
     GDF_WORLD_GEN_ALGORITHM algorithm;
 } GeneratorCreateInfo;

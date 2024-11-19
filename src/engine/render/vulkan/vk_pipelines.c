@@ -4,13 +4,13 @@
 
 bool vk_pipelines_create_blocks(vk_renderer_context* context)
 {
+    vk_pipeline_block* pipeline = &context->block_pipeline;
     // Copy all static block data to a storage buffer
-    vk_buffer ssbo;
     vk_buffers_create_storage(
         context,
         STATIC_BLOCK_LOOKUP_TABLE,
         STATIC_BLOCK_LOOKUP_TABLE_SIZE,
-        &ssbo
+        &pipeline->block_lookup_ssbo
     );
     VkDescriptorSetLayoutBinding layout_bindings[] = {
         {
@@ -35,7 +35,7 @@ bool vk_pipelines_create_blocks(vk_renderer_context* context)
 
     u32 image_count = context->swapchain.image_count;
 
-    context->block_pipeline.descriptor_layouts = GDF_LIST_Reserve(VkDescriptorSetLayout, image_count);
+    pipeline->descriptor_layouts = GDF_LIST_Reserve(VkDescriptorSetLayout, image_count);
 
     for (u32 i = 0; i < context->swapchain.image_count; i++)
     {
@@ -50,10 +50,10 @@ bool vk_pipelines_create_blocks(vk_renderer_context* context)
             )
         );
 
-        GDF_LIST_Push(context->block_pipeline.descriptor_layouts, layout);
+        GDF_LIST_Push(pipeline->descriptor_layouts, layout);
     }  
 
-    context->block_pipeline.descriptor_sets = GDF_LIST_Reserve(VkDescriptorSet, image_count);
+    pipeline->descriptor_sets = GDF_LIST_Reserve(VkDescriptorSet, image_count);
     
     VkDescriptorPoolSize pool_size = {
         .type = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
@@ -71,13 +71,13 @@ bool vk_pipelines_create_blocks(vk_renderer_context* context)
             context->device.handle,
             &pool_info,
             context->device.allocator,
-            &context->block_pipeline.descriptor_pool
+            &pipeline->descriptor_pool
         )
     );
     VkDescriptorSetAllocateInfo set_alloc_info = {
         .sType = VK_STRUCTURE_TYPE_DESCRIPTOR_SET_ALLOCATE_INFO,
-        .descriptorPool = context->block_pipeline.descriptor_pool,
-        .pSetLayouts = context->block_pipeline.descriptor_layouts,
+        .descriptorPool = pipeline->descriptor_pool,
+        .pSetLayouts = pipeline->descriptor_layouts,
         .descriptorSetCount = image_count
     };
 
@@ -86,50 +86,50 @@ bool vk_pipelines_create_blocks(vk_renderer_context* context)
         vkAllocateDescriptorSets(
             context->device.handle,
             &set_alloc_info,
-            context->block_pipeline.descriptor_sets
+            pipeline->descriptor_sets
         )
     );
 
     // Update sets
     // Fragment texture sampler 
     VkDescriptorImageInfo image_info = {
-        .sampler = context->block_textures.sampler,
-        .imageView = context->block_textures.texture_array.view,
+        .sampler = pipeline->block_textures.sampler,
+        .imageView = pipeline->block_textures.texture_array.view,
         .imageLayout = VK_IMAGE_LAYOUT_SHADER_READ_ONLY_OPTIMAL
     };
     // SSBO for static block data for gpu lookups
     VkDeviceSize offset = {0};
     VkDescriptorBufferInfo buffer_info = {
-        .buffer = 
+        .buffer = pipeline->block_lookup_ssbo.handle,
         .offset = offset,
         .range = VK_WHOLE_SIZE
     };
-
-    VkWriteDescriptorSet descriptor_writes[1] = {
-        {
-            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-            .dstSet = context->block_pipeline.descriptor_sets[i],
-            .dstBinding = 0,
-            .dstArrayElement = 0,
-            .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
-            .descriptorCount = 1,
-            .pImageInfo = &image_info
-        },
-        {
-            .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
-            .dstSet = context->block_pipeline.descriptor_sets[i],
-            .dstBinding = 1,
-            .dstArrayElement = 0,
-            .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
-            .descriptorCount = 1,
-            .pBufferInfo = &buffer_info
-        }
-    };
+    
     for (u32 i = 0; i < image_count; i++)
     {
+        VkWriteDescriptorSet descriptor_writes[] = {
+            {
+                .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+                .dstSet = pipeline->descriptor_sets[i],
+                .dstBinding = 0,
+                .dstArrayElement = 0,
+                .descriptorType = VK_DESCRIPTOR_TYPE_COMBINED_IMAGE_SAMPLER,
+                .descriptorCount = 1,
+                .pImageInfo = &image_info
+            },
+            {
+                .sType = VK_STRUCTURE_TYPE_WRITE_DESCRIPTOR_SET,
+                .dstSet = pipeline->descriptor_sets[i],
+                .dstBinding = 1,
+                .dstArrayElement = 0,
+                .descriptorType = VK_DESCRIPTOR_TYPE_STORAGE_BUFFER,
+                .descriptorCount = 1,
+                .pBufferInfo = &buffer_info
+            }
+        };
         vkUpdateDescriptorSets(
             context->device.handle, 
-            1, 
+            sizeof(descriptor_writes) / sizeof(VkWriteDescriptorSet), 
             descriptor_writes, 
             0, 
             NULL
@@ -225,7 +225,7 @@ bool vk_pipelines_create_blocks(vk_renderer_context* context)
 
     VkDescriptorSetLayout descriptor_layouts[2] = {
         context->global_vp_ubo_layouts[0],
-        context->block_pipeline.descriptor_layouts[0]
+        pipeline->descriptor_layouts[0]
     };
 
     /*
@@ -244,11 +244,11 @@ bool vk_pipelines_create_blocks(vk_renderer_context* context)
     //     },
     // };
 
-    VkPushConstantRange push_constant_ranges[1] = {
+    VkPushConstantRange push_constant_ranges[] = {
         {
             .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
             .offset = 0,
-            .size = sizeof(mat4)
+            .size = sizeof(mat4) + sizeof(u32)
         },
     };
 
@@ -266,11 +266,9 @@ bool vk_pipelines_create_blocks(vk_renderer_context* context)
             context->device.handle, 
             &layout_info,
             context->device.allocator,
-            &context->block_pipeline.layout
+            &pipeline->layout
         )
     );
-
-    rasterizer_state.polygonMode = VK_POLYGON_MODE_FILL;
 
     // Create wireframe layout
     VK_ASSERT(
@@ -278,7 +276,7 @@ bool vk_pipelines_create_blocks(vk_renderer_context* context)
             context->device.handle, 
             &layout_info,
             context->device.allocator,
-            &context->block_pipeline.wireframe_layout
+            &pipeline->wireframe_layout
         )
     );
 
@@ -295,20 +293,20 @@ bool vk_pipelines_create_blocks(vk_renderer_context* context)
         .pDynamicStates = d_states
     };
 
-    context->block_pipeline.vert = context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_BLOCKS_VERT];
-    context->block_pipeline.frag = context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_BLOCKS_FRAG];
+    pipeline->vert = context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_BLOCKS_VERT];
+    pipeline->frag = context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_BLOCKS_FRAG];
 
     VkPipelineShaderStageCreateInfo block_shaders[] = {
         {
             .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
             .stage = VK_SHADER_STAGE_VERTEX_BIT,
-            .module = context->block_pipeline.vert,
+            .module = pipeline->vert,
             .pName = "main"
         },
         {
             .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
             .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
-            .module = context->block_pipeline.frag,
+            .module = pipeline->frag,
             .pName = "main"
         }
     };
@@ -326,7 +324,7 @@ bool vk_pipelines_create_blocks(vk_renderer_context* context)
         .pMultisampleState = &multisampling_state,
         .pDepthStencilState = &depth_stencil_state,
         .pColorBlendState = &color_blend_state,
-        .layout = context->block_pipeline.layout,
+        .layout = pipeline->layout,
         // index of geometry subpass
         .subpass = 0,
         .pDynamicState = &dynamic_states,
@@ -339,10 +337,12 @@ bool vk_pipelines_create_blocks(vk_renderer_context* context)
             1,
             &pipeline_create_info,
             context->device.allocator,
-            &context->block_pipeline.handle
+            &pipeline->handle
         )
     );
-    pipeline_create_info.layout = context->block_pipeline.wireframe_layout;
+    pipeline_create_info.layout = pipeline->wireframe_layout;
+    // input_assembly.topology = VK_PRIMITIVE_TOPOLOGY_LINE_STRIP;
+    rasterizer_state.polygonMode = VK_POLYGON_MODE_LINE;
     VK_ASSERT(
         vkCreateGraphicsPipelines(
             context->device.handle,
@@ -350,7 +350,7 @@ bool vk_pipelines_create_blocks(vk_renderer_context* context)
             1,
             &pipeline_create_info,
             context->device.allocator,
-            &context->block_pipeline.wireframe_handle
+            &pipeline->wireframe_handle
         )
     );
 
@@ -542,4 +542,13 @@ bool vk_pipelines_create_grid(vk_renderer_context* context)
     );
 
     return true;
+}
+
+bool vk_pipelines_create_ui(vk_renderer_context* context)
+{
+    // TODO!
+    // null pointer deref to remind me tommorow
+    *((int*)NULL) = 5;
+    
+    return false;
 }

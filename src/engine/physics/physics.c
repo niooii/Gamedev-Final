@@ -47,6 +47,14 @@ bool physics_update(PhysicsEngine engine, f64 dt)
             comp->vel.z * dt + 0.5f * net_accel.z * dt * dt
         );
 
+        // Stop entities at Y = 0 for now..
+        if (comp->aabb.min.y <= 0)
+        {
+            comp->vel.y = MAX(0, comp->vel.y);
+            deltas.y = MAX(0, deltas.y);
+            comp->aabb.min.y = 0;
+        }
+        
         aabb_translate(&comp->aabb, deltas);
         
         comp->vel.x = comp->vel.x + net_accel.x * dt;

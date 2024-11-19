@@ -7,3 +7,4 @@ bool vk_pipelines_create_blocks(vk_renderer_context* context);
 // bool vk_pipelines_create_lighting(vk_renderer_context* context);
 // bool vk_pipelines_create_post_processing(vk_renderer_context* context);
 bool vk_pipelines_create_grid(vk_renderer_context* context);
+bool vk_pipelines_create_ui(vk_renderer_context* context);

@@ -6,10 +6,10 @@
 #include "engine/math/math.h"
 #include "vk_buffers.h"
 
-bool vk_renderer_init(renderer_backend* backend, const char* application_name);
-void vk_renderer_destroy(renderer_backend* backend);
+bool vk_renderer_init(Renderer* backend, const char* application_name);
+void vk_renderer_destroy(Renderer* backend);
 
-void vk_renderer_resize(renderer_backend* backend, u16 width, u16 height);
+void vk_renderer_resize(Renderer* backend, u16 width, u16 height);
 
-bool vk_renderer_begin_frame(renderer_backend* backend, f32 delta_time);
-bool vk_renderer_end_frame(renderer_backend* backend, f32 delta_time);
+bool vk_renderer_begin_frame(Renderer* backend, f32 delta_time);
+bool vk_renderer_end_frame(Renderer* backend, f32 delta_time);

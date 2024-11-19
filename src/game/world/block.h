@@ -7,11 +7,10 @@
 #define MAX_CHUNK_Y 32
 
 typedef enum BLOCKTYPE {
-    GDF_BLOCKTYPE_AIR,
     GDF_BLOCKTYPE_Grass,
     GDF_BLOCKTYPE_Dirt,
-    GDF_BLOCKTYPE_Glass,
     GDF_BLOCKTYPE_Stone,
+    GDF_BLOCKTYPE_Glass,
 } BLOCKTYPE;
 
 typedef struct BlockTextureIds {

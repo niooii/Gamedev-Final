@@ -131,11 +131,11 @@ int main()
     f64 time_ran_for = GDF_RunApp();
     if (time_ran_for != -1)
     {
-        printf("App has been running for %lf seconds... Time to rest!", time_ran_for);
+        LOG_INFO("App has been running for %lf seconds... Time to rest!", time_ran_for);
     }
     else
     {
-        printf("yikes....\n");
+        LOG_INFO("yikes....\n");
         return 1;
     }
     logging_flush_buffer();
