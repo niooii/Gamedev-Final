@@ -2,7 +2,7 @@
 
 bool chunk_init(Chunk* out_chunk)
 {
-    out_chunk->block_arr = GDF_Malloc(CHUNK_SIZE_XZ * CHUNK_SIZE_Y * sizeof(ChunkBlock), GDF_MEMTAG_GAME);
+    out_chunk->block_arr = GDF_Malloc(CHUNK_SIZE_XZ * CHUNK_SIZE_XZ * CHUNK_SIZE_Y * sizeof(ChunkBlock), GDF_MEMTAG_GAME);
     out_chunk->block_list = GDF_LIST_Reserve(ChunkBlock*, 2048);
 
     out_chunk->faces = NULL;
@@ -37,9 +37,9 @@ bool chunk_setblock(
     ];
 
     block->exists = true;
-    block->chunk_x = chunk_block_info->block_x;
-    block->chunk_y = chunk_block_info->block_y;
-    block->chunk_z = chunk_block_info->block_z;
+    block->x_rel = chunk_block_info->block_x;
+    block->y_rel = chunk_block_info->block_y;
+    block->z_rel = chunk_block_info->block_z;
 
     block->data.type = chunk_block_info->type;
     // if (!cube_textures_get_default(block->data.type, &block->data.textures))

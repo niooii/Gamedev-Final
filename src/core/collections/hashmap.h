@@ -50,4 +50,4 @@ HashmapEntry* GDF_HashmapIter(GDF_HashMap hashmap);
 // Returns true on a successful advance, returns false on end.
 // Similarly sets curr to NULL on end.
 // If a hashmap is modified while an iterator is still being used, behavior is undefined.
-bool GDF_HashmapIterNext(HashmapEntry** iter);
+bool GDF_HashmapIterAdvance(HashmapEntry** iter);

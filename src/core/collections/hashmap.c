@@ -240,7 +240,7 @@ HashmapEntry* GDF_HashmapIter(GDF_HashMap hashmap)
     return __iter_first(hashmap->bucket, hashmap->capacity);
 }
 
-bool GDF_HashmapIterNext(HashmapEntry** iter)
+bool GDF_HashmapIterAdvance(HashmapEntry** iter)
 {
     return __iter_next((*iter)->owner->bucket, iter, (*iter)->owner->capacity);
 }

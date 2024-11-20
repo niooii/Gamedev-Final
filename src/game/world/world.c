@@ -32,7 +32,7 @@ void world_create(World* out_world, WorldCreateInfo* create_info)
     // Create da chunks
     for (i32 chunk_x = -5; chunk_x <= 5; chunk_x++)
     {
-        for (i32 chunk_y = -5; chunk_y <= 5; chunk_y++)
+        for (i32 chunk_y = 0; chunk_y <= 10; chunk_y++)
         {
             for (i32 chunk_z = -5; chunk_z <= 5; chunk_z++)
             {
@@ -41,8 +41,7 @@ void world_create(World* out_world, WorldCreateInfo* create_info)
                     .y = chunk_y,
                     .z = chunk_z
                 };
-                Chunk ch = {};
-                GDF_HashmapInsert(out_world->chunks, &c, &ch);
+                world_get_chunk(out_world, c);
             }
         }
     }

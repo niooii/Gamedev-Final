@@ -72,33 +72,42 @@ bool vk_draw_game(vk_renderer_context* context, Renderer* backend, u8 resource_i
         .model = random_ahh_cube.model_matrix,
         .block_type = GDF_BLOCKTYPE_Stone
     };
-    vkCmdPushConstants(
-        cmd_buffer, block_pipeline_layout, 
-        VK_SHADER_STAGE_VERTEX_BIT,
-        0, sizeof(struct PushConstantTemp), &pct
-    );
-
-    vkCmdDrawIndexed(cmd_buffer, 36, 1, 0, 0, 0);
+    // vkCmdPushConstants(
+    //     cmd_buffer, block_pipeline_layout, 
+    //     VK_SHADER_STAGE_VERTEX_BIT,
+    //     0, sizeof(struct PushConstantTemp), &pct
+    // );
 
     // TODO!
-    // u32 num_visible_chunks = GDF_LIST_GetLength(context->visible_chunks);
-    // for (u32 i = 0; i < num_visible_chunks; i++) 
-    // {
-    //     GpuChunkData* data = &context->visible_chunks[i];
-    //     i32 new_vals[3] = {
-    //         data->chunk_x,
-    //         data->chunk_y,
-    //         data->chunk_z,
-    //     };
-    //     vkCmdPushConstants(
-    //         cmd_buffer,
-    //         context->grid_pipeline.layout,
-    //         VK_SHADER_STAGE_VERTEX_BIT,
-    //         0,
-    //         sizeof(i32) * 3,
-    //         new_vals
-    //     );
-    // }
+    for (
+        HashmapEntry* entry = GDF_HashmapIter(game->world->chunks); 
+        entry != NULL; 
+        GDF_HashmapIterAdvance(&entry)
+    ) 
+    {
+        Chunk* chunk = (Chunk*)entry->val;
+        ChunkCoord* cc = (ChunkCoord*)entry->key;
+        u32 num_blocks = GDF_LIST_GetLength(chunk->block_list);
+        for (u32 i = 0; i < num_blocks; i++)
+        {
+            ChunkBlock* block = chunk->block_list[i];
+            random_ahh_cube.pos.x = cc->x * CHUNK_SIZE_XZ + block->x_rel - 0.5;
+            random_ahh_cube.pos.y = cc->y * CHUNK_SIZE_Y + block->y_rel - 0.5;
+            random_ahh_cube.pos.z = cc->z * CHUNK_SIZE_XZ + block->z_rel - 0.5;
+            transform_recalc_model_matrix(&random_ahh_cube);
+            pct.block_type = block->data.type;
+            pct.model = random_ahh_cube.model_matrix;
+            vkCmdPushConstants(
+                cmd_buffer,
+                block_pipeline_layout,
+                VK_SHADER_STAGE_VERTEX_BIT,
+                0,
+                sizeof(struct PushConstantTemp),
+                &pct
+            );
+            vkCmdDrawIndexed(cmd_buffer, 36, 1, 0, 0, 0);
+        }
+    }
 
     // draw debug grid
     vkCmdBindPipeline(cmd_buffer, VK_PIPELINE_BIND_POINT_GRAPHICS, context->grid_pipeline.handle);

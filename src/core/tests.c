@@ -34,7 +34,7 @@ void test_hashmap()
     HashmapEntry* iter1 = GDF_HashmapIter(map);
     GDF_ASSERT(iter1 != NULL)
     LOG_WARN("Testing first iteration (2 elements)...");
-    for (; iter1 != NULL; GDF_HashmapIterNext(&iter1))
+    for (; iter1 != NULL; GDF_HashmapIterAdvance(&iter1))
     {
         LOG_DEBUG("key: %d, val: %d", *((int*)iter1->key), *((int*)iter1->val));
     }
@@ -48,7 +48,7 @@ void test_hashmap()
     HashmapEntry* iter2 = GDF_HashmapIter(map);
     GDF_ASSERT(iter2 != NULL)
     LOG_WARN("Testing second iteration (1 element)...");
-    for (; iter2 != NULL; GDF_HashmapIterNext(&iter2))
+    for (; iter2 != NULL; GDF_HashmapIterAdvance(&iter2))
     {
         LOG_DEBUG("key: %d, val: %d", *((int*)iter2->key), *((int*)iter2->val));
     }

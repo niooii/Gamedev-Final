@@ -106,14 +106,14 @@ bool GDF_InitApp()
     MAIN_WINDOW = GDF_CreateWindow(GDF_WIN_CENTERED, GDF_WIN_CENTERED, display_info.screen_width * 0.45, display_info.screen_height * 0.5, "A GDF");
     if (MAIN_WINDOW != NULL)
         LOG_INFO("Created window.");
-    if (GDF_AppSettings_Get()->client_show_console)
-    {
-        GDF_ShowConsole();
-    }
-    else
-    {
-        GDF_HideConsole();
-    }
+    // if (GDF_AppSettings_Get()->client_show_console)
+    // {
+    //     GDF_ShowConsole();
+    // }
+    // else
+    // {
+    //     GDF_HideConsole();
+    // }
     GDF_EVENT_Register(GDF_EVENT_INTERNAL_KEY_PRESSED, NULL, app_on_event);
     GDF_EVENT_Register(GDF_EVENT_INTERNAL_APP_QUIT, NULL, app_on_event);
     GDF_EVENT_Register(GDF_EVENT_INTERNAL_WINDOW_RESIZE, NULL, app_on_event);

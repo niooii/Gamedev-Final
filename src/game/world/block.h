@@ -42,9 +42,9 @@ typedef struct GDF_ChunkBlockCreateInfo {
 
 typedef struct ChunkBlock {
     BlockData data;
-    u8 chunk_x;
-    u8 chunk_y;
-    u8 chunk_z;
+    u8 x_rel;
+    u8 y_rel;
+    u8 z_rel;
     bool exists;
 } ChunkBlock;
 

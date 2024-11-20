@@ -33,21 +33,21 @@ int main()
     if (!GDF_InitLogging() || !GDF_InitThreadLogging("Main"))
         return false;
     GDF_InitSubsystems(GDF_SUBSYSTEM_WINDOWING | GDF_SUBSYSTEM_EVENTS | GDF_SUBSYSTEM_INPUT | GDF_SUBSYSTEM_NET);
-    GDF_Stopwatch logging_test = GDF_StopwatchCreate();
-    for (int i = 0; i < 50000; i++)
-    {
-        printf(" %d ", i);
-    }
-    printf("\n");
-    f32 printf_time = GDF_StopwatchElasped(logging_test);
-    GDF_StopwatchReset(logging_test);
-    for (int i = 0; i < 50000; i++)
-    {
-        LOG_INFO("LOGINFO: %d", i);
-    }
-    f32 log_time = GDF_StopwatchElasped(logging_test);
-    LOG_INFO("\nprintf took: %fs\nLOG_INFO took: %fs", printf_time, log_time);
-    logging_flush_buffer();
+    // GDF_Stopwatch logging_test = GDF_StopwatchCreate();
+    // for (int i = 0; i < 50000; i++)
+    // {
+    //     printf(" %d ", i);
+    // }
+    // printf("\n");
+    // f32 printf_time = GDF_StopwatchElasped(logging_test);
+    // GDF_StopwatchReset(logging_test);
+    // for (int i = 0; i < 50000; i++)
+    // {
+    //     LOG_INFO("LOGINFO: %d", i);
+    // }
+    // f32 log_time = GDF_StopwatchElasped(logging_test);
+    // LOG_INFO("\nprintf took: %fs\nLOG_INFO took: %fs", printf_time, log_time);
+    // logging_flush_buffer();
     // return 1;
 
     run_all_tests();

@@ -14,7 +14,7 @@ typedef enum WORLD_DIRECTION {
 } WORLD_DIRECTION;
 
 typedef struct Chunk {
-    // Heap allocated array of [CHUNK_SIZE_XZ * MAX_CHUNK_Y] size for direct access.
+    // Heap allocated array of [CHUNK_SIZE_XZ * CHUNK_SIZE_XZ * MAX_CHUNK_Y] size for direct access.
     ChunkBlock* block_arr;
 
     // GDF_LIST of ChunkBlock pointers for easy iteration over existing blocks.
