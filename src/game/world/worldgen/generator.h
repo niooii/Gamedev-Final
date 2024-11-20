@@ -1,18 +1,13 @@
 #pragma once
 
 #include "core.h"
-#include "algos.h"
 #include "game/world/chunk.h"
 
-typedef struct GeneratorCreateInfo {
-    GDF_WORLD_GEN_ALGORITHM algorithm;
-} GeneratorCreateInfo;
-
 typedef struct Generator {
-    u32 testfield;
+    u64 testfield;
 } Generator;
 
-Generator generator_create(GeneratorCreateInfo* parameters);
+Generator generator_create_default();
 
 bool generator_make_chunk(
     Generator* generator, 

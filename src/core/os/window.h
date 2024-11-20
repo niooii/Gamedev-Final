@@ -25,7 +25,7 @@ bool GDF_SetWindowPos(i16 dest_x, i16 dest_y);
 void GDF_GetWindowPos(i16* x, i16* y);
 // should be client width and height
 bool GDF_SetWindowSizeInternal(i16 w, i16 h);
-void GDF_GetWindowSize(i16* w, i16* h);
+void GDF_GetWindowSize(u16* w, u16* h);
 bool GDF_PumpMessages();
 bool GDF_DestroyWindow(GDF_Window* window);
 GDF_Window GDF_GetMainWindow();

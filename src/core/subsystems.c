@@ -50,6 +50,7 @@ bool GDF_ShutdownSubsystems()
     {
         GDF_ShutdownInput();
     }
+    GDF_ShutdownLogging();
 
     return true;
 }

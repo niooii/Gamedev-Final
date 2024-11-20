@@ -711,16 +711,16 @@ static const u16 plane_indices[] = {
     0, 1, 2, 2, 3, 0
 };
 
-const vec3 cube_vertices[] = {
+const Vertex3d cube_vertices[] = {
     // Unique vertices of the cube
-    {-0.5f, -0.5f, -0.5f}, // left-bottom-back
-    { 0.5f, -0.5f, -0.5f}, // right-bottom-back
-    {-0.5f,  0.5f, -0.5f}, // left-top-back
-    { 0.5f,  0.5f, -0.5f}, // right-top-back
-    {-0.5f, -0.5f,  0.5f}, // left-bottom-front
-    { 0.5f, -0.5f,  0.5f}, // right-bottom-front
-    {-0.5f,  0.5f,  0.5f}, // left-top-front
-    { 0.5f,  0.5f,  0.5f}  // right-top-front
+    {{-0.5f, -0.5f, -0.5f}}, // left-bottom-back
+    {{0.5f, -0.5f, -0.5f}}, // right-bottom-back
+    {{-0.5f,  0.5f, -0.5f}}, // left-top-back
+    {{0.5f,  0.5f, -0.5f}}, // right-top-back
+    {{-0.5f, -0.5f,  0.5f}}, // left-bottom-front
+    {{0.5f, -0.5f,  0.5f}}, // right-bottom-front
+    {{-0.5f,  0.5f,  0.5f}}, // left-top-front
+    {{0.5f,  0.5f,  0.5f}}  // right-top-front
 };
 
 const u16 cube_indices[] = {

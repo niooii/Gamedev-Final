@@ -20,7 +20,7 @@ typedef struct GDF_DirInfo {
 void GDF_InitIO();
 void GDF_ShowConsole();
 void GDF_HideConsole();
-void GDF_WriteConsole(const char* msg, u8 color);
+void GDF_WriteConsole(const char* msg);
 void GDF_GetAbsolutePath(const char* rel_path, char* out_buf);
 // gets path of resource in a resources/ directory
 // ex: resources/icon.ico can be accessed by GDF_GetResourcePath("icon.ico", buf)

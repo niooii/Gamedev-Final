@@ -155,6 +155,9 @@
         "physics.h": "c",
         "world.h": "c",
         "block.h": "c",
-        "textures.h": "c"
+        "textures.h": "c",
+        "chunk.h": "c",
+        "list": "c",
+        "tests.h": "c"
     },
 }

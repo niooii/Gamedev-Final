@@ -47,7 +47,7 @@ void world_create(World* out_world, WorldCreateInfo* create_info)
         }
     }
 
-    LOG_DEBUG("amount entries: %d", GDF_HashmapLen(out_world->chunks));
+    LOG_ERR("amount entries: %d", GDF_HashmapLen(out_world->chunks));
 }
 
 void world_update(World* world, f64 dt)

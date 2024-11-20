@@ -80,12 +80,12 @@ GDF_Semaphore GDF_CreateSemaphore()
 
 bool GDF_WaitSemaphore(GDF_Semaphore semaphore)
 {
-    WaitForSingleObject(semaphore->sm_handle, INFINITE);
+    return WaitForSingleObject(semaphore->sm_handle, INFINITE) == WAIT_OBJECT_0;
 }
 
 bool GDF_SignalSemaphore(GDF_Semaphore semaphore)
 {
-    ReleaseSemaphore(semaphore->sm_handle, 1, NULL);
+    return ReleaseSemaphore(semaphore->sm_handle, 1, NULL) != FALSE;
 }
 
 #endif

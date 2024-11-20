@@ -1,6 +1,6 @@
 #include "generator.h"
 
-Generator generator_create(GeneratorCreateInfo* parameters)
+Generator generator_create_default()
 {
     // TODO!
     Generator gen;

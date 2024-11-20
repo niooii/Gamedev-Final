@@ -334,7 +334,7 @@ bool GDF_SetWindowSizeInternal(i16 w, i16 h)
     return true;
 }
 
-void GDF_GetWindowSize(i16* w, i16* h)
+void GDF_GetWindowSize(u16* w, u16* h)
 {
     *w = MAIN_WINDOW->client_w;
     *h = MAIN_WINDOW->client_h;

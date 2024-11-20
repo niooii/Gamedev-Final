@@ -10,6 +10,7 @@
 
 static HWND console_window = NULL;
 static char* EXECUTABLE_PATH;
+static HANDLE stdout_;
 
 void GDF_InitIO() 
 {
@@ -21,6 +22,7 @@ void GDF_InitIO()
     if (lastBackslash != NULL) {
         *(lastBackslash+1) = '\0'; // Null-terminate the string at the last '\'
     }
+    stdout_ = GetStdHandle(STD_OUTPUT_HANDLE);
 }
 
 void GDF_ShowConsole()
@@ -56,19 +58,16 @@ void GDF_HideConsole()
     ShowWindow(console_window, SW_HIDE);
 }
 
-void GDF_WriteConsole(const char* msg, u8 color)
+void GDF_WriteConsole(const char* msg)
 {
-    HANDLE stdout_ = GetStdHandle(STD_OUTPUT_HANDLE);
     // FATAL,ERROR,WARN,INFO,DEBUG,TRACE
-    static u8 levels[6] = {64, 4, 6, 2, 1, 8};
-    SetConsoleTextAttribute(stdout_, levels[color]);
+    // static u8 levels[6] = {64, 4, 6, 2, 1, 8};
 
-    OutputDebugStringA(msg);
+    // OutputDebugStringA(msg);
     
+    // TODO! this strlen is probably expensive at the scales im using it at
     u64 len = strlen(msg);
     WriteConsoleA(stdout_, msg, (DWORD)len, 0, 0);  
-
-    SetConsoleTextAttribute(stdout_, FOREGROUND_RED|FOREGROUND_GREEN|FOREGROUND_BLUE);  
 }
 
 void GDF_GetAbsolutePath(const char* rel_path, char* out_buf)

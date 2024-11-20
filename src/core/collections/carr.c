@@ -37,7 +37,7 @@ const void* const GDF_CArrayReadNext(GDF_CArray arr)
     if (!*ready)
         return NULL;
     *ready = false;
-    const void const* data = &arr->data[arr->next_read_idx * arr->stride];
+    const void* const data = &arr->data[arr->next_read_idx * arr->stride];
     // Wrap around index
     arr->next_read_idx = (arr->next_read_idx + 1) % arr->capacity;
     return data;

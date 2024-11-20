@@ -9,7 +9,7 @@ WORLDSERVER_EXIT_CODE listen_for_connections(WorldServer* ctx)
     }
 
     GDF_Socket client_sock;
-    while(client_sock = GDF_SocketAccept(server_socket))
+    while((client_sock = GDF_SocketAccept(server_socket)))
     {
         if (!GDF_LockMutex(ctx->clients_mutex))
         {
@@ -31,6 +31,7 @@ unsigned long client_accepting_thread_wrapper(void* args)
     GDF_InitThreadLogging("ClientListener");
     WorldServer* ctx = (WorldServer*)args;
     listen_for_connections(ctx);
+    return 0;
 }
 
 bool world_server_init(WorldServerStartInfo* start_info, WorldServer* ctx)
