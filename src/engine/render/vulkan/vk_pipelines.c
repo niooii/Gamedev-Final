@@ -546,9 +546,150 @@ bool vk_pipelines_create_grid(vk_renderer_context* context)
 
 bool vk_pipelines_create_ui(vk_renderer_context* context)
 {
-    // TODO!
-    // null pointer deref to remind me tommorow
-    *((int*)NULL) = 5;
+    vk_pipeline_ui* pipeline = &context->ui_pipeline;
+
+     // Vertex input configuration
+    VkVertexInputBindingDescription bindings = {
+        .binding = 0,
+        .stride = sizeof(Vertex3d), 
+        .inputRate = VK_VERTEX_INPUT_RATE_VERTEX
+    };
+
+    VkVertexInputAttributeDescription attributes[] = {
+        {
+            .binding = 0,
+            .location = 0,
+            .format = VK_FORMAT_R32G32B32_SFLOAT,
+            .offset = offsetof(Vertex3d, pos)
+        },
+    };
+
+    VkPipelineVertexInputStateCreateInfo vertex_input_info = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_VERTEX_INPUT_STATE_CREATE_INFO,
+        .vertexBindingDescriptionCount = 1,
+        .pVertexBindingDescriptions = &bindings,
+        .vertexAttributeDescriptionCount = sizeof(attributes) / sizeof(attributes[0]),
+        .pVertexAttributeDescriptions = attributes
+    };
+
+    // Input assembly configuration
+    VkPipelineInputAssemblyStateCreateInfo input_assembly = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_INPUT_ASSEMBLY_STATE_CREATE_INFO,
+        .primitiveRestartEnable = VK_FALSE,
+        .topology = VK_PRIMITIVE_TOPOLOGY_TRIANGLE_LIST
+    };
+
+    // Viewport and scissor configuration (dynamic states)
+    VkPipelineViewportStateCreateInfo viewport_state = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_VIEWPORT_STATE_CREATE_INFO,
+        .viewportCount = 1,
+        .scissorCount = 1,
+    };
+
+    // Rasterization configuration
+    VkPipelineRasterizationStateCreateInfo rasterizer_state = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_RASTERIZATION_STATE_CREATE_INFO,
+        .depthClampEnable = VK_FALSE,
+        .rasterizerDiscardEnable = VK_FALSE,
+        .polygonMode = VK_POLYGON_MODE_FILL,
+        .lineWidth = 1.0f,
+        .cullMode = VK_CULL_MODE_NONE,
+        .frontFace = VK_FRONT_FACE_CLOCKWISE,
+        .depthBiasEnable = VK_FALSE
+    };
+
+    // Multisampling configuration
+    VkPipelineMultisampleStateCreateInfo multisampling_state = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_MULTISAMPLE_STATE_CREATE_INFO,
+        .sampleShadingEnable = VK_FALSE,
+        .rasterizationSamples = VK_SAMPLE_COUNT_1_BIT,
+    };
+
+    // Depths stencil configuration
+    VkPipelineDepthStencilStateCreateInfo depth_stencil_state = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_DEPTH_STENCIL_STATE_CREATE_INFO,
+        .depthTestEnable = VK_TRUE,
+        .depthWriteEnable = VK_TRUE,
+        .depthCompareOp = VK_COMPARE_OP_LESS,
+        .depthBoundsTestEnable = VK_FALSE,
+        .stencilTestEnable = VK_FALSE
+    };
+
+    // Color blending configuration
+    VkPipelineColorBlendAttachmentState color_blend_attachment = {
+        .colorWriteMask = VK_COLOR_COMPONENT_R_BIT | VK_COLOR_COMPONENT_G_BIT | VK_COLOR_COMPONENT_B_BIT | VK_COLOR_COMPONENT_A_BIT,
+        .blendEnable = VK_TRUE,
+        .srcColorBlendFactor = VK_BLEND_FACTOR_SRC_ALPHA,
+        .dstColorBlendFactor = VK_BLEND_FACTOR_ONE_MINUS_SRC_ALPHA,
+        .colorBlendOp = VK_BLEND_OP_ADD,
+        .srcAlphaBlendFactor = VK_BLEND_FACTOR_ONE,
+        .dstAlphaBlendFactor = VK_BLEND_FACTOR_ZERO,
+        .alphaBlendOp = VK_BLEND_OP_ADD
+    };
+
+    VkPipelineColorBlendStateCreateInfo color_blend_state = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_COLOR_BLEND_STATE_CREATE_INFO,
+        .logicOpEnable = VK_FALSE,
+        .attachmentCount = 1,
+        .pAttachments = &color_blend_attachment,
+        .blendConstants = {0.0f, 0.0f, 0.0f, 0.0f}
+    };
+
+    VkPushConstantRange push_constant_range = {
+        .stageFlags = VK_SHADER_STAGE_VERTEX_BIT,
+        .offset = 0,
+        .size = sizeof(vec3)
+    };
+
+    // Pipeline layout
+    // TODO! dont need uniform matrices
+    VkPipelineLayoutCreateInfo layout_info = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_LAYOUT_CREATE_INFO,
+        .pSetLayouts = &context->global_vp_ubo_layouts[0],
+        .setLayoutCount = 1,
+        .pPushConstantRanges = &push_constant_range,
+        .pushConstantRangeCount = 1
+    };
     
-    return false;
+    VK_ASSERT(
+        vkCreatePipelineLayout(
+            context->device.handle, 
+            &layout_info,
+            context->device.allocator,
+            &context->grid_pipeline.layout
+        )
+    );
+
+    // Create dynamic state for pipeline (viewport & scissor)
+    // TODO! eventually if the game is fixed size remove these and bake states
+    // into pipelines
+    VkDynamicState d_states[2] = {
+        VK_DYNAMIC_STATE_VIEWPORT,
+        VK_DYNAMIC_STATE_SCISSOR
+    };
+    VkPipelineDynamicStateCreateInfo dynamic_states = {
+        .sType = VK_STRUCTURE_TYPE_PIPELINE_DYNAMIC_STATE_CREATE_INFO,
+        .dynamicStateCount = 2,
+        .pDynamicStates = d_states
+    };
+
+    pipeline->vert = context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_UI_VERT];
+    pipeline->frag = context->builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_UI_FRAG];
+
+    VkPipelineShaderStageCreateInfo ui_shaders[] = {
+        {
+            .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+            .stage = VK_SHADER_STAGE_VERTEX_BIT,
+            .module = pipeline->vert,
+            .pName = "main"
+        },
+        {
+            .sType = VK_STRUCTURE_TYPE_PIPELINE_SHADER_STAGE_CREATE_INFO,
+            .stage = VK_SHADER_STAGE_FRAGMENT_BIT,
+            .module = pipeline->frag,
+            .pName = "main"
+        }
+    };
+    
+    return true;
 }

@@ -23,7 +23,7 @@ bool vk_draw_game(vk_renderer_context* context, Renderer* backend, u8 resource_i
         context->block_pipeline.descriptor_sets[resource_idx]
     };
 
-    VkPipelineLayout block_pipeline_layout = VK_NULL_HANDLE;
+    VkPipeline block_pipeline_layout = VK_NULL_HANDLE;
     VkPipelineLayout block_pipeline = VK_NULL_HANDLE;
     switch (backend->render_mode) 
     {

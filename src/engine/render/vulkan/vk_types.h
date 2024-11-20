@@ -213,6 +213,7 @@ typedef struct vk_renderer_context {
     // All pipelines used in application
     vk_pipeline_block block_pipeline;
     vk_pipeline_grid grid_pipeline;
+    vk_pipeline_ui ui_pipeline;
     VkShaderModule builtin_shaders[GDF_VK_SHADER_MODULE_INDEX_MAX];
     VkRenderPass renderpasses[GDF_VK_RENDERPASS_INDEX_MAX];
     
