@@ -18,7 +18,7 @@ typedef struct World {
     // Terrain stuff
     Generator generator;
     // <ChunkCoord, Chunk>
-    GDF_HashMap chunks;
+    GDF_HashMap(ChunkCoord, Chunk) chunks;
     u8 chunk_simulate_distance;
     u16 ticks_per_sec;
     GDF_Stopwatch world_update_stopwatch;
