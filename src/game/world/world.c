@@ -55,6 +55,20 @@ void world_update(World* world, f64 dt)
     physics_update(world->physics, dt);
 }
 
+Chunk* world_get_chunk(World* world, ChunkCoord coord)
+{
+    Chunk* c = GDF_HashmapGet(world->chunks, &coord);
+    if (c == NULL)
+    {
+        Chunk t = {};
+        chunk_init(&t);
+        c = GDF_HashmapInsert(world->chunks, &coord, &t);
+        generator_gen_chunk(&world->generator, world, coord, c);
+    }
+
+    return c;
+}
+
 void world_tick(World* world)
 {
     LOG_INFO("something tick world");

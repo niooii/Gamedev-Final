@@ -2,7 +2,7 @@
 
 bool chunk_init(Chunk* out_chunk)
 {
-    out_chunk->block_arr = GDF_Malloc(MAX_CHUNK_XZ * MAX_CHUNK_Y * sizeof(ChunkBlock), GDF_MEMTAG_GAME);
+    out_chunk->block_arr = GDF_Malloc(CHUNK_SIZE_XZ * CHUNK_SIZE_Y * sizeof(ChunkBlock), GDF_MEMTAG_GAME);
     out_chunk->block_list = GDF_LIST_Reserve(ChunkBlock*, 2048);
 
     out_chunk->faces = NULL;
@@ -10,7 +10,7 @@ bool chunk_init(Chunk* out_chunk)
     return true;
 }
 
-ChunkBlock* GDF_CHUNK_GetBlock(
+ChunkBlock* chunk_getblock(
     Chunk* chunk, 
     u8 block_x, 
     u8 block_y, 

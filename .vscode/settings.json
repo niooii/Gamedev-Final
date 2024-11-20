@@ -158,6 +158,7 @@
         "textures.h": "c",
         "chunk.h": "c",
         "list": "c",
-        "tests.h": "c"
+        "tests.h": "c",
+        "world_types.h": "c"
     },
 }

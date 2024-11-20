@@ -29,9 +29,9 @@ GDF_HashMap __hashmap_create(u32 k_stride, u32 v_stride, u32 (*hash_func)(const 
 bool GDF_HashmapDestroy(GDF_HashMap hashmap);
 
 // The key and value are memcpy'd on insertion.
-// Returns true on success, and false on duplicate key.
-// Returns false if the requested key is NULL. 
-bool GDF_HashmapInsert(GDF_HashMap hashmap, void* key, void* value);
+// Returns a pointer to the inserted value (owned by hashmap) on success, and NULL on duplicate key.
+// Returns NULL if the requested key is NULL. 
+void* GDF_HashmapInsert(GDF_HashMap hashmap, void* key, void* value);
 // Gets the value stored for a key.
 // Returns NULL if the key does not exist, or the requested key is NULL.
 void* GDF_HashmapGet(GDF_HashMap hashmap, void* key);

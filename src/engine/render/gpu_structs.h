@@ -4,7 +4,7 @@
 #include "game/world/chunk.h"
 
 typedef struct GpuChunkData {
-    u64 faces[MAX_CHUNK_XZ * MAX_CHUNK_XZ * MAX_CHUNK_Y];
+    u64 faces[CHUNK_SIZE_XZ * CHUNK_SIZE_XZ * CHUNK_SIZE_Y];
     u8 chunk_x;
     u8 chunk_y;
     u8 chunk_z;

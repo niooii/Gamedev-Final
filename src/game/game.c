@@ -30,6 +30,7 @@ bool GDF_GAME_Init()
     world_create(GAME->world, &world_info);
     player_comp = physics_create_component(GAME->world->physics);
     player_comp->aabb.max = vec3_new(1, 2, 1);
+    world_get_chunk(GAME->world, (ChunkCoord) {0, 0, 0});
     return true;
 }
 
@@ -92,7 +93,7 @@ bool GDF_GAME_Update(f32 dt)
         Renderer* renderer = renderer_get_instance();
         renderer->render_mode = !renderer->render_mode;
     }
-    // LOG_INFO("VEL: %f %f %f", player_comp->vel.x, player_comp->vel.y, player_comp->vel.z);
+    LOG_INFO("VEL: %f %f %f", player_comp->vel.x, player_comp->vel.y, player_comp->vel.z);
     // cam is in center of players head 
     camera->pos.x = player_comp->aabb.max.x - 0.5;
     camera->pos.y = player_comp->aabb.max.y - 0.5;

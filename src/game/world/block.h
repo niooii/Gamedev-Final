@@ -3,8 +3,8 @@
 #include "core.h"
 #include "engine/render/textures.h"
 
-#define MAX_CHUNK_XZ 16
-#define MAX_CHUNK_Y 32
+#define CHUNK_SIZE_XZ 16
+#define CHUNK_SIZE_Y 32
 
 typedef enum BLOCKTYPE {
     GDF_BLOCKTYPE_Grass,

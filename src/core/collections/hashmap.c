@@ -111,10 +111,10 @@ bool GDF_HashmapDestroy(GDF_HashMap hashmap)
     return false;    
 }
 
-bool GDF_HashmapInsert(GDF_HashMap hashmap, void* key, void* value)
+void* GDF_HashmapInsert(GDF_HashMap hashmap, void* key, void* value)
 {
     if (key == NULL)
-        return false;
+        return NULL;
     // TODO! when num entries is almost (0.75 or 0.5)x at capacity, alloc new array
     // and rehash all entries.
 
@@ -169,13 +169,13 @@ bool GDF_HashmapInsert(GDF_HashMap hashmap, void* key, void* value)
 
     if (entry == NULL)
     {
-        return false;
+        return NULL;
     }
 
     entry->owner = hashmap;
     hashmap->num_entries++;
 
-    return true;
+    return entry->val;
 }
 
 void* GDF_HashmapGet(GDF_HashMap hashmap, void* key)

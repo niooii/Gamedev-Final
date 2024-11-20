@@ -8,12 +8,11 @@ Generator generator_create_default()
     return gen;
 }
 
-bool generator_make_chunk(
+bool generator_gen_chunk(
     Generator* generator, 
-    Chunk* chunk, 
-    i32 chunk_x, 
-    i32 chunk_y, 
-    i32 chunk_z
+    World* world, 
+    ChunkCoord cc,
+    Chunk* out_chunk
 )
 {
     i32 t = 1;
@@ -24,6 +23,6 @@ bool generator_make_chunk(
         .type = GDF_BLOCKTYPE_Dirt
     };
 
-    chunk_setblock(chunk, &block_info);
+    chunk_setblock(out_chunk, &block_info);
     return true;
 }

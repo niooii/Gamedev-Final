@@ -89,8 +89,14 @@ static const ColorCombination log_level_color_combinations[] = {
 void logging_flush_buffer()
 {
     char* write_ptr = FORMAT_BUFFER;
-    if (!GDF_LockMutex(entries_mutex) || !GDF_LockMutex(flushing_mutex))
+    if (!GDF_LockMutex(entries_mutex))
     {
+        GDF_WriteConsole("Failed to flush log buffer, mutex not acquired..\n");
+        return;
+    }
+    if (!GDF_LockMutex(flushing_mutex))
+    {
+        GDF_ReleaseMutex(entries_mutex);
         GDF_WriteConsole("Failed to flush log buffer, mutex not acquired..\n");
         return;
     }

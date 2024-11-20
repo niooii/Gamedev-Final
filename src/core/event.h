@@ -3,7 +3,7 @@
 #include "core.h"
 
 typedef struct GDF_EventContext {
-    // 128 bytes
+    // 196 bytes
     union {
         i64 i64[2];
         u64 u64[2];
@@ -90,4 +90,4 @@ typedef enum GDF_EVENT_INTERNAL {
     // Not actaully an event.
     GDF_EVENT_INTERNAL_MAX = 0xFF
 
-} internal_event_codes; 
+} GDF_EVENT_INTERNAL; 
