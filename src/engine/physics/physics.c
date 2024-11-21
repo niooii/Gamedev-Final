@@ -66,7 +66,8 @@ bool physics_update(PhysicsEngine engine, World* world, f64 dt)
 
         aabb_translate(&comp->aabb, deltas);
 
-        Chunk* c = world_get_chunk(world, world_pos_to_chunk_coord(comp->aabb));
+        BlockTouchingResult results[64];
+        // TODO!
         
     }
 

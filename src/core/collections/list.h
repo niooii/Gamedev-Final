@@ -17,6 +17,9 @@ enum {
     LIST_FIELD_LENGTH
 };
 
+// For easier reading of struct definitions that contain lists.
+#define GDF_LIST(type) type*
+
 void* __list_create(u64 length, u64 stride);
 void __list_destroy(void* list);
 

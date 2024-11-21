@@ -4,6 +4,8 @@
 
 typedef struct GDF_CArray_T* GDF_CArray;
 
+#define GDF_CArray(type) GDF_CArray
+
 GDF_CArray __create_carray(u32 stride, u32 capacity);
 // Creates a cyclic array structure. 
 // Meant to be a circular buffer with minimal allocations and in-place element modification.

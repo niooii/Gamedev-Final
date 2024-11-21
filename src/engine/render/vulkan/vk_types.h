@@ -136,10 +136,8 @@ typedef struct vk_pipeline_block {
     vk_block_textures block_textures;
     vk_buffer block_lookup_ssbo;
     VkDescriptorPool descriptor_pool;
-    // GDF_LIST
-    VkDescriptorSet* descriptor_sets;
-    // GDF_LIST
-    VkDescriptorSetLayout* descriptor_layouts;
+    GDF_LIST(VkDescriptorSet) descriptor_sets;
+    GDF_LIST(VkDescriptorSetLayout) descriptor_layouts;
 } vk_pipeline_block;
 
 typedef struct vk_pipeline_ui {
@@ -175,10 +173,8 @@ typedef struct vk_pipeline_grid {
 typedef struct vk_swapchain {
     VkSwapchainKHR handle;
 
-    // GDF_LIST structure
-    vk_image* images; 
-    // GDF_LIST structure
-    VkFramebuffer* framebuffers;
+    GDF_LIST(vk_image) images; 
+    GDF_LIST(VkFramebuffer) framebuffers;
     u32 current_img_idx;
     VkExtent2D extent;
     u32 image_count;
@@ -219,36 +215,28 @@ typedef struct vk_renderer_context {
     
     vk_formats formats;
 
-    // GDF_LIST
     // All vertex shaders will get input from these uniform buffers.
-    vk_uniform_buffer* uniform_buffers;
+    GDF_LIST(vk_uniform_buffer) uniform_buffers;
     // This field is modified then copied over to vk_uniform_buffer[n].mapped_Data
     ViewProjUB uniform_buffer_data;
     VkDescriptorPool descriptor_pool;
-    // GDF_LIST
-    VkDescriptorSet* global_vp_ubo_sets;
-    // GDF_LIST
-    VkDescriptorSetLayout* global_vp_ubo_layouts;
+    GDF_LIST(VkDescriptorSet) global_vp_ubo_sets;
+    GDF_LIST(VkDescriptorSetLayout) global_vp_ubo_layouts;
 
     VkCommandPool persistent_command_pool;
     VkCommandPool transient_command_pool;
     VkCommandBuffer* command_buffers;
 
-    // GDF_LIST of physical device info structs
-    vk_physical_device* physical_device_info_list;
+    GDF_LIST(vk_physical_device) physical_device_info_list;
     vk_device device;
 
     u32 current_frame;
     u32 max_concurrent_frames;
     // Sync objects
-    // GDF_LIST
-    VkSemaphore* image_available_semaphores;
-    // GDF_LIST
-    VkSemaphore* render_finished_semaphores;
-    // GDF_LIST
-    VkFence* in_flight_fences;
-    // GDF_LIST
-    VkFence* images_in_flight;
+    GDF_LIST(VkSemaphore) image_available_semaphores;
+    GDF_LIST(VkSemaphore) render_finished_semaphores;
+    GDF_LIST(VkFence) in_flight_fences;
+    GDF_LIST(VkFence) images_in_flight;
     
     bool pending_resize_event;
     bool recreating_swapchain;
@@ -259,8 +247,7 @@ typedef struct vk_renderer_context {
     vk_buffer cube_vbo;
     vk_buffer cube_index_buffer;
 
-    // GDF_LIST of visible chunk data.
-    GpuChunkData* visible_chunks;
+    GDF_LIST(GpuChunkData) visible_chunks;
 
 #ifndef GDF_RELEASE
     VkDebugUtilsMessengerEXT debug_messenger;

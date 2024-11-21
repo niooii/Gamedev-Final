@@ -11,8 +11,7 @@ typedef struct tp_work {
 
 typedef struct GDF_Threadpool_T {
     u16 workers;
-    // GDF_List of work structs
-    tp_work* work_queue;
+    GDF_LIST(tp_work) work_queue;
 } GDF_Threadpool_T;
 
 GDF_Threadpool GDF_CreateThreadpool()

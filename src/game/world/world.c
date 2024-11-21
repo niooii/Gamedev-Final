@@ -75,7 +75,7 @@ u32 world_get_blocks_touching(
     u32 result_arr_size
 )
 {
-    // TODO!
+    
     return 0;
 }
 

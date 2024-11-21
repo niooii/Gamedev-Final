@@ -34,8 +34,7 @@ typedef struct ClientInfo {
 typedef struct WorldServer {
     World world;
     GDF_Mutex clients_mutex;
-    // GDF_List of clients for fast broadcasting
-    ClientInfo* clients;
+    GDF_LIST(ClientInfo) clients;
     // Map of uid -> ClientInfo for quick access.
     GDF_HashMap client_map;
     bool alive;
