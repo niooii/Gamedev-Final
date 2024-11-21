@@ -1,5 +1,5 @@
 #include "physics.h"
-
+#include "game/world/world.h"
 #include "core/collections/list.h"
 
 typedef struct Physics_T {
@@ -28,7 +28,7 @@ PhysicsComponent* physics_create_component(PhysicsEngine engine)
 }
 
 // TODO! collision
-bool physics_update(PhysicsEngine engine, f64 dt)
+bool physics_update(PhysicsEngine engine, World* world, f64 dt)
 {   
     // TODO! optimize, look into SIMD
     vec3 effective_gravity = engine->gravity_active ? engine->gravity : vec3_zero();
@@ -47,19 +47,27 @@ bool physics_update(PhysicsEngine engine, f64 dt)
             comp->vel.z * dt + 0.5f * net_accel.z * dt * dt
         );
 
+        comp->vel.x = comp->vel.x + net_accel.x * dt;
+        comp->vel.y = comp->vel.y + net_accel.y * dt;
+        comp->vel.z = comp->vel.z + net_accel.z * dt;
+        
         // Stop entities at Y = 0 for now..
         if (comp->aabb.min.y <= 0)
         {
             comp->vel.y = MAX(0, comp->vel.y);
-            deltas.y = MAX(0, deltas.y);
-            comp->aabb.min.y = 0;
+            
+            // If vel.y was just set to 0 then entity should be grounded
+            // and delta.y will adjust to keep it on y = 0.
+            if (comp->vel.y == 0)
+            {
+                deltas.y = -comp->aabb.min.y;
+            }
         }
-        
+
         aabb_translate(&comp->aabb, deltas);
+
+        Chunk* c = world_get_chunk(world, world_pos_to_chunk_coord(comp->aabb));
         
-        comp->vel.x = comp->vel.x + net_accel.x * dt;
-        comp->vel.y = comp->vel.y + net_accel.y * dt;
-        comp->vel.z = comp->vel.z + net_accel.z * dt;
     }
 
     return true;

@@ -26,4 +26,5 @@ PhysicsEngine physics_init(PhysicsCreateInfo create_info);
  */
 PhysicsComponent* physics_create_component(PhysicsEngine engine);
 
-bool physics_update(PhysicsEngine engine, f64 delta_time);
+typedef struct World World; 
+bool physics_update(PhysicsEngine engine, World* world, f64 delta_time);

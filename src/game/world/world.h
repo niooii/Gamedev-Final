@@ -4,6 +4,7 @@
 #include "game/entities/player.h"
 #include "chunk.h"
 #include "engine/physics/physics.h"
+#include "engine/physics/aabb.h"
 #include "core/collections/hashmap.h"
 #include "generator.h"
 #include "world_types.h"
@@ -38,6 +39,19 @@ void world_update(World* world, f64 dt);
  * If a chunk still doesn't exist, it will create it
  */
 Chunk* world_get_chunk(World* world, ChunkCoord coord);
+
+typedef struct BlockTouchingResult {
+
+} BlockTouchingResult;
+
+// Gets the blocks that is touching an AABB.
+// Modifies the result_arr with the found blocks, and returns the amount of blocks found
+u32 world_get_blocks_touching(
+    World* world, 
+    AxisAlignedBoundingBox* aabb, 
+    BlockTouchingResult* result_arr,
+    u32 result_arr_size
+);
 
 // Called every world tick by world_update()
 void world_tick(World* world);

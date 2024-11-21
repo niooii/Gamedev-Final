@@ -51,7 +51,7 @@ void world_create(World* out_world, WorldCreateInfo* create_info)
 
 void world_update(World* world, f64 dt)
 {
-    physics_update(world->physics, dt);
+    physics_update(world->physics, world, dt);
 }
 
 Chunk* world_get_chunk(World* world, ChunkCoord coord)
@@ -66,6 +66,17 @@ Chunk* world_get_chunk(World* world, ChunkCoord coord)
     }
 
     return c;
+}
+
+u32 world_get_blocks_touching(
+    World* world, 
+    AxisAlignedBoundingBox* aabb, 
+    BlockTouchingResult* result_arr,
+    u32 result_arr_size
+)
+{
+    // TODO!
+    return 0;
 }
 
 void world_tick(World* world)

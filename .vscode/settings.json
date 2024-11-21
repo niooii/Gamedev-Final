@@ -159,6 +159,7 @@
         "chunk.h": "c",
         "list": "c",
         "tests.h": "c",
-        "world_types.h": "c"
+        "world_types.h": "c",
+        "aabb.h": "c"
     },
 }

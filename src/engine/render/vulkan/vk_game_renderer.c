@@ -91,9 +91,9 @@ bool vk_draw_game(vk_renderer_context* context, Renderer* backend, u8 resource_i
         for (u32 i = 0; i < num_blocks; i++)
         {
             ChunkBlock* block = chunk->block_list[i];
-            random_ahh_cube.pos.x = cc->x * CHUNK_SIZE_XZ + block->x_rel - 0.5;
-            random_ahh_cube.pos.y = cc->y * CHUNK_SIZE_Y + block->y_rel - 0.5;
-            random_ahh_cube.pos.z = cc->z * CHUNK_SIZE_XZ + block->z_rel - 0.5;
+            random_ahh_cube.pos.x = cc->x * CHUNK_SIZE_XZ + block->x_rel;
+            random_ahh_cube.pos.y = cc->y * CHUNK_SIZE_Y + block->y_rel;
+            random_ahh_cube.pos.z = cc->z * CHUNK_SIZE_XZ + block->z_rel;
             transform_recalc_model_matrix(&random_ahh_cube);
             pct.block_type = block->data.type;
             pct.model = random_ahh_cube.model_matrix;

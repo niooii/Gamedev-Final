@@ -15,8 +15,8 @@ const float thickness = 0.05;
 const float fade_distance = 16;
 
 void main() {
-    float decimal_part_x = fract(in_world_pos.x);
-    float decimal_part_y = fract(in_world_pos.z);
+    float decimal_part_x = fract(in_world_pos.x + 0.5);
+    float decimal_part_y = fract(in_world_pos.z + 0.5);
     if ((decimal_part_x < thickness || decimal_part_x > (1-thickness))
         || (decimal_part_y < thickness || decimal_part_y > (1-thickness)))
     {
