@@ -15,14 +15,17 @@ bool generator_gen_chunk(
     Chunk* out_chunk
 )
 {
-    i32 t = 1;
-    GDF_ChunkBlockCreateInfo block_info = {
-        .block_x = t,
-        .block_y = t,
-        .block_z = t,
-        .type = GDF_BLOCKTYPE_Dirt
-    };
+    for (u8 x = 0; x < 5; x++)
+    {
+        GDF_ChunkBlockCreateInfo block_info = {
+            .block_x = x,
+            .block_y = 0,
+            .block_z = 0,
+            .type = x % 3
+        };
+        chunk_setblock(out_chunk, &block_info);
+    }
 
-    chunk_setblock(out_chunk, &block_info);
+    
     return true;
 }

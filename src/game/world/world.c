@@ -29,12 +29,12 @@ void world_create(World* out_world, WorldCreateInfo* create_info)
 
     out_world->world_update_stopwatch = GDF_StopwatchCreate();
 
-    // Create da chunks
-    for (i32 chunk_x = -5; chunk_x <= 5; chunk_x++)
+    // Create chunks
+    for (i32 chunk_x = -2; chunk_x <= 2; chunk_x++)
     {
-        for (i32 chunk_y = 0; chunk_y <= 5; chunk_y++)
+        for (i32 chunk_y = 0; chunk_y <= 2; chunk_y++)
         {
-            for (i32 chunk_z = -5; chunk_z <= 5; chunk_z++)
+            for (i32 chunk_z = -2; chunk_z <= 2; chunk_z++)
             {
                 ChunkCoord c = {
                     .x = chunk_x,
@@ -61,8 +61,12 @@ Chunk* world_get_or_create_chunk(World* world, ChunkCoord coord)
     {
         Chunk t = {};
         chunk_init(&t);
-        LOG_INFO("CREATED NEW CHUNK: %d, %d, %d", coord.x, coord.y, coord.z);
         c = GDF_HashmapInsert(world->chunks, &coord, &t);
+        if (c == NULL)
+        {
+            LOG_WARN("WOMP WOMP");
+        } 
+        
         generator_gen_chunk(&world->generator, world, coord, c);
     }
 
@@ -126,6 +130,7 @@ ChunkBlock* world_get_block_at(
     u8 rel_x = pos.x - cc.x * CHUNK_SIZE_XZ;
     u8 rel_y = pos.y - cc.y * CHUNK_SIZE_Y;
     u8 rel_z = pos.z - cc.z * CHUNK_SIZE_XZ;
+    // LOG_DEBUG("getting block at rel: %u, %u, %u", rel_x, rel_y, rel_z);
     return chunk_getblock(chunk, rel_x, rel_y, rel_z);
 }
 

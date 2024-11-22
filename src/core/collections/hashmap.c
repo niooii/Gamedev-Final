@@ -1,5 +1,6 @@
 #include "hashmap.h"
 #include "superfasthash.h"
+    #include <stdio.h>
 
 typedef struct GDF_HashMap_T {
     u32 k_stride;
@@ -12,9 +13,24 @@ typedef struct GDF_HashMap_T {
     u32 (*hash_func)(const u8* data, u32 len);
 } GDF_HashMap_T;
 
-static FORCEINLINE u32 __get_idx(void* key, GDF_HashMap map)
+static FORCEINLINE u32 __get_idx(
+    void* key, 
+    GDF_HashMap map
+)
 {
-    return map->hash_func((const u8*)key, map->k_stride) % map->capacity;
+    u16 idx = map->hash_func((const u8*)key, map->k_stride) % map->capacity;
+    return idx;
+}
+
+static FORCEINLINE u32 __get_idx_custom(
+    void* key, 
+    u32 key_size,
+    u32 capacity,
+    u32 (*hash_func)(const u8* data, u32 len)
+)
+{
+    u16 idx = hash_func((const u8*)key, key_size) % capacity;
+    return idx;
 }
 
 // Inserts key and value at the given index or linearly probes for an
@@ -32,36 +48,30 @@ static FORCEINLINE HashmapEntry* __insert(
 )
 {
     u32 idx;
-    for (u32 i = 0; i < capacity && bucket[(
-        (idx = (start_idx + i) % capacity) 
-    )].key != NULL; i++)
+
+    for (u32 i = 0; i < capacity; i++)
     {
-        // Check if we have a duplicate key.
-        if (memcmp(bucket[idx].key, key, key_size) == 0)
+        idx = (start_idx + i) % capacity;
+
+        if (bucket[idx].key != NULL && memcmp(bucket[idx].key, key, key_size) == 0)
         {
-            LOG_ERR(
-                "DUPLICATE KEY: %d, %d, %d", 
-                *((i32*)key), 
-                *((i32*)((u64)key + sizeof(i32))),
-                *((i32*)((u64)key + sizeof(i32) * 2))
-            );
-            LOG_ERR(
-                "WITH: %d, %d, %d", 
-                *((i32*)bucket[idx].key), 
-                *((i32*)((u64)bucket[idx].key + sizeof(i32))),
-                *((i32*)((u64)bucket[idx].key + sizeof(i32) * 2))
-            );
-            logging_flush_buffer();
-            return NULL;
+            // update entry
+            GDF_MemCopy(bucket[idx].val, val, val_size);
+            return bucket + idx;  
+        }
+
+        if (bucket[idx].key == NULL)
+        {
+            bucket[idx].key = GDF_Malloc(key_size, GDF_MEMTAG_APPLICATION);
+            GDF_MemCopy(bucket[idx].key, key, key_size);
+            bucket[idx].val = GDF_Malloc(val_size, GDF_MEMTAG_APPLICATION);
+            GDF_MemCopy(bucket[idx].val, val, val_size);
+            return bucket + idx;  
         }
     }
-    
-    bucket[idx].key = GDF_Malloc(key_size, GDF_MEMTAG_APPLICATION);
-    GDF_MemCopy(bucket[idx].key, key, key_size);
-    bucket[idx].val = GDF_Malloc(val_size, GDF_MEMTAG_APPLICATION);
-    GDF_MemCopy(bucket[idx].val, val, val_size);
 
-    return bucket + idx;
+    // if capacity is exceeded for some reason
+    return NULL;
 }
 
 static HashmapEntry* __iter_first(HashmapEntry* bucket, u32 capacity) 
@@ -148,14 +158,19 @@ void* GDF_HashmapInsert(GDF_HashMap hashmap, void* key, void* value)
             if (bucket[i].key == NULL) 
                 continue;
 
-            u32 start_idx = __get_idx(bucket[i].key, hashmap);
-            
-            LOG_DEBUG(
-                "REHASHING: %d, %d, %d", 
-                *((i32*)bucket[i].key), 
-                *((i32*)((u64)bucket[i].key + sizeof(i32))),
-                *((i32*)((u64)bucket[i].key + sizeof(i32) * 2))
+            u32 start_idx = __get_idx_custom(
+                bucket[i].key, 
+                hashmap->k_stride,
+                new_capacity,
+                hashmap->hash_func
             );
+            
+            // LOG_DEBUG(
+            //     "REHASHING: %d, %d, %d", 
+            //     *((i32*)bucket[i].key), 
+            //     *((i32*)((u64)bucket[i].key + sizeof(i32))),
+            //     *((i32*)((u64)bucket[i].key + sizeof(i32) * 2))
+            // );
             HashmapEntry* entry = __insert(
                 start_idx,
                 bucket[i].key,
@@ -206,7 +221,6 @@ void* GDF_HashmapGet(GDF_HashMap hashmap, void* key)
     
     HashmapEntry* bucket = hashmap->bucket;
     u32 start_idx = __get_idx(key, hashmap);
-
     // Linear probing, wrap around until something is found or nothing is found.
     for (u32 i = 0, idx; i < hashmap->capacity && bucket[(
         (idx = (start_idx + i) % hashmap->capacity) 
@@ -216,20 +230,17 @@ void* GDF_HashmapGet(GDF_HashMap hashmap, void* key)
         {
             return bucket[idx].val;
         } 
-        LOG_ERR(
-            "NOT MATCHING: %d, %d, %d", 
-            *((i32*)bucket[idx].key), 
-            *((i32*)((u64)bucket[idx].key + sizeof(i32))),
-            *((i32*)((u64)bucket[idx].key + sizeof(i32) * 2))
-        );
+        // debugging chunk coords
+        // LOG_DEBUG(
+        //     "NOT MATCHING: \n%d, %d, %d\n%d, %d, %d\n", 
+        //     *((i32*)bucket[idx].key), 
+        //     *((i32*)((u64)bucket[idx].key + sizeof(i32))),
+        //     *((i32*)((u64)bucket[idx].key + sizeof(i32) * 2)),
+        //     *((i32*)key), 
+        //     *((i32*)((u64)key + sizeof(i32))),
+        //     *((i32*)((u64)key + sizeof(i32) * 2))
+        // );
     }
-
-    LOG_ERR(
-        "DID NOT EXIST: %d, %d, %d", 
-        *((i32*)key), 
-        *((i32*)((u64)key + sizeof(i32))),
-        *((i32*)((u64)key + sizeof(i32) * 2))
-    );
 
     return NULL;
 }

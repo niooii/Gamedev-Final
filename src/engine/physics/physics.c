@@ -93,13 +93,29 @@ bool physics_update(PhysicsEngine engine, World* world, f64 dt)
         for (u32 i = 0; i < results_len; i++)
         {
             BlockTouchingResult* r = results + i;
-            LOG_DEBUG("FOUJND TOUCHING BLOCK...");
+            LOG_DEBUG(
+                "FOUND TOUCHING BLOCK at: %f, %f, %f", 
+                r->box.min.x,
+                r->box.min.y,
+                r->box.min.z
+            );
             
             if (aabb_intersects(&comp->aabb, &r->box))
             {
-                vec3 a_translation = aabb_get_intersection_resolution(&comp->aabb, &r->box);
-                vec3_add_to(&deltas, a_translation);
-                // TODO! zero out velocity 
+                vec3 resolution = aabb_get_intersection_resolution(&comp->aabb, &r->box);
+                vec3_add_to(&deltas, resolution);
+                if (resolution.x != 0)
+                {
+                    comp->vel.x = 0;
+                }
+                else if (resolution.y != 0)
+                {
+                    comp->vel.y = 0;
+                }
+                else 
+                {
+                    comp->vel.z = 0;
+                }
             }
         }
 

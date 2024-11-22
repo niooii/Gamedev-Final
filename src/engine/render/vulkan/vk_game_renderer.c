@@ -78,6 +78,7 @@ bool vk_draw_game(vk_renderer_context* context, Renderer* backend, u8 resource_i
     //     0, sizeof(struct PushConstantTemp), &pct
     // );
 
+    // LOG_WARN("RENDERING START");
     // TODO!
     for (
         HashmapEntry* entry = GDF_HashmapIter(game->world->chunks); 
@@ -87,6 +88,7 @@ bool vk_draw_game(vk_renderer_context* context, Renderer* backend, u8 resource_i
     {
         Chunk* chunk = (Chunk*)entry->val;
         ChunkCoord* cc = (ChunkCoord*)entry->key;
+        // LOG_DEBUG("RENDERING CHUNK AT %d, %d, %d", cc->x, cc->y, cc->z);
         u32 num_blocks = GDF_LIST_GetLength(chunk->block_list);
         for (u32 i = 0; i < num_blocks; i++)
         {

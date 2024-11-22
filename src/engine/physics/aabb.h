@@ -3,6 +3,10 @@
 #include "core.h"
 #include "engine/math/math.h"
 
+typedef enum AXIS {
+    AXIS_POS_X,
+} AXIS;
+
 typedef struct AxisAlignedBoundingBox {
     vec3 min;
     vec3 max;
@@ -61,13 +65,18 @@ FORCEINLINE vec3 aabb_get_intersection_resolution(AxisAlignedBoundingBox* a, Axi
     float absZ = gabs(resolution.z);
     
     // only keep smallest penetration axis
-    if (absX <= absY && absX <= absZ) {
+    if (absX <= absY && absX <= absZ) 
+    {
         resolution.y = 0;
         resolution.z = 0;
-    } else if (absY <= absX && absY <= absZ) {
+    } 
+    else if (absY <= absX && absY <= absZ) 
+    {
         resolution.x = 0;
         resolution.z = 0;
-    } else {
+    } 
+    else 
+    {
         resolution.x = 0;
         resolution.y = 0;
     }

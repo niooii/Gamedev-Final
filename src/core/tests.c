@@ -28,8 +28,8 @@ void test_hashmap()
     int val2 = 343435;
     GDF_ASSERT(GDF_HashmapInsert(map, &key2, &val2));
     int* val2_p = GDF_HashmapGet(map, &key2);
-    // // should fail, duplicate key
-    GDF_ASSERT(!GDF_HashmapInsert(map, &key2, &val1));
+    // should work, updates values on duplicate key
+    GDF_ASSERT(GDF_HashmapInsert(map, &key2, &val1));
     LOG_DEBUG("got val2: %d", *val2_p);
 
     // key iteration test
@@ -52,7 +52,7 @@ void test_hashmap()
     LOG_WARN("Testing second iteration (1 element)...");
     for (; iter2 != NULL; GDF_HashmapIterAdvance(&iter2))
     {
-        LOG_DEBUG("key: %d, val: %d", *((int*)iter2->key), *((int*)iter2->val));
+        // LOG_DEBUG("key: %d, val: %d", *((int*)iter2->key), *((int*)iter2->val));
     }
     LOG_DEBUG("Hashmap tests finish");
 }

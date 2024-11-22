@@ -17,7 +17,9 @@ ChunkBlock* chunk_getblock(
     u8 block_z
 )
 {
-    ChunkBlock* chunk_block = &chunk->block_arr[block_x * block_y * block_z];
+    ChunkBlock* chunk_block = &chunk->block_arr[
+        block_x + (block_y * CHUNK_SIZE_XZ) + (block_z * CHUNK_SIZE_XZ * CHUNK_SIZE_Y)
+    ];
     
     if (!chunk_block->exists)
         return NULL;
@@ -31,9 +33,7 @@ bool chunk_setblock(
 )
 {
     ChunkBlock* block = &chunk->block_arr[
-        chunk_block_info->block_x * 
-        chunk_block_info->block_y * 
-        chunk_block_info->block_z
+        chunk_block_info->block_x + (chunk_block_info->block_y * CHUNK_SIZE_XZ) + (chunk_block_info->block_z * CHUNK_SIZE_XZ * CHUNK_SIZE_Y)
     ];
 
     block->exists = true;
