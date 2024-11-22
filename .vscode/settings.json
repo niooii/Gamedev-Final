@@ -160,6 +160,7 @@
         "list": "c",
         "tests.h": "c",
         "world_types.h": "c",
-        "aabb.h": "c"
+        "aabb.h": "c",
+        "limits": "c"
     },
 }

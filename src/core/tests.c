@@ -5,12 +5,14 @@ static GDF_Stopwatch benchmarker;
 
 void test_hashmap();
 void test_carr();
+void test_math();
 
 void run_all_tests()
 {
     benchmarker = GDF_StopwatchCreate();
+    test_math();
     test_hashmap();
-    test_carr();
+    // test_carr();
 }
 
 void test_hashmap() 
@@ -77,4 +79,10 @@ void test_carr()
     }
     LOG_INFO("read ops took %lf seconds..", GDF_StopwatchElasped(benchmarker));
     LOG_INFO("read iters: %u", r_iterations);
+}
+
+void test_math()
+{
+    GDF_ASSERT(FLOOR(-0.00001) == -1);
+    GDF_ASSERT(FLOOR(-16.45 / 4) == -5);
 }

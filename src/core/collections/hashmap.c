@@ -38,7 +38,22 @@ static FORCEINLINE HashmapEntry* __insert(
     {
         // Check if we have a duplicate key.
         if (memcmp(bucket[idx].key, key, key_size) == 0)
-            return false;
+        {
+            LOG_ERR(
+                "DUPLICATE KEY: %d, %d, %d", 
+                *((i32*)key), 
+                *((i32*)((u64)key + sizeof(i32))),
+                *((i32*)((u64)key + sizeof(i32) * 2))
+            );
+            LOG_ERR(
+                "WITH: %d, %d, %d", 
+                *((i32*)bucket[idx].key), 
+                *((i32*)((u64)bucket[idx].key + sizeof(i32))),
+                *((i32*)((u64)bucket[idx].key + sizeof(i32) * 2))
+            );
+            logging_flush_buffer();
+            return NULL;
+        }
     }
     
     bucket[idx].key = GDF_Malloc(key_size, GDF_MEMTAG_APPLICATION);
@@ -135,6 +150,12 @@ void* GDF_HashmapInsert(GDF_HashMap hashmap, void* key, void* value)
 
             u32 start_idx = __get_idx(bucket[i].key, hashmap);
             
+            LOG_DEBUG(
+                "REHASHING: %d, %d, %d", 
+                *((i32*)bucket[i].key), 
+                *((i32*)((u64)bucket[i].key + sizeof(i32))),
+                *((i32*)((u64)bucket[i].key + sizeof(i32) * 2))
+            );
             HashmapEntry* entry = __insert(
                 start_idx,
                 bucket[i].key,
@@ -195,7 +216,20 @@ void* GDF_HashmapGet(GDF_HashMap hashmap, void* key)
         {
             return bucket[idx].val;
         } 
+        LOG_ERR(
+            "NOT MATCHING: %d, %d, %d", 
+            *((i32*)bucket[idx].key), 
+            *((i32*)((u64)bucket[idx].key + sizeof(i32))),
+            *((i32*)((u64)bucket[idx].key + sizeof(i32) * 2))
+        );
     }
+
+    LOG_ERR(
+        "DID NOT EXIST: %d, %d, %d", 
+        *((i32*)key), 
+        *((i32*)((u64)key + sizeof(i32))),
+        *((i32*)((u64)key + sizeof(i32) * 2))
+    );
 
     return NULL;
 }

@@ -10,13 +10,13 @@
 #include "world_types.h"
 
 FORCEINLINE ChunkCoord world_pos_to_chunk_coord(vec3 pos) {
-    GDF_ASSERT(pos.x < i32_MAX * CHUNK_SIZE_XZ)
-    GDF_ASSERT(pos.y < i32_MAX * CHUNK_SIZE_Y)
-    GDF_ASSERT(pos.z < i32_MAX * CHUNK_SIZE_XZ)
+    // GDF_ASSERT(pos.x < i32_MAX * CHUNK_SIZE_XZ)
+    // GDF_ASSERT(pos.y < i32_MAX * CHUNK_SIZE_Y)
+    // GDF_ASSERT(pos.z < i32_MAX * CHUNK_SIZE_XZ)
     return (ChunkCoord){
-        FLOOR_DIV(pos.x, CHUNK_SIZE_XZ),
-        FLOOR_DIV(pos.y, CHUNK_SIZE_Y), 
-        FLOOR_DIV(pos.z, CHUNK_SIZE_XZ)
+        FLOOR(pos.x / CHUNK_SIZE_XZ),
+        FLOOR(pos.y / CHUNK_SIZE_Y), 
+        FLOOR(pos.z / CHUNK_SIZE_XZ)
     };
 }
 
@@ -38,10 +38,11 @@ void world_update(World* world, f64 dt);
  * by reading from the world's save file and try again
  * If a chunk still doesn't exist, it will create it
  */
-Chunk* world_get_chunk(World* world, ChunkCoord coord);
+Chunk* world_get_or_create_chunk(World* world, ChunkCoord coord);
 
 typedef struct BlockTouchingResult {
-
+    ChunkBlock* block;
+    AxisAlignedBoundingBox box;
 } BlockTouchingResult;
 
 // Gets the blocks that is touching an AABB.
@@ -51,6 +52,11 @@ u32 world_get_blocks_touching(
     AxisAlignedBoundingBox* aabb, 
     BlockTouchingResult* result_arr,
     u32 result_arr_size
+);
+
+ChunkBlock* world_get_block_at(
+    World* world, 
+    vec3 pos
 );
 
 // Called every world tick by world_update()

@@ -319,6 +319,8 @@ FORCEINLINE f32 vec3_length(vec3 vector)
 FORCEINLINE void vec3_normalize(vec3* vector) 
 {
     const f32 length = vec3_length(*vector);
+    if (length == 0)
+        return;
     vector->x /= length;
     vector->y /= length;
     vector->z /= length;
@@ -326,8 +328,10 @@ FORCEINLINE void vec3_normalize(vec3* vector)
 
 FORCEINLINE vec3 vec3_normalized(vec3 vector) 
 {
-    vec3_normalize(&vector);
-    return vector;
+    const f32 length = vec3_length(vector);
+    if (length == 0)
+        return (vec3) { 0, 0, 0 };
+    return (vec3) { vector.x / length, vector.y / length, vector.z / length };
 }
 
 FORCEINLINE f32 vec3_dot(vec3 vector_0, vec3 vector_1) 

@@ -10,7 +10,8 @@ typedef struct PhysicsComponent {
     vec3 vel;
     vec3 accel;
 
-    AxisAlignedBoundingBox aabb;    
+    AxisAlignedBoundingBox aabb;
+    bool grounded;
 } PhysicsComponent;
 
 typedef struct PhysicsCreateInfo {

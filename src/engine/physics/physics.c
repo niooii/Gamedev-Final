@@ -27,6 +27,18 @@ PhysicsComponent* physics_create_component(PhysicsEngine engine)
     return component;
 }
 
+// TODO!
+// Returns the pending movement vector to be ran through block collisions after.
+static vec3 update_kinematics(PhysicsComponent* comp, vec3 effective_gravity, f64 dt)
+{
+    
+}
+
+static void handle_block_collisions(World* world, PhysicsComponent* comp)
+{
+
+}
+
 // TODO! collision
 bool physics_update(PhysicsEngine engine, World* world, f64 dt)
 {   
@@ -52,7 +64,7 @@ bool physics_update(PhysicsEngine engine, World* world, f64 dt)
         comp->vel.z = comp->vel.z + net_accel.z * dt;
         
         // Stop entities at Y = 0 for now..
-        if (comp->aabb.min.y <= 0)
+        if (comp->aabb.min.y <= 0.5)
         {
             comp->vel.y = MAX(0, comp->vel.y);
             
@@ -60,15 +72,38 @@ bool physics_update(PhysicsEngine engine, World* world, f64 dt)
             // and delta.y will adjust to keep it on y = 0.
             if (comp->vel.y == 0)
             {
-                deltas.y = -comp->aabb.min.y;
+                deltas.y = -(comp->aabb.min.y - 0.5);
+            }
+        }
+
+        // TODO! eliminate phasing through blocks at high velocities
+        // with raycasting, for now compare centers of aabbs
+
+        AxisAlignedBoundingBox translated_aabb = comp->aabb;
+        aabb_translate(&translated_aabb, deltas);
+        //
+        BlockTouchingResult results[64];
+        u32 results_len = world_get_blocks_touching(
+            world, 
+            &comp->aabb,
+            results,
+            sizeof(results) / sizeof(*results)
+        );
+
+        for (u32 i = 0; i < results_len; i++)
+        {
+            BlockTouchingResult* r = results + i;
+            LOG_DEBUG("FOUJND TOUCHING BLOCK...");
+            
+            if (aabb_intersects(&comp->aabb, &r->box))
+            {
+                vec3 a_translation = aabb_get_intersection_resolution(&comp->aabb, &r->box);
+                vec3_add_to(&deltas, a_translation);
+                // TODO! zero out velocity 
             }
         }
 
         aabb_translate(&comp->aabb, deltas);
-
-        BlockTouchingResult results[64];
-        // TODO!
-        
     }
 
     return true;

@@ -19,7 +19,9 @@ layout(location = 1) out vec2 out_tex_coord;
 layout(location = 2) out uint block_type;
 
 void main() {
-    out_tex_coord = vec2(in_position.x + 0.5, in_position.z + 0.5);
+    vec3 transformed_pos = in_position;
+    transformed_pos.xz += 0.5;
+    out_tex_coord = vec2(in_position.x, in_position.z);
     block_type = pc.block_type;
-    gl_Position = ubo.view_projection * pc.model * vec4(in_position, 1);
+    gl_Position = ubo.view_projection * pc.model * vec4(transformed_pos, 1);
 }

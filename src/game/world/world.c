@@ -32,7 +32,7 @@ void world_create(World* out_world, WorldCreateInfo* create_info)
     // Create da chunks
     for (i32 chunk_x = -5; chunk_x <= 5; chunk_x++)
     {
-        for (i32 chunk_y = 0; chunk_y <= 10; chunk_y++)
+        for (i32 chunk_y = 0; chunk_y <= 5; chunk_y++)
         {
             for (i32 chunk_z = -5; chunk_z <= 5; chunk_z++)
             {
@@ -41,7 +41,7 @@ void world_create(World* out_world, WorldCreateInfo* create_info)
                     .y = chunk_y,
                     .z = chunk_z
                 };
-                world_get_chunk(out_world, c);
+                world_get_or_create_chunk(out_world, c);
             }
         }
     }
@@ -54,13 +54,14 @@ void world_update(World* world, f64 dt)
     physics_update(world->physics, world, dt);
 }
 
-Chunk* world_get_chunk(World* world, ChunkCoord coord)
+Chunk* world_get_or_create_chunk(World* world, ChunkCoord coord)
 {
     Chunk* c = GDF_HashmapGet(world->chunks, &coord);
     if (c == NULL)
     {
         Chunk t = {};
         chunk_init(&t);
+        LOG_INFO("CREATED NEW CHUNK: %d, %d, %d", coord.x, coord.y, coord.z);
         c = GDF_HashmapInsert(world->chunks, &coord, &t);
         generator_gen_chunk(&world->generator, world, coord, c);
     }
@@ -75,8 +76,57 @@ u32 world_get_blocks_touching(
     u32 result_arr_size
 )
 {
+    f32 min_x = FLOOR(aabb->min.x);
+    f32 min_y = FLOOR(aabb->min.y);
+    f32 min_z = FLOOR(aabb->min.z);
+    f32 max_x = FLOOR(aabb->max.x);
+    f32 max_y = FLOOR(aabb->max.y);
+    f32 max_z = aabb->max.z;
+    u32 i = 0;
+    ChunkBlock* cb = NULL;
+    for (f32 x = min_x; x <= max_x; x++)
+    {
+        for (f32 y = min_y; y <= max_y; y++)
+        {
+            for (f32 z = min_z; z <= max_z; z++)
+            {
+                // TODO! unreliable for now
+                cb = world_get_block_at(world, vec3_new(x, y, z));
+                if (cb == NULL)
+                    continue;
+                
+                BlockTouchingResult* res = &result_arr[i++];
+                res->block = cb;
+                res->box = (AxisAlignedBoundingBox) {
+                    .min = vec3_new(x, y, z),
+                    .max = vec3_new(x+1, y+1, z+1)
+                };
+
+                if (i >= result_arr_size)
+                    return i;
+            }
+        }
+    }
+    return i;
+}
+
+// TODO! needs testing
+ChunkBlock* world_get_block_at(
+    World* world, 
+    vec3 pos
+)
+{
+    ChunkCoord cc = world_pos_to_chunk_coord(pos);
+    Chunk* chunk = world_get_or_create_chunk(world, cc);
+    if (chunk == NULL)
+    {
+        return NULL;
+    }
     
-    return 0;
+    u8 rel_x = pos.x - cc.x * CHUNK_SIZE_XZ;
+    u8 rel_y = pos.y - cc.y * CHUNK_SIZE_Y;
+    u8 rel_z = pos.z - cc.z * CHUNK_SIZE_XZ;
+    return chunk_getblock(chunk, rel_x, rel_y, rel_z);
 }
 
 void world_tick(World* world)

@@ -29,8 +29,9 @@ bool GDF_GAME_Init()
     };
     world_create(GAME->world, &world_info);
     player_comp = physics_create_component(GAME->world->physics);
-    player_comp->aabb.max = vec3_new(1, 2, 1);
-    world_get_chunk(GAME->world, (ChunkCoord) {0, 0, 0});
+    player_comp->aabb.min = vec3_new(-0.375, 0, -0.375);
+    player_comp->aabb.max = vec3_new(0.375, 2, 0.375);
+    world_get_or_create_chunk(GAME->world, (ChunkCoord) {0, 0, 0});
     return true;
 }
 
@@ -56,26 +57,30 @@ bool GDF_GAME_Update(f32 dt)
     right_vec = vec3_mul_scalar(right_vec, move_speed * dt);
     forward_vec = vec3_mul_scalar(forward_vec, move_speed * dt);
 
+    f32 scale_factor = dt * 10;
+    vec3 dv = vec3_new(0, 0, 0);
     if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_W))
     {
-        aabb_translate(&player_comp->aabb, forward_vec);
-        // vec3_add_to(&player_comp->vel, forward_vec);
+        vec3_add_to(&dv, forward_vec);
     }
     if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_S))
     {
-        aabb_translate(&player_comp->aabb, vec3_negated(forward_vec));
-        // vec3_add_to(&player_comp->vel, vec3_negated(forward_vec));
+        vec3_add_to(&dv, (vec3_negated(forward_vec)));
     }
     if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_A))
     {
-        aabb_translate(&player_comp->aabb, vec3_negated(right_vec));
-        // vec3_add_to(&player_comp->vel, vec3_negated(right_vec));
+        vec3_add_to(&dv, vec3_negated(right_vec));
     }
     if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_D))
     {
-        aabb_translate(&player_comp->aabb, right_vec);
-        // vec3_add_to(&player_comp->vel, right_vec);
+        vec3_add_to(&dv, right_vec);
     }
+    vec3_normalize(&dv);
+    // LOG_DEBUG("%f, %f, %f", dv.x, dv.y, dv.z);
+    dv = vec3_mul_scalar(dv, scale_factor);
+
+    vec3_add_to(&player_comp->vel, dv);
+
     if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_SPACE))
     {
         player_comp->vel.y = move_speed;
@@ -93,11 +98,11 @@ bool GDF_GAME_Update(f32 dt)
         Renderer* renderer = renderer_get_instance();
         renderer->render_mode = !renderer->render_mode;
     }
-    LOG_INFO("VEL: %f %f %f", player_comp->vel.x, player_comp->vel.y, player_comp->vel.z);
+    // LOG_INFO("VEL: %f %f %f", player_comp->vel.x, player_comp->vel.y, player_comp->vel.z);
     // cam is in center of players head 
-    camera->pos.x = player_comp->aabb.max.x - 0.5;
+    camera->pos.x = (player_comp->aabb.min.x + player_comp->aabb.max.x) / 2.0;
     camera->pos.y = player_comp->aabb.max.y - 0.5;
-    camera->pos.z = player_comp->aabb.max.z - 0.5;
+    camera->pos.z = (player_comp->aabb.min.z + player_comp->aabb.max.z) / 2.0;
     i32 dx;
     i32 dy;
     GDF_INPUT_GetMouseDelta(&dx, &dy);
