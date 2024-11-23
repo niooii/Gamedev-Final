@@ -40,13 +40,13 @@ typedef struct GDF_ChunkBlockCreateInfo {
     u8 block_z;
 } GDF_ChunkBlockCreateInfo;
 
-typedef struct ChunkBlock {
+typedef struct Block {
     BlockData data;
     u8 x_rel;
     u8 y_rel;
     u8 z_rel;
     bool exists;
-} ChunkBlock;
+} Block;
 
 typedef enum GDF_BLOCK_OFFSETS {
     GDF_BLOCK_OFFSETS_FaceDirection = 0,

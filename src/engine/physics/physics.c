@@ -1,9 +1,10 @@
 #include "physics.h"
 #include "game/world/world.h"
 #include "core/collections/list.h"
+#include "game/events.h"
 
 typedef struct Physics_T {
-    PhysicsComponent** components;
+    Entity** entities;
     
     f32 terminal_velocity;
     f32 air_drag;
@@ -15,7 +16,7 @@ typedef struct Physics_T {
 PhysicsEngine physics_init(PhysicsCreateInfo create_info)
 {
     PhysicsEngine physics = GDF_Malloc(sizeof(Physics_T), GDF_MEMTAG_APPLICATION);
-    physics->components = GDF_LIST_Reserve(PhysicsComponent*, 32);
+    physics->entities = GDF_LIST_Reserve(Entity*, 32);
     physics->gravity = create_info.gravity;
     physics->gravity_active = create_info.gravity_active;
     physics->air_drag = create_info.air_drag;
@@ -25,12 +26,9 @@ PhysicsEngine physics_init(PhysicsCreateInfo create_info)
     return physics;
 }
 
-PhysicsComponent* physics_create_component(PhysicsEngine engine)
+void physics_add_entity(PhysicsEngine engine, Entity* entity)
 {
-    PhysicsComponent* component = GDF_Malloc(sizeof(PhysicsComponent), GDF_MEMTAG_UNKNOWN);
-    GDF_LIST_Push(engine->components, component);
-
-    return component;
+    GDF_LIST_Push(engine->entities, entity);
 }
 
 bool physics_update(PhysicsEngine engine, World* world, f64 dt)
@@ -39,18 +37,18 @@ bool physics_update(PhysicsEngine engine, World* world, f64 dt)
     vec3 effective_gravity = engine->gravity_active ? engine->gravity : vec3_zero();
     vec3 net_accel;
     
-    u32 len = GDF_LIST_GetLength(engine->components);
+    u32 len = GDF_LIST_GetLength(engine->entities);
     for (u32 i = 0; i < len; i++)
     {
-        PhysicsComponent* comp = engine->components[i];
+        Entity* entity = engine->entities[i];
 
-        f32 drag = comp->grounded ? engine->ground_drag : engine->air_drag;
+        f32 drag = entity->grounded ? engine->ground_drag : engine->air_drag;
 
         // TODO! this aint quite right..
         if (engine->gravity_active)
         {
-            comp->vel.x *= (drag * (1 - dt));
-            comp->vel.z *= (drag * (1 - dt));
+            entity->vel.x *= (drag * (1 - dt));
+            entity->vel.z *= (drag * (1 - dt));
         }
         
         // gravity will be handling the drag
@@ -59,31 +57,31 @@ bool physics_update(PhysicsEngine engine, World* world, f64 dt)
         //     comp->vel.y *= engine->air_drag;
         // }
 
-        net_accel = vec3_add(comp->accel, effective_gravity);
+        net_accel = vec3_add(entity->accel, effective_gravity);
         
         vec3 deltas = vec3_new(
-            comp->vel.x * dt + 0.5f * net_accel.x * dt * dt,
-            comp->vel.y * dt + 0.5f * net_accel.y * dt * dt,
-            comp->vel.z * dt + 0.5f * net_accel.z * dt * dt
+            entity->vel.x * dt + 0.5f * net_accel.x * dt * dt,
+            entity->vel.y * dt + 0.5f * net_accel.y * dt * dt,
+            entity->vel.z * dt + 0.5f * net_accel.z * dt * dt
         );
 
-        comp->vel.x = comp->vel.x + net_accel.x * dt;
+        entity->vel.x = entity->vel.x + net_accel.x * dt;
         // cap velocity gain at a terminal velocity
         // TODO! should this be for all axis? (and both y directions?)
-        if (comp->vel.y > engine->terminal_velocity)
+        if (entity->vel.y > engine->terminal_velocity)
         {
-            f32 t_vy = comp->vel.y + net_accel.y * dt;
+            f32 t_vy = entity->vel.y + net_accel.y * dt;
             if (t_vy < engine->terminal_velocity)
-                comp->vel.y = engine->terminal_velocity;
+                entity->vel.y = engine->terminal_velocity;
             else
-                comp->vel.y = t_vy;
+                entity->vel.y = t_vy;
         }
-        comp->vel.z = comp->vel.z + net_accel.z * dt;
+        entity->vel.z = entity->vel.z + net_accel.z * dt;
 
         // TODO! eliminate phasing through blocks at high velocities
         // with raycasting
 
-        AxisAlignedBoundingBox translated_aabb = comp->aabb;
+        AxisAlignedBoundingBox translated_aabb = entity->aabb;
         aabb_translate(&translated_aabb, deltas);
         
         BlockTouchingResult results[64];
@@ -94,7 +92,7 @@ bool physics_update(PhysicsEngine engine, World* world, f64 dt)
             sizeof(results) / sizeof(*results)
         );
 
-        comp->grounded = false;
+        entity->grounded = false;
 
         for (u32 i = 0; i < results_len; i++)
         {
@@ -114,22 +112,26 @@ bool physics_update(PhysicsEngine engine, World* world, f64 dt)
                 // zero velocity and shi
                 if (resolution.x != 0)
                 {
-                    comp->vel.x = 0;
+                    entity->vel.x = 0;
                 }
                 else if (resolution.y != 0)
                 {
-                    comp->vel.y = 0;
+                    entity->vel.y = 0;
                     if (resolution.y > 0)
-                        comp->grounded = true;
+                        entity->grounded = true;
                 }
                 else 
                 {
-                    comp->vel.z = 0;
+                    entity->vel.z = 0;
                 }
+                GDF_EventContext ctx = {
+                    .data.u64[0] = (u64)entity
+                };
+                GDF_EVENT_Fire(GDF_EVENT_BLOCK_TOUCHED, r->block, ctx);
             }
         }
 
-        aabb_translate(&comp->aabb, deltas);
+        aabb_translate(&entity->aabb, deltas);
     }
 
     return true;

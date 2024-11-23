@@ -132,7 +132,7 @@ bool GDF_InitApp()
     }
     camera.pos = vec3_new(0, 0, -2);
     camera.aspect_ratio = 1.77777f;
-    camera.fov = 80 * DEG_TO_RAD;
+    camera.fov = 90 * DEG_TO_RAD;
     camera.near_clip = 0.01f;
     camera.far_clip = 1000;
     camera_recalc_matrices(&camera);

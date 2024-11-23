@@ -4,10 +4,10 @@
 #include "engine/math/math_types.h"
 #include "engine/render/renderer.h"
 #include "movement.h"
+#include "engine/math/raycast.h"
 
 static GDF_Game* GAME;
 static HumanoidEntity* player;
-static PhysicsComponent* player_comp;
 
 bool GDF_GAME_Init()
 {
@@ -30,12 +30,11 @@ bool GDF_GAME_Init()
         .ticks_per_sec = 20,
     };
     world_create(GAME->world, &world_info);
-    player_comp = physics_create_component(GAME->world->physics);
-    player_comp->aabb.min = vec3_new(-0.375, 0, -0.375);
-    player_comp->aabb.max = vec3_new(0.375, 1.8, 0.375);
-    aabb_translate(&player_comp->aabb, vec3_new(1, 5, 1));
     player = world_create_humanoid(GAME->world);
-    player->base.physics = player_comp;
+    physics_add_entity(GAME->world->physics, &player->base);
+    player->base.aabb.min = vec3_new(-0.375, 0, -0.375);
+    player->base.aabb.max = vec3_new(0.375, 1.8, 0.375);
+    aabb_translate(&player->base.aabb, vec3_new(1, 5, 1));
     player->base.health = 100;
     player->base.damagable = true;
 
@@ -80,7 +79,7 @@ bool GDF_GAME_Update(f32 dt)
         dash(player, 1.f, camera_forward);
     }
     bool jumped = false;
-    if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_SPACE) && player_comp->grounded)
+    if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_SPACE) && player->base.grounded)
     {
         jump(player, 1);
         jumped = true;
@@ -97,7 +96,7 @@ bool GDF_GAME_Update(f32 dt)
     );
     if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_LSHIFT))
     {
-        player_comp->vel.y = -move_speed;
+        player->base.vel.y = -move_speed;
     }
     if (GDF_INPUT_IsKeyPressed(GDF_KEYCODE_V))
     {
@@ -106,9 +105,9 @@ bool GDF_GAME_Update(f32 dt)
     }
     // LOG_INFO("VEL: %f %f %f", player_comp->vel.x, player_comp->vel.y, player_comp->vel.z);
     // cam is in center of players head 
-    camera->pos.x = (player_comp->aabb.min.x + player_comp->aabb.max.x) / 2.0;
-    camera->pos.y = player_comp->aabb.max.y - 0.5;
-    camera->pos.z = (player_comp->aabb.min.z + player_comp->aabb.max.z) / 2.0;
+    camera->pos.x = (player->base.aabb.min.x + player->base.aabb.max.x) / 2.0;
+    camera->pos.y = player->base.aabb.max.y - 0.5;
+    camera->pos.z = (player->base.aabb.min.z + player->base.aabb.max.z) / 2.0;
     i32 dx;
     i32 dy;
     GDF_INPUT_GetMouseDelta(&dx, &dy);
@@ -127,6 +126,18 @@ bool GDF_GAME_Update(f32 dt)
     camera->pitch = CLAMP(camera->pitch, -89, 89);
     camera_recalc_view_matrix(camera);
     world_update(GAME->world, dt);
+
+    RaycastInfo raycast_info = raycast_default_block_info(
+        GAME->world, 
+        camera->pos, 
+        camera_forward, 
+        2
+    );
+    RaycastResult result = raycast(&raycast_info);
+    if (result.status == RAYCAST_STATUS_HIT_BLOCK) 
+    {
+        LOG_DEBUG("HIT BLOCK LETS GIO");
+    }
     // LOG_DEBUG("pos: %f %f %f", player_comp->pos.x, player_comp->pos.y, player_comp->pos.z);
     // LOG_DEBUG("vel: %f %f %f", player_comp->vel.x, player_comp->vel.y, player_comp->vel.z);
     return true;

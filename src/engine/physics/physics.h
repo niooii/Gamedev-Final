@@ -3,16 +3,9 @@
 #include "core.h"
 #include "engine/math/math.h"
 #include "aabb.h"
+#include "game/entity/entity.h"
 
 typedef struct Physics_T* PhysicsEngine;
-
-typedef struct PhysicsComponent {
-    vec3 vel;
-    vec3 accel;
-
-    AxisAlignedBoundingBox aabb;
-    bool grounded;
-} PhysicsComponent;
 
 typedef struct PhysicsCreateInfo {
     f32 ground_drag;
@@ -26,11 +19,7 @@ typedef struct PhysicsCreateInfo {
 
 PhysicsEngine physics_init(PhysicsCreateInfo create_info);
 
-/*
- * Creates a new physics component, and returns it for immediate modification.
- * It is up to the user to determine how to link this component to entities.
- */
-PhysicsComponent* physics_create_component(PhysicsEngine engine);
+void physics_add_entity(PhysicsEngine engine, Entity* entity);
 
 typedef struct World World; 
 bool physics_update(PhysicsEngine engine, World* world, f64 delta_time);

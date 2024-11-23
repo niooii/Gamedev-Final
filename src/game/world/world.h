@@ -43,7 +43,7 @@ void world_update(World* world, f64 dt);
 Chunk* world_get_or_create_chunk(World* world, ChunkCoord coord);
 
 typedef struct BlockTouchingResult {
-    ChunkBlock* block;
+    Block* block;
     AxisAlignedBoundingBox box;
 } BlockTouchingResult;
 
@@ -56,7 +56,7 @@ u32 world_get_blocks_touching(
     u32 result_arr_size
 );
 
-ChunkBlock* world_get_block_at(
+Block* world_get_block_at(
     World* world, 
     vec3 pos
 );

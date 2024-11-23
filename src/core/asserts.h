@@ -13,6 +13,13 @@
 #endif
 
 void report_assertion_failure(const char* expression, const char* message, const char* file, i32 line);
+void report_todo(const char* message, const char* file, i32 line);
+
+#define TODO(message)                                                \
+    {   \
+        report_todo(message, __FILE__, __LINE__);    \
+        debugBreak();            \
+    }
 
 #define GDF_ASSERT(expr)                                                \
     {   \

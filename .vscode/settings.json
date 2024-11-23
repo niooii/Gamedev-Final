@@ -161,6 +161,9 @@
         "tests.h": "c",
         "world_types.h": "c",
         "aabb.h": "c",
-        "limits": "c"
+        "limits": "c",
+        "entity.h": "c",
+        "*.rh": "c",
+        "renderer.h": "c"
     },
 }

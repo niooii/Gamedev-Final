@@ -3,30 +3,10 @@
 #include "core.h"
 #include "block.h"
 #include "core/collections/list.h"
-
-typedef enum WORLD_DIRECTION {
-    WORLD_UP = 0,
-    WORLD_DOWN = 1,
-    WORLD_LEFT = 2,
-    WORLD_RIGHT = 3,
-    WORLD_FORWARD = 4,
-    WORLD_BACKWARD = 5,
-} WORLD_DIRECTION;
-
-typedef struct Chunk {
-    // Heap allocated array of [CHUNK_SIZE_XZ * CHUNK_SIZE_XZ * MAX_CHUNK_Y] size for direct access.
-    ChunkBlock* block_arr;
-
-    // GDF_LIST of ChunkBlock pointers for easy iteration over existing blocks.
-    ChunkBlock** block_list;
-
-    u64* faces;
-
-    bool pending_render_update;
-} Chunk;
+#include "world_types.h"
 
 bool chunk_init(Chunk* out_chunk);
-ChunkBlock* chunk_getblock(
+Block* chunk_getblock(
     Chunk* out_chunk, 
     u8 block_x, 
     u8 block_y, 

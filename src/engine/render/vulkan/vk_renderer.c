@@ -1261,6 +1261,12 @@ bool vk_renderer_init(Renderer* backend, const char* application_name)
 
     LOG_INFO("Finished initialization of vulkan stuff...");
 
+    if (!vk_game_renderer_init(&context, backend))
+    {
+        LOG_ERR("Failed to init game renderer..");
+        return false;
+    }
+
     context.ready_for_use = true;
 
     return true;
@@ -1566,7 +1572,7 @@ bool vk_renderer_begin_frame(Renderer* backend, f32 delta_time)
     vkCmdSetScissor(cmd_buffer, 0, 1, &scissor);
 
     // render the game
-    if (!vk_draw_game(&context, backend, resource_idx, delta_time))
+    if (!vk_game_renderer_draw(&context, backend, resource_idx, delta_time))
     {
         LOG_ERR("Failed to render the game.");
         // TODO! handle some weird sync stuff here

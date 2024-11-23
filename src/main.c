@@ -52,6 +52,7 @@ int main()
 
     run_all_tests();
 
+
     // TODO! eventually move to either a dedicated server start or creating a world. 
     GDF_Thread server_thread = GDF_CreateThread(server_thread_wrapper, NULL);
     GDF_Socket client = GDF_MakeSocket();

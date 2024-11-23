@@ -24,6 +24,7 @@ typedef struct Renderer {
 
     // Holds the current state of the game
     GDF_Game* game;
+    GDF_RENDER_MODE fd;
     GDF_HashMap(ChunkCoord, RenderChunk) render_chunks;
     GDF_RENDER_MODE render_mode;
 

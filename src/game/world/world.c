@@ -1,4 +1,5 @@
 #include "world.h"
+#include "game/events.h"
 
 uint32_t chunk_hash(const u8* data, u32 len) {
     ChunkCoord* coord = (ChunkCoord*)(data);
@@ -13,6 +14,17 @@ uint32_t chunk_hash(const u8* data, u32 len) {
     u32 h3 = (u32)(coord->z) * p3;
     
     return h1 ^ h2 ^ h3;
+}
+
+static bool __on_block_touch(u16 event_code, void* sender, void* listener_instance, GDF_EventContext ctx)
+{
+    Block* block = (Block*)sender;
+    Entity* entity = (Entity*)(ctx.data.u64[0]);
+    if (entity->type != ENTITY_TYPE_HUMANOID)
+        return false;
+
+    HumanoidEntity* hum = entity->parent;
+    return false;
 }
 
 void world_create(World* out_world, WorldCreateInfo* create_info)
@@ -50,7 +62,7 @@ void world_create(World* out_world, WorldCreateInfo* create_info)
         }
     }
 
-    LOG_ERR("amount entries: %d", GDF_HashmapLen(out_world->chunks));
+    GDF_ASSERT(GDF_EVENT_Register(GDF_EVENT_BLOCK_TOUCHED, NULL, __on_block_touch));
 }
 
 HumanoidEntity* world_create_humanoid(World* world)
@@ -58,6 +70,9 @@ HumanoidEntity* world_create_humanoid(World* world)
     HumanoidEntity* hum = GDF_Malloc(sizeof(HumanoidEntity), GDF_MEMTAG_GAME);
 
     GDF_LIST_Push(world->humanoids, hum);
+
+    hum->base.type = ENTITY_TYPE_HUMANOID;
+    hum->base.parent = hum;
 
     return hum;
 }
@@ -83,7 +98,12 @@ Chunk* world_get_or_create_chunk(World* world, ChunkCoord coord)
             LOG_WARN("WOMP WOMP");
         } 
         
-        generator_gen_chunk(&world->generator, world, coord, c);
+        if (!generator_gen_chunk(&world->generator, world, coord, c))
+        {
+            LOG_ERR("Failed to create chunk");
+            return NULL;
+        }
+        GDF_EVENT_Fire(GDF_EVENT_CHUNK_LOAD, c, (GDF_EventContext){});
     }
 
     return c;
@@ -103,7 +123,7 @@ u32 world_get_blocks_touching(
     f32 max_y = FLOOR(aabb->max.y);
     f32 max_z = aabb->max.z;
     u32 i = 0;
-    ChunkBlock* cb = NULL;
+    Block* cb = NULL;
     for (f32 x = min_x; x <= max_x; x++)
     {
         for (f32 y = min_y; y <= max_y; y++)
@@ -129,7 +149,7 @@ u32 world_get_blocks_touching(
     return i;
 }
 
-ChunkBlock* world_get_block_at(
+Block* world_get_block_at(
     World* world, 
     vec3 pos
 )

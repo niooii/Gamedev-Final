@@ -1,9 +1,35 @@
 #include "vk_game_renderer.h"
 #include "engine/geometry.h"
+#include "game/events.h"
 
 Transform random_ahh_cube;
 
-bool vk_draw_game(vk_renderer_context* context, Renderer* backend, u8 resource_idx, f32 dt)
+static bool __on_chunk_load(u16 event_code, void* sender, void* listener_instance, GDF_EventContext ctx)
+{
+    LOG_DEBUG("CHUNK LOAD");
+    return false;
+}
+
+static bool __on_chunk_update(u16 event_code, void* sender, void* listener_instance, GDF_EventContext ctx)
+{
+    LOG_DEBUG("CHUNK UPDATE");
+    return false;
+}
+
+bool vk_game_renderer_init(vk_renderer_context* context, Renderer* backend)
+{
+    if (
+        !GDF_EVENT_Register(GDF_EVENT_CHUNK_LOAD, NULL, __on_chunk_load) ||
+        !GDF_EVENT_Register(GDF_EVENT_CHUNK_UPDATE, NULL, __on_chunk_update)
+    )
+    {
+        return false;
+    }
+
+    return true;
+}
+
+bool vk_game_renderer_draw(vk_renderer_context* context, Renderer* backend, u8 resource_idx, f32 dt)
 {
     // TODO! BEGONE
     transform_init_default(&random_ahh_cube);
@@ -92,7 +118,7 @@ bool vk_draw_game(vk_renderer_context* context, Renderer* backend, u8 resource_i
         u32 num_blocks = GDF_LIST_GetLength(chunk->block_list);
         for (u32 i = 0; i < num_blocks; i++)
         {
-            ChunkBlock* block = chunk->block_list[i];
+            Block* block = chunk->block_list[i];
             random_ahh_cube.pos.x = cc->x * CHUNK_SIZE_XZ + block->x_rel;
             random_ahh_cube.pos.y = cc->y * CHUNK_SIZE_Y + block->y_rel;
             random_ahh_cube.pos.z = cc->z * CHUNK_SIZE_XZ + block->z_rel;

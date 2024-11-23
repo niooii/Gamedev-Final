@@ -2,8 +2,8 @@
 
 void jump(HumanoidEntity* humanoid, f32 jump_power)
 {
-    PhysicsComponent* physics = humanoid->base.physics;
-    physics->vel.y = 7 * jump_power;
+    Entity* entity = &humanoid->base;
+    entity->vel.y = 7 * jump_power;
 }
 
 // Set to 1 for max
@@ -22,7 +22,7 @@ void player_apply_movement(
     f32 speed
 )
 {
-    PhysicsComponent* physics = humanoid->base.physics;
+    Entity* entity = &humanoid->base;
 
     vec3 dv = {0};
 
@@ -34,7 +34,7 @@ void player_apply_movement(
     f32 true_speed = speed;
     if (just_jumped)
         true_speed = speed * 4;
-    else if (!physics->grounded)
+    else if (!entity->grounded)
         true_speed = speed * 0.3;
 
     vec3_add_to(&dv, vec3_mul_scalar(forward_vec, z_input));
@@ -70,7 +70,7 @@ void player_apply_movement(
     //         dv = vec3_mul_scalar(dv, AIR_CONTROL);
     // }
 
-    vec3_add_to(&physics->vel, dv);
+    vec3_add_to(&entity->vel, dv);
 }
 
 void dash(
@@ -81,6 +81,7 @@ void dash(
 {
     vec3 dash_vec = vec3_mul_scalar(forward, dash_power * 40);
     dash_vec.y *= 0.4;
-    vec3_add_to(&humanoid->base.physics->vel, dash_vec);
+    // vec3_add_to(&humanoid->base.vel, dash_vec);
+    humanoid->base.vel = dash_vec;
     humanoid->in_dash = true;
 }

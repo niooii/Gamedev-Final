@@ -6,15 +6,24 @@
 // TODO! UNUSED FOR NOW..
 typedef enum GDF_EVENT {
     /*
+    A chunk was modified
     Usage:
-    u16 keycode = ctx.data.u16[0]
+    Chunk* chunk = (Chunk*)sender;
     */
-    GDF_EVENT_CHUNK_CHANGE = 0x100,
+    GDF_EVENT_CHUNK_UPDATE = 0x100,
     /*
+    Whenever a chunk is loaded or created.
     Usage:
-    u16 keycode = ctx.data.u16[0]
+    Chunk* chunk = (Chunk*)sender;
     */
-    GDF_EVENT_INTERNAL_ENTITY_HIT = 0x101,
+    GDF_EVENT_CHUNK_LOAD = 0x101,
+    /*
+    Fires if an Entity touches a block.
+    Usage:
+    Block* block = (Block*)sender
+    Entity* h = (Entity*)(ctx.data.u64[0])
+    */
+    GDF_EVENT_BLOCK_TOUCHED = 0x102,
     
     // Not actaully an event.
     GDF_EVENT_MAX = 0xFFF
