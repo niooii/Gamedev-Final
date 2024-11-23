@@ -3,6 +3,8 @@
 #include "core.h"
 #include "core/collections/hashmap.h"
 #include "engine/physics/physics.h"
+#include "game/entity/entity.h"
+#include "game/entity/humanoid.h"
 
 typedef struct Generator {
     u64 testfield;
@@ -22,6 +24,8 @@ typedef struct World {
     u8 chunk_simulate_distance;
     u16 ticks_per_sec;
     GDF_Stopwatch world_update_stopwatch;
+    
+    GDF_LIST(HumanoidEntity*) humanoids;
 
     PhysicsEngine physics;
 } World;

@@ -712,25 +712,25 @@ static const u16 plane_indices[] = {
 };
 
 const Vertex3d cube_vertices[] = {
-    // Unique vertices of the cube
-    {{-0.5f, -0.5f, -0.5f}}, // left-bottom-back
-    {{0.5f, -0.5f, -0.5f}}, // right-bottom-back
-    {{-0.5f,  0.5f, -0.5f}}, // left-top-back
-    {{0.5f,  0.5f, -0.5f}}, // right-top-back
-    {{-0.5f, -0.5f,  0.5f}}, // left-bottom-front
-    {{0.5f, -0.5f,  0.5f}}, // right-bottom-front
-    {{-0.5f,  0.5f,  0.5f}}, // left-top-front
-    {{0.5f,  0.5f,  0.5f}}  // right-top-front
+    {{-0.5f, -0.5f, -0.5f}}, // 0: left-bottom-back
+    {{0.5f, -0.5f, -0.5f}},  // 1: right-bottom-back
+    {{-0.5f, 0.5f, -0.5f}},  // 2: left-top-back
+    {{0.5f, 0.5f, -0.5f}},   // 3: right-top-back
+    {{-0.5f, -0.5f, 0.5f}},  // 4: left-bottom-front
+    {{0.5f, -0.5f, 0.5f}},   // 5: right-bottom-front
+    {{-0.5f, 0.5f, 0.5f}},   // 6: left-top-front
+    {{0.5f, 0.5f, 0.5f}}     // 7: right-top-front
 };
 
 const u16 cube_indices[] = {
-    4, 5, 7, 7, 6, 4, // front
-    1, 0, 2, 2, 3, 1, // back
-    6, 7, 3, 3, 2, 6, // top
-    0, 1, 5, 5, 4, 0, // bottom
-    5, 1, 3, 3, 7, 5, // right
-    0, 4, 6, 6, 2, 0  // left
+    4, 6, 5, 5, 6, 7,
+    0, 2, 1, 1, 2, 3, 
+    2, 6, 3, 3, 6, 7,
+    4, 0, 5, 5, 0, 1,
+    5, 7, 1, 1, 7, 3,
+    4, 6, 0, 0, 6, 2 
 };
+
 
 static void __create_global_vbos(vk_renderer_context* context) 
 {

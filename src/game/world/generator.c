@@ -15,15 +15,29 @@ bool generator_gen_chunk(
     Chunk* out_chunk
 )
 {
-    for (u8 x = 0; x < 5; x++)
+    GDF_ChunkBlockCreateInfo bi = {
+        .block_x = 0,
+        .block_y = 5,
+        .block_z = 0,
+        .type = GDF_BLOCKTYPE_Grass
+    };
+    chunk_setblock(out_chunk, &bi);
+    for (u8 y = 0; y < 1; y++)
     {
-        GDF_ChunkBlockCreateInfo block_info = {
-            .block_x = x,
-            .block_y = 0,
-            .block_z = 0,
-            .type = x % 3
-        };
-        chunk_setblock(out_chunk, &block_info);
+        for (u8 x = 0; x < CHUNK_SIZE_XZ; x++)
+        {
+            for (u8 z = 0; z < CHUNK_SIZE_XZ; z++)
+            {
+                GDF_ChunkBlockCreateInfo block_info = {
+                    .block_x = x,
+                    .block_y = y,
+                    .block_z = z,
+                    .type = y
+                };
+
+                chunk_setblock(out_chunk, &block_info);
+            }
+        }
     }
 
     

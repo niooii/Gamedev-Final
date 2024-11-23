@@ -15,6 +15,11 @@ typedef struct PhysicsComponent {
 } PhysicsComponent;
 
 typedef struct PhysicsCreateInfo {
+    f32 ground_drag;
+    f32 air_drag;
+    // TODO! this is only for negative Y, so
+    // only negative numbers will work
+    f32 terminal_velocity;
     vec3 gravity;
     bool gravity_active;
 } PhysicsCreateInfo;

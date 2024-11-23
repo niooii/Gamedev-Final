@@ -182,7 +182,7 @@ bool vk_pipelines_create_blocks(vk_renderer_context* context)
         .polygonMode = VK_POLYGON_MODE_FILL,
         .lineWidth = 1.0f,
         .cullMode = VK_CULL_MODE_NONE,
-        .frontFace = VK_FRONT_FACE_CLOCKWISE,
+        .frontFace = VK_FRONT_FACE_COUNTER_CLOCKWISE,
         .depthBiasEnable = VK_FALSE
     };
 

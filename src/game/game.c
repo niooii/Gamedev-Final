@@ -3,8 +3,10 @@
 #include "engine/math/math.h"
 #include "engine/math/math_types.h"
 #include "engine/render/renderer.h"
+#include "movement.h"
 
 static GDF_Game* GAME;
+static HumanoidEntity* player;
 static PhysicsComponent* player_comp;
 
 bool GDF_GAME_Init()
@@ -21,7 +23,7 @@ bool GDF_GAME_Init()
 
     GAME->current_screen = GDF_GAME_SCREEN_IN_WORLD;
     GAME->current_screen_type = GDF_GAME_SCREENTYPE_WORLD;
-    GAME->main_player = NULL;
+    // GAME->main_player = NULL;
     GAME->world = GDF_Malloc(sizeof(World), GDF_MEMTAG_GAME);
     WorldCreateInfo world_info = {
         .chunk_simulate_distance = 16,
@@ -30,8 +32,13 @@ bool GDF_GAME_Init()
     world_create(GAME->world, &world_info);
     player_comp = physics_create_component(GAME->world->physics);
     player_comp->aabb.min = vec3_new(-0.375, 0, -0.375);
-    player_comp->aabb.max = vec3_new(0.375, 2, 0.375);
-    world_get_or_create_chunk(GAME->world, (ChunkCoord) {0, 0, 0});
+    player_comp->aabb.max = vec3_new(0.375, 1.8, 0.375);
+    aabb_translate(&player_comp->aabb, vec3_new(1, 5, 1));
+    player = world_create_humanoid(GAME->world);
+    player->base.physics = player_comp;
+    player->base.health = 100;
+    player->base.damagable = true;
+
     return true;
 }
 
@@ -40,58 +47,57 @@ bool GDF_GAME_Update(f32 dt)
 {
     // quick camera input test stuff 
     // TODO! remove
-    f32 move_speed = 3;
+    f32 move_speed = 1;
     if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_LCONTROL))
     {
-        move_speed = 20;
+        move_speed = 1.5;
     }
     GDF_Camera* camera = GAME->main_camera;
     vec3 camera_forward = vec3_forward(camera->yaw  * DEG_TO_RAD, camera->pitch * DEG_TO_RAD);
     vec3 camera_right = vec3_right_from_forward(camera_forward);
 
-    vec3 right_vec = vec3_new(camera_right.x, 0, camera_right.z);
-    vec3_normalize(&right_vec);
-    vec3 forward_vec = vec3_new(camera_forward.x, 0, camera_forward.z);
-    vec3_normalize(&forward_vec);
-    // TODO! handle normalization when traveling diagonally
-    right_vec = vec3_mul_scalar(right_vec, move_speed * dt);
-    forward_vec = vec3_mul_scalar(forward_vec, move_speed * dt);
-
     f32 scale_factor = dt * 10;
-    vec3 dv = vec3_new(0, 0, 0);
+    i8 z_input = 0;
+    i8 x_input = 0;
     if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_W))
     {
-        vec3_add_to(&dv, forward_vec);
+        z_input++;
     }
     if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_S))
     {
-        vec3_add_to(&dv, (vec3_negated(forward_vec)));
+        z_input--;
     }
     if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_A))
     {
-        vec3_add_to(&dv, vec3_negated(right_vec));
+        x_input--;
     }
     if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_D))
     {
-        vec3_add_to(&dv, right_vec);
+        x_input++;
     }
-    vec3_normalize(&dv);
-    // LOG_DEBUG("%f, %f, %f", dv.x, dv.y, dv.z);
-    dv = vec3_mul_scalar(dv, scale_factor);
-
-    vec3_add_to(&player_comp->vel, dv);
-
-    if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_SPACE))
+    if (GDF_INPUT_IsKeyPressed(GDF_KEYCODE_Q))
     {
-        player_comp->vel.y = move_speed;
+        dash(player, 1.f, camera_forward);
     }
+    bool jumped = false;
+    if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_SPACE) && player_comp->grounded)
+    {
+        jump(player, 1);
+        jumped = true;
+    }
+    player_apply_movement(
+        player,
+        x_input,
+        z_input,
+        &camera_forward,
+        &camera_right,
+        dt,
+        jumped,
+        move_speed
+    );
     if (GDF_INPUT_IsKeyDown(GDF_KEYCODE_LSHIFT))
     {
         player_comp->vel.y = -move_speed;
-    }
-    if (GDF_INPUT_IsKeyPressed(GDF_KEYCODE_SPACE))
-    {
-        LOG_INFO("PRESSED>...");
     }
     if (GDF_INPUT_IsKeyPressed(GDF_KEYCODE_V))
     {

@@ -1,7 +1,7 @@
 #pragma once
 
 #include "core.h"
-#include "game/entities/player.h"
+#include "game/entity/humanoid.h"
 #include "chunk.h"
 #include "engine/physics/physics.h"
 #include "engine/physics/aabb.h"
@@ -29,6 +29,8 @@ FORCEINLINE vec3 chunk_coord_to_world_pos(ChunkCoord coord) {
 }
 
 void world_create(World* out_world, WorldCreateInfo* create_info);
+// Creates a new Humanoid Entity and returns it for modification.
+HumanoidEntity* world_create_humanoid(World* world);
 
 // Called every frame.
 void world_update(World* world, f64 dt);

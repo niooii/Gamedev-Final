@@ -7,9 +7,9 @@
 #define CHUNK_SIZE_Y 32
 
 typedef enum BLOCKTYPE {
-    GDF_BLOCKTYPE_Grass,
-    GDF_BLOCKTYPE_Dirt,
     GDF_BLOCKTYPE_Stone,
+    GDF_BLOCKTYPE_Dirt,
+    GDF_BLOCKTYPE_Grass,
     GDF_BLOCKTYPE_Glass,
 } BLOCKTYPE;
 

@@ -20,7 +20,7 @@ void main() {
     vec3 transformed_vertex = in_position * 40;
     transformed_vertex.xz += pc.camera_pos.xz;
     // // because the input is the "up plane" for a cube so set y to 0.
-    transformed_vertex.y = 0.5;
+    transformed_vertex.y = -0.5;
 
     out_world_pos = transformed_vertex;
     gl_Position = ubo.view_projection * vec4(transformed_vertex, 1.0);

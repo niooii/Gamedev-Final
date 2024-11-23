@@ -18,21 +18,25 @@ uint32_t chunk_hash(const u8* data, u32 len) {
 void world_create(World* out_world, WorldCreateInfo* create_info)
 {
     PhysicsCreateInfo physics_info = {
-        .gravity = {0, -9.81, 0},
-        .gravity_active = true
+        .gravity = {0, -20, 0},
+        .gravity_active = true,
+        .air_drag = 0.97f,
+        .ground_drag = 0.846f,
+        .terminal_velocity = -50.f
     };
     out_world->physics = physics_init(physics_info);
     out_world->chunk_simulate_distance = create_info->chunk_simulate_distance;
     i32 chunk_sim_distance = out_world->chunk_simulate_distance;
     out_world->ticks_per_sec = create_info->ticks_per_sec;
     out_world->chunks = GDF_HashmapWithHasher(ChunkCoord, Chunk, chunk_hash, false);
+    out_world->humanoids = GDF_LIST_Reserve(HumanoidEntity*, 32);
 
     out_world->world_update_stopwatch = GDF_StopwatchCreate();
 
     // Create chunks
     for (i32 chunk_x = -2; chunk_x <= 2; chunk_x++)
     {
-        for (i32 chunk_y = 0; chunk_y <= 2; chunk_y++)
+        for (i32 chunk_y = 0; chunk_y < 1; chunk_y++)
         {
             for (i32 chunk_z = -2; chunk_z <= 2; chunk_z++)
             {
@@ -49,8 +53,20 @@ void world_create(World* out_world, WorldCreateInfo* create_info)
     LOG_ERR("amount entries: %d", GDF_HashmapLen(out_world->chunks));
 }
 
+HumanoidEntity* world_create_humanoid(World* world)
+{
+    HumanoidEntity* hum = GDF_Malloc(sizeof(HumanoidEntity), GDF_MEMTAG_GAME);
+
+    GDF_LIST_Push(world->humanoids, hum);
+
+    return hum;
+}
+
 void world_update(World* world, f64 dt)
 {
+    u32 num_humanoids = GDF_LIST_GetLength(world->humanoids);
+    for (u32 i = 0; i < num_humanoids; i++)
+        humanoid_entity_update(world->humanoids[i]);
     physics_update(world->physics, world, dt);
 }
 
@@ -94,7 +110,6 @@ u32 world_get_blocks_touching(
         {
             for (f32 z = min_z; z <= max_z; z++)
             {
-                // TODO! unreliable for now
                 cb = world_get_block_at(world, vec3_new(x, y, z));
                 if (cb == NULL)
                     continue;
@@ -130,7 +145,6 @@ ChunkBlock* world_get_block_at(
     u8 rel_x = pos.x - cc.x * CHUNK_SIZE_XZ;
     u8 rel_y = pos.y - cc.y * CHUNK_SIZE_Y;
     u8 rel_z = pos.z - cc.z * CHUNK_SIZE_XZ;
-    // LOG_DEBUG("getting block at rel: %u, %u, %u", rel_x, rel_y, rel_z);
     return chunk_getblock(chunk, rel_x, rel_y, rel_z);
 }
 

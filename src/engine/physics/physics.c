@@ -5,6 +5,9 @@
 typedef struct Physics_T {
     PhysicsComponent** components;
     
+    f32 terminal_velocity;
+    f32 air_drag;
+    f32 ground_drag;
     vec3 gravity;
     bool gravity_active; 
 } Physics_T;
@@ -15,6 +18,9 @@ PhysicsEngine physics_init(PhysicsCreateInfo create_info)
     physics->components = GDF_LIST_Reserve(PhysicsComponent*, 32);
     physics->gravity = create_info.gravity;
     physics->gravity_active = create_info.gravity_active;
+    physics->air_drag = create_info.air_drag;
+    physics->ground_drag = create_info.ground_drag;
+    physics->terminal_velocity = create_info.terminal_velocity;
 
     return physics;
 }
@@ -27,19 +33,6 @@ PhysicsComponent* physics_create_component(PhysicsEngine engine)
     return component;
 }
 
-// TODO!
-// Returns the pending movement vector to be ran through block collisions after.
-static vec3 update_kinematics(PhysicsComponent* comp, vec3 effective_gravity, f64 dt)
-{
-    
-}
-
-static void handle_block_collisions(World* world, PhysicsComponent* comp)
-{
-
-}
-
-// TODO! collision
 bool physics_update(PhysicsEngine engine, World* world, f64 dt)
 {   
     // TODO! optimize, look into SIMD
@@ -51,6 +44,21 @@ bool physics_update(PhysicsEngine engine, World* world, f64 dt)
     {
         PhysicsComponent* comp = engine->components[i];
 
+        f32 drag = comp->grounded ? engine->ground_drag : engine->air_drag;
+
+        // TODO! this aint quite right..
+        if (engine->gravity_active)
+        {
+            comp->vel.x *= (drag * (1 - dt));
+            comp->vel.z *= (drag * (1 - dt));
+        }
+        
+        // gravity will be handling the drag
+        // if (!comp->grounded)
+        // {
+        //     comp->vel.y *= engine->air_drag;
+        // }
+
         net_accel = vec3_add(comp->accel, effective_gravity);
         
         vec3 deltas = vec3_new(
@@ -60,50 +68,50 @@ bool physics_update(PhysicsEngine engine, World* world, f64 dt)
         );
 
         comp->vel.x = comp->vel.x + net_accel.x * dt;
-        comp->vel.y = comp->vel.y + net_accel.y * dt;
-        comp->vel.z = comp->vel.z + net_accel.z * dt;
-        
-        // Stop entities at Y = 0 for now..
-        if (comp->aabb.min.y <= 0.5)
+        // cap velocity gain at a terminal velocity
+        // TODO! should this be for all axis? (and both y directions?)
+        if (comp->vel.y > engine->terminal_velocity)
         {
-            comp->vel.y = MAX(0, comp->vel.y);
-            
-            // If vel.y was just set to 0 then entity should be grounded
-            // and delta.y will adjust to keep it on y = 0.
-            if (comp->vel.y == 0)
-            {
-                deltas.y = -(comp->aabb.min.y - 0.5);
-            }
+            f32 t_vy = comp->vel.y + net_accel.y * dt;
+            if (t_vy < engine->terminal_velocity)
+                comp->vel.y = engine->terminal_velocity;
+            else
+                comp->vel.y = t_vy;
         }
+        comp->vel.z = comp->vel.z + net_accel.z * dt;
 
         // TODO! eliminate phasing through blocks at high velocities
-        // with raycasting, for now compare centers of aabbs
+        // with raycasting
 
         AxisAlignedBoundingBox translated_aabb = comp->aabb;
         aabb_translate(&translated_aabb, deltas);
-        //
+        
         BlockTouchingResult results[64];
         u32 results_len = world_get_blocks_touching(
             world, 
-            &comp->aabb,
+            &translated_aabb,
             results,
             sizeof(results) / sizeof(*results)
         );
 
+        comp->grounded = false;
+
         for (u32 i = 0; i < results_len; i++)
         {
             BlockTouchingResult* r = results + i;
-            LOG_DEBUG(
-                "FOUND TOUCHING BLOCK at: %f, %f, %f", 
-                r->box.min.x,
-                r->box.min.y,
-                r->box.min.z
-            );
+            // LOG_DEBUG(
+            //     "FOUND TOUCHING BLOCK at: %f, %f, %f", 
+            //     r->box.min.x,
+            //     r->box.min.y,
+            //     r->box.min.z
+            // );
             
-            if (aabb_intersects(&comp->aabb, &r->box))
+            if (aabb_intersects(&translated_aabb, &r->box))
             {
-                vec3 resolution = aabb_get_intersection_resolution(&comp->aabb, &r->box);
+                vec3 resolution = aabb_get_intersection_resolution(&translated_aabb, &r->box);
                 vec3_add_to(&deltas, resolution);
+                aabb_translate(&translated_aabb, resolution);
+                // zero velocity and shi
                 if (resolution.x != 0)
                 {
                     comp->vel.x = 0;
@@ -111,6 +119,8 @@ bool physics_update(PhysicsEngine engine, World* world, f64 dt)
                 else if (resolution.y != 0)
                 {
                     comp->vel.y = 0;
+                    if (resolution.y > 0)
+                        comp->grounded = true;
                 }
                 else 
                 {
@@ -120,6 +130,15 @@ bool physics_update(PhysicsEngine engine, World* world, f64 dt)
         }
 
         aabb_translate(&comp->aabb, deltas);
+
+        if (comp->grounded)
+        {
+            // more drag
+        }
+        else
+        {
+            // less drag
+        }
     }
 
     return true;
