@@ -130,15 +130,6 @@ bool physics_update(PhysicsEngine engine, World* world, f64 dt)
         }
 
         aabb_translate(&comp->aabb, deltas);
-
-        if (comp->grounded)
-        {
-            // more drag
-        }
-        else
-        {
-            // less drag
-        }
     }
 
     return true;

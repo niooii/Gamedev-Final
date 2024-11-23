@@ -24,6 +24,7 @@ typedef struct Renderer {
 
     // Holds the current state of the game
     GDF_Game* game;
+    GDF_HashMap(ChunkCoord, RenderChunk) render_chunks;
     GDF_RENDER_MODE render_mode;
 
     bool (*initialize)(struct Renderer* backend, const char* application_name);
@@ -45,6 +46,10 @@ typedef struct GDF_RenderPacket {
 typedef struct Vertex3d {
     vec3 pos;
 } Vertex3d;
+
+// Everything needed aboutt a chunk to render it
+typedef struct RenderChunk {
+} RenderChunk;
 
 typedef struct ViewProjUB {
     mat4 view_projection;

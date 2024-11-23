@@ -22,6 +22,14 @@ bool generator_gen_chunk(
         .type = GDF_BLOCKTYPE_Grass
     };
     chunk_setblock(out_chunk, &bi);
+    bi.block_y = 1;
+    bi.block_x = 1;
+    bi.block_z = 1;
+    chunk_setblock(out_chunk, &bi);
+    bi.block_x = 2;
+    bi.block_z = 2;
+    chunk_setblock(out_chunk, &bi);
+
     for (u8 y = 0; y < 1; y++)
     {
         for (u8 x = 0; x < CHUNK_SIZE_XZ; x++)

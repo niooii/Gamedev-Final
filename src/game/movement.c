@@ -40,7 +40,8 @@ void player_apply_movement(
     vec3_add_to(&dv, vec3_mul_scalar(forward_vec, z_input));
     vec3_add_to(&dv, vec3_mul_scalar(right_vec, x_input));
     
-    if (x_input != 0 || z_input != 0) {
+    if (x_input != 0 || z_input != 0) 
+    {
         vec3_normalize(&dv);
     }
 

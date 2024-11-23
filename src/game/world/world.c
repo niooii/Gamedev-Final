@@ -129,7 +129,6 @@ u32 world_get_blocks_touching(
     return i;
 }
 
-// TODO! needs testing
 ChunkBlock* world_get_block_at(
     World* world, 
     vec3 pos
