@@ -31,21 +31,21 @@ void player_apply_movement(
     vec3 forward_vec = vec3_new(forward->x, 0, forward->z);
     vec3_normalize(&forward_vec);
 
-    f32 true_speed = speed;
+    f32 true_speed = speed * 100;
     if (just_jumped)
-        true_speed = speed * 4;
+        true_speed *= 4;
     else if (!entity->grounded)
-        true_speed = speed * 0.3;
+        true_speed *= 0.3;
 
     vec3_add_to(&dv, vec3_mul_scalar(forward_vec, z_input));
-    vec3_add_to(&dv, vec3_mul_scalar(right_vec, x_input));
+    vec3_add_to(&dv, vec3_mul_scalar(right_vec, -x_input));
     
     if (x_input != 0 || z_input != 0) 
     {
         vec3_normalize(&dv);
     }
 
-    dv = vec3_mul_scalar(dv, true_speed);
+    dv = vec3_mul_scalar(dv, true_speed * dt);
 
     // vec3 horizontal_vel = vec3_new(physics->vel.x, 0, physics->vel.z);
     // f32 current_speed = vec3_length(horizontal_vel);

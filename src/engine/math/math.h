@@ -41,6 +41,8 @@ f32 gtan(f32 x);
 f32 gsqrt(f32 x);
 // abs value fn
 f32 gabs(f32 x);
+// power fn
+f32 gpowf(f32 x, f32 pow);
 
 i32 random();
 i32 random_in_range(i32 min, i32 max);
@@ -633,7 +635,7 @@ FORCEINLINE mat4 mat4_perspective(f32 fov_radians, f32 aspect_ratio, f32 near_cl
     f32 half_tan_fov = gtan(fov_radians * 0.5f);
     mat4 out_matrix;
     GDF_MemZero(out_matrix.data, sizeof(f32) * 16);
-    out_matrix.data[0] = 1.0f / (aspect_ratio * half_tan_fov);
+    out_matrix.data[0] = -1.0f / (aspect_ratio * half_tan_fov);
     out_matrix.data[5] = 1.0f / half_tan_fov;
     out_matrix.data[10] = -((far_clip + near_clip) / (far_clip - near_clip));
     out_matrix.data[11] = -1.0f;

@@ -111,8 +111,8 @@ bool GDF_GAME_Update(f32 dt)
     i32 dx;
     i32 dy;
     GDF_INPUT_GetMouseDelta(&dx, &dy);
-    camera->yaw -= dx * 0.4;
-    camera->pitch -= dy * 0.4;
+    camera->yaw += dx * 0.1;
+    camera->pitch -= dy * 0.1;
     // wrap around yaw
     if (camera->yaw > 180)
     {
@@ -127,20 +127,20 @@ bool GDF_GAME_Update(f32 dt)
     camera_recalc_view_matrix(camera);
     world_update(GAME->world, dt);
 
-    RaycastInfo raycast_info = raycast_default_block_info(
-        GAME->world, 
-        camera->pos, 
-        camera_forward, 
+    RaycastInfo raycast_info = raycast_info_new(
+        GAME->world,
+        camera->pos,
+        camera_forward,
         2
     );
-    RaycastResult result = raycast(&raycast_info);
-    if (result.status == RAYCAST_STATUS_HIT_BLOCK) 
+    RaycastBlockHitInfo result = raycast_blocks(&raycast_info);
+    if (result.status == RAYCAST_STATUS_HIT) 
     {
         LOG_DEBUG("HIT BLOCK LETS GIO");
     }
-    // LOG_DEBUG("pos: %f %f %f", player_comp->pos.x, player_comp->pos.y, player_comp->pos.z);
+    // LOG_DEBUG("pos: %f %f %f", player->base.aabb.min.x, player->base.aabb.min.y, player->base.aabb.min.z);
     // LOG_DEBUG("vel: %f %f %f", player_comp->vel.x, player_comp->vel.y, player_comp->vel.z);
-    return true;
+    return true;//
 }
 
 GDF_Game* GDF_GAME_GetInstance() 

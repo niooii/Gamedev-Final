@@ -32,8 +32,8 @@ void world_create(World* out_world, WorldCreateInfo* create_info)
     PhysicsCreateInfo physics_info = {
         .gravity = {0, -20, 0},
         .gravity_active = true,
-        .air_drag = 0.97f,
-        .ground_drag = 0.846f,
+        .air_drag = 3.f,
+        .ground_drag = 12.f,
         .terminal_velocity = -50.f
     };
     out_world->physics = physics_init(physics_info);

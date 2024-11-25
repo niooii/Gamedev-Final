@@ -42,10 +42,50 @@ FORCEINLINE vec3 aabb_get_center(AxisAlignedBoundingBox* a)
     );
 }
 
+FORCEINLINE vec3 aabb_bot_left(AxisAlignedBoundingBox* a)
+{
+    return vec3_new(a->min.x, a->min.y, a->min.z);
+}
+
+FORCEINLINE vec3 aabb_bot_right(AxisAlignedBoundingBox* a)
+{
+    return vec3_new(a->max.x, a->min.y, a->min.z);
+}
+
+FORCEINLINE vec3 aabb_top_left(AxisAlignedBoundingBox* a)
+{
+    return vec3_new(a->min.x, a->max.y, a->min.z);
+}
+
+FORCEINLINE vec3 aabb_top_right(AxisAlignedBoundingBox* a)
+{
+    return vec3_new(a->max.x, a->max.y, a->min.z);
+}
+
+FORCEINLINE vec3 aabb_bot_left_back(AxisAlignedBoundingBox* a)
+{
+    return vec3_new(a->min.x, a->min.y, a->max.z);
+}
+
+FORCEINLINE vec3 aabb_bot_right_back(AxisAlignedBoundingBox* a)
+{
+    return vec3_new(a->max.x, a->min.y, a->max.z);
+}
+
+FORCEINLINE vec3 aabb_top_left_back(AxisAlignedBoundingBox* a)
+{
+    return vec3_new(a->min.x, a->max.y, a->max.z);
+}
+
+FORCEINLINE vec3 aabb_top_right_back(AxisAlignedBoundingBox* a)
+{
+    return vec3_new(a->max.x, a->max.y, a->max.z);
+}
+
 // Returns the vector needed to translate aabb a to resolve the intersection.
 FORCEINLINE vec3 aabb_get_intersection_resolution(AxisAlignedBoundingBox* a, AxisAlignedBoundingBox* b)
 {
-    vec3 resolution = {};
+    vec3 resolution = {0};
     
     float dx1 = b->max.x - a->min.x;  // overlap when a is to the left
     float dx2 = b->min.x - a->max.x;  // overlap when a is to the right
@@ -65,14 +105,14 @@ FORCEINLINE vec3 aabb_get_intersection_resolution(AxisAlignedBoundingBox* a, Axi
     float absZ = gabs(resolution.z);
     
     // only keep smallest penetration axis
-    if (absX <= absY && absX <= absZ) 
-    {
-        resolution.y = 0;
-        resolution.z = 0;
-    } 
-    else if (absY <= absX && absY <= absZ) 
+    if (absY <= absX && absY <= absZ) 
     {
         resolution.x = 0;
+        resolution.z = 0;
+    } 
+    else if (absX <= absY && absX <= absZ) 
+    {
+        resolution.y = 0;
         resolution.z = 0;
     } 
     else 

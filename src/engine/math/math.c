@@ -35,6 +35,11 @@ f32 gabs(f32 x)
     return fabsf(x);
 }
 
+f32 gpowf(f32 x, f32 pow)
+{
+    return powf(x, pow);
+}
+
 i32 random() 
 {
     if (!RAND_SEEDED) 

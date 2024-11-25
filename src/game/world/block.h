@@ -48,6 +48,21 @@ typedef struct Block {
     bool exists;
 } Block;
 
+typedef enum BLOCK_FACE {
+    // Positive Y
+    BLOCK_FACE_TOP,
+    // Negative Y
+    BLOCK_FACE_BOT,
+    // Positive X
+    BLOCK_FACE_LEFT,
+    // Negative X
+    BLOCK_FACE_RIGHT,
+    // Positive Z
+    BLOCK_FACE_FRONT,
+    // Negative Z
+    BLOCK_FACE_BACK,
+} BLOCK_FACE;
+
 typedef enum GDF_BLOCK_OFFSETS {
     GDF_BLOCK_OFFSETS_FaceDirection = 0,
     GDF_BLOCK_OFFSETS_FaceChunkPosX = 3,

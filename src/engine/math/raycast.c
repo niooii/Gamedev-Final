@@ -24,59 +24,69 @@ FORCEINLINE static bool __check_blocks(World* world, vec3 ray_pos, RaycastBlockH
     return false;
 }
 
-RaycastResult raycast(RaycastInfo* info)
+RaycastBlockHitInfo raycast_blocks(RaycastInfo* info)
 {
-    RaycastResult result = {0};
+    RaycastBlockHitInfo result = {0};
 
-    vec3 ray_pos = info->origin;
-    if (vec3_length_squared(info->dir) == 0)
-    {
-        result.status = RAYCAST_STATUS_ERR_NO_DIRECTION;
-        return result;
-    }
-    vec3 dir = vec3_normalized(info->dir);
-    vec3 step_vec = vec3_mul_scalar(dir, info->step_distance);
+    
 
-    for (
-        f32 dist_traveled = 0; 
-        dist_traveled < info->max_distance; 
-        dist_traveled += info->step_distance
-    )
-    {
-        if (info->mode == RAYCAST_MODE_ENTITIES || info->mode == RAYCAST_MODE_WHATEVER)
-        {
-            
-        }
-        if (info->mode == RAYCAST_MODE_BLOCKS || info->mode == RAYCAST_MODE_WHATEVER)
-        {
-            RaycastBlockHitInfo ret_info = {0};
-            if (__check_blocks(info->world, ray_pos, &info))
-            {
-                result.block_info = ret_info;
-                result.status = RAYCAST_STATUS_HIT_BLOCK;
-                return result;
-            }
-        }
-        vec3_add_to(&ray_pos, step_vec);
-    }
-
-    // one last case at max_distance
-    ray_pos = vec3_add(info->origin, vec3_mul_scalar(dir, info->max_distance));
-    if (info->mode == RAYCAST_MODE_ENTITIES || info->mode == RAYCAST_MODE_WHATEVER)
-    {
-        TODO("Entity raycasting");
-    }
-    if (info->mode == RAYCAST_MODE_BLOCKS || info->mode == RAYCAST_MODE_WHATEVER)
-    {
-        RaycastBlockHitInfo ret_info = {0};
-        if (__check_blocks(info->world, ray_pos, &info))
-        {
-            result.block_info = ret_info;
-            result.status = RAYCAST_STATUS_HIT_BLOCK;
-            return result;
-        }
-    }
-
-    result.status = RAYCAST_STATUS_ERR_NO_HIT;
     return result;
+}
+
+RaycastEntityHitInfo raycast_entity(RaycastInfo* info)
+{
+    TODO("entity raycasting");
+    // RaycastResult result = {0};
+
+    // vec3 ray_pos = info->origin;
+    // if (vec3_length_squared(info->dir) == 0)
+    // {
+    //     result.status = RAYCAST_STATUS_ERR_NO_DIRECTION;
+    //     return result;
+    // }
+    // vec3 dir = vec3_normalized(info->dir);
+    // vec3 step_vec = vec3_mul_scalar(dir, info->step_distance);
+
+    // for (
+    //     f32 dist_traveled = 0; 
+    //     dist_traveled < info->max_distance; 
+    //     dist_traveled += info->step_distance
+    // )
+    // {
+    //     if (info->mode == RAYCAST_MODE_ENTITIES || info->mode == RAYCAST_MODE_WHATEVER)
+    //     {
+            
+    //     }
+    //     if (info->mode == RAYCAST_MODE_BLOCKS || info->mode == RAYCAST_MODE_WHATEVER)
+    //     {
+    //         RaycastBlockHitInfo ret_info = {0};
+    //         if (__check_blocks(info->world, ray_pos, &info))
+    //         {
+    //             result.block_info = ret_info;
+    //             result.status = RAYCAST_STATUS_HIT_BLOCK;
+    //             return result;
+    //         }
+    //     }
+    //     vec3_add_to(&ray_pos, step_vec);
+    // }
+
+    // // one last case at max_distance
+    // ray_pos = vec3_add(info->origin, vec3_mul_scalar(dir, info->max_distance));
+    // if (info->mode == RAYCAST_MODE_ENTITIES || info->mode == RAYCAST_MODE_WHATEVER)
+    // {
+    //     TODO("Entity raycasting");
+    // }
+    // if (info->mode == RAYCAST_MODE_BLOCKS || info->mode == RAYCAST_MODE_WHATEVER)
+    // {
+    //     RaycastBlockHitInfo ret_info = {0};
+    //     if (__check_blocks(info->world, ray_pos, &info))
+    //     {
+    //         result.block_info = ret_info;
+    //         result.status = RAYCAST_STATUS_HIT_BLOCK;
+    //         return result;
+    //     }
+    // }
+
+    // result.status = RAYCAST_STATUS_ERR_NO_HIT;
+    // return result;
 }

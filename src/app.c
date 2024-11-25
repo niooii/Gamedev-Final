@@ -53,19 +53,30 @@ bool app_on_event(u16 event_code, void *sender, void *listener_instance, GDF_Eve
             u16 old_w;
             u16 old_h;
             GDF_GetWindowSize(&old_w, &old_h);
-            if (width != old_w || height != old_h) 
+            GDF_SetWindowSizeInternal(width, height);
+
+            LOG_DEBUG("Window resize: %i, %i", width, height);
+
+            // Handle minimization
+            if (width == 0 || height == 0) 
             {
-                GDF_SetWindowSizeInternal(width, height);
-
-                LOG_DEBUG("Window resize: %i, %i", width, height);
-
-                // Handle minimization
-                if (width == 0 || height == 0) 
-                {
-                    LOG_INFO("Window is minimized kinda.");
-                }
-                renderer_resize(width, height);
+                LOG_INFO("Window is minimized kinda.");
             }
+            renderer_resize(width, height);
+            // TODO! why doesn this work?
+            // if (width != old_w || height != old_h) 
+            // {
+            //     GDF_SetWindowSizeInternal(width, height);
+
+            //     LOG_DEBUG("Window resize: %i, %i", width, height);
+
+            //     // Handle minimization
+            //     if (width == 0 || height == 0) 
+            //     {
+            //         LOG_INFO("Window is minimized kinda.");
+            //     }
+            //     renderer_resize(width, height);
+            // }
             return false;
         }
         case GDF_EVENT_INTERNAL_APP_QUIT:
@@ -170,7 +181,7 @@ f64 GDF_RunApp()
 
     GDF_Stopwatch running_timer = GDF_StopwatchCreate();
     u8 frame_count = 0;
-    u32 fps = 2222;
+    u32 fps = 3000;
     f64 secs_per_frame = 1.0/fps;
     GDF_Stopwatch frame_timer = GDF_StopwatchCreate();
 

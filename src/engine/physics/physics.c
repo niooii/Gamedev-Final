@@ -4,7 +4,7 @@
 #include "game/events.h"
 
 typedef struct Physics_T {
-    Entity** entities;
+    GDF_LIST(Entity*) entities;
     
     f32 terminal_velocity;
     f32 air_drag;
@@ -43,20 +43,16 @@ bool physics_update(PhysicsEngine engine, World* world, f64 dt)
         Entity* entity = engine->entities[i];
 
         f32 drag = entity->grounded ? engine->ground_drag : engine->air_drag;
-
+        LOG_INFO("DT: %f", dt);
         // TODO! this aint quite right..
         if (engine->gravity_active)
         {
-            entity->vel.x *= (drag * (1 - dt));
-            entity->vel.z *= (drag * (1 - dt));
+            f32 drag_factor = 1.0f - (drag * dt);
+            drag_factor = MAX(0, drag_factor);
+            entity->vel.x *= drag_factor;
+            entity->vel.z *= drag_factor;
         }
         
-        // gravity will be handling the drag
-        // if (!comp->grounded)
-        // {
-        //     comp->vel.y *= engine->air_drag;
-        // }
-
         net_accel = vec3_add(entity->accel, effective_gravity);
         
         vec3 deltas = vec3_new(
@@ -81,46 +77,90 @@ bool physics_update(PhysicsEngine engine, World* world, f64 dt)
         // TODO! eliminate phasing through blocks at high velocities
         // with raycasting
 
-        AxisAlignedBoundingBox translated_aabb = entity->aabb;
-        aabb_translate(&translated_aabb, deltas);
+        AxisAlignedBoundingBox t_aabb = entity->aabb;
+        aabb_translate(&t_aabb, deltas);
         
         BlockTouchingResult results[64];
         u32 results_len = world_get_blocks_touching(
             world, 
-            &translated_aabb,
+            &t_aabb,
             results,
             sizeof(results) / sizeof(*results)
         );
 
-        entity->grounded = false;
+        // Check for floor (only if translated aabb's y is below the current one)
+        bool ground_found = false;
+        bool should_check_ground = 
+            t_aabb.min.y <= entity->aabb.min.y;
+        f32 ground_y = 0;
+        if (should_check_ground)
+        {
+            vec3 corner;
+            for (u32 i = 0; i < 4; i++)
+            {
+                switch (i)
+                {
+                    case 0:
+                    corner = aabb_bot_left(&t_aabb);
+                    break;
+                    case 1:
+                    corner = aabb_bot_left_back(&t_aabb);
+                    break;
+                    case 2:
+                    corner = aabb_bot_right(&t_aabb);
+                    break;
+                    case 3:
+                    corner = aabb_bot_right_back(&t_aabb);
+                    break;
+                }
+                // REPLACE WITH RAYCAST (or just handle slabs well)
+                ChunkCoord cc = world_pos_to_chunk_coord(corner);
+                Block* block = world_get_block_at(world, corner);
+                if (block != NULL)
+                {
+                    ground_found = true;
+                    // without +1 is the coordinate from the bottom left
+                    ground_y = cc.y * CHUNK_SIZE_Y + block->y_rel + 1;
+                    // set aabb at appropriate y level
+                    f32 y_offset = ground_y - t_aabb.min.y;
+                    vec3 offset_vec = vec3_new(0, y_offset, 0);
+                    aabb_translate(&t_aabb, offset_vec);
+                    vec3_add_to(&deltas, offset_vec);
+                    entity->vel.y = 0;
+                    break;
+                }
+            }
+        }
 
+        GDF_EventContext ctx = {
+            .data.u64[0] = (u64)entity
+        };
         for (u32 i = 0; i < results_len; i++)
         {
             BlockTouchingResult* r = results + i;
-            // LOG_DEBUG(
-            //     "FOUND TOUCHING BLOCK at: %f, %f, %f", 
-            //     r->box.min.x,
-            //     r->box.min.y,
-            //     r->box.min.z
-            // );
-            
-            if (aabb_intersects(&translated_aabb, &r->box))
+            if (aabb_intersects(&t_aabb, &r->box))
             {
-                vec3 resolution = aabb_get_intersection_resolution(&translated_aabb, &r->box);
+                vec3 resolution = aabb_get_intersection_resolution(&t_aabb, &r->box);
+                // discard all blocks on ground level, but still fire event
+                // (avoids some weird issues with edge collisions)
+                if (ground_found && r->box.max.y == ground_y)
+                {
+                    GDF_EVENT_Fire(GDF_EVENT_BLOCK_TOUCHED, r->block, ctx);
+                    continue;
+                }
+
                 vec3_add_to(&deltas, resolution);
-                aabb_translate(&translated_aabb, resolution);
+                aabb_translate(&t_aabb, resolution);
                 // zero velocity and shi
                 if (resolution.x != 0)
                 {
                     entity->vel.x = 0;
                 }
-                else if (resolution.y != 0)
+                if (resolution.y != 0)
                 {
                     entity->vel.y = 0;
-                    if (resolution.y > 0)
-                        entity->grounded = true;
                 }
-                else 
+                if (resolution.z != 0) 
                 {
                     entity->vel.z = 0;
                 }
@@ -130,6 +170,8 @@ bool physics_update(PhysicsEngine engine, World* world, f64 dt)
                 GDF_EVENT_Fire(GDF_EVENT_BLOCK_TOUCHED, r->block, ctx);
             }
         }
+        // update grounded status
+        entity->grounded = ground_found;
 
         aabb_translate(&entity->aabb, deltas);
     }

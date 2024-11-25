@@ -1436,6 +1436,8 @@ void vk_renderer_resize(Renderer* backend, u16 width, u16 height)
 bool vk_renderer_begin_frame(Renderer* backend, f32 delta_time) 
 {
     vk_device* device = &context.device;
+    // because there are separate resources for each frame in flight.
+    u32 resource_idx = context.current_frame % context.max_concurrent_frames;
 
     if (!context.ready_for_use) {
         if (!vk_result_is_success(vkDeviceWaitIdle(device->handle))) {
@@ -1446,7 +1448,7 @@ bool vk_renderer_begin_frame(Renderer* backend, f32 delta_time)
         return false;
     }
 
-    // // Check if the framebuffer has been resized. If so, a new swapchain must be created.
+    // Check if the framebuffer has been resized. If so, a new swapchain must be created.
     if (context.pending_resize_event) 
     {
         if (!vk_result_is_success(vkDeviceWaitIdle(device->handle)))
@@ -1484,17 +1486,16 @@ bool vk_renderer_begin_frame(Renderer* backend, f32 delta_time)
         UINT64_MAX
     );
 
-    // because there are separate resources for each frame in flight.
-    u32 resource_idx = context.current_frame % context.max_concurrent_frames;
-
     // Acquire the next image from the swapchain
-    vkAcquireNextImageKHR(
-        context.device.handle, 
-        context.swapchain.handle, 
-        UINT64_MAX, 
-        context.image_available_semaphores[resource_idx], 
-        VK_NULL_HANDLE, 
-        &context.swapchain.current_img_idx
+    VK_RETURN_FALSE_ASSERT(
+        vkAcquireNextImageKHR(
+            context.device.handle, 
+            context.swapchain.handle, 
+            UINT64_MAX, 
+            context.image_available_semaphores[resource_idx], 
+            VK_NULL_HANDLE, 
+            &context.swapchain.current_img_idx
+        )
     );
     // TODO! handle VK_ERROR_OUT_OF_DATE_KHR and resizing stuff etc etc
 
@@ -1505,20 +1506,8 @@ bool vk_renderer_begin_frame(Renderer* backend, f32 delta_time)
     // TODO! remove and extract updating ubo into another function
     ViewProjUB ubo = {
         .view_projection = active_camera->view_perspective
-        // .proj = mat4_identity(),
     };
     memcpy(context.uniform_buffers[current_img_idx].mapped_data, &ubo, sizeof(ubo));
-    // LOG_INFO(
-    //     "%f, %f, %f, %f, %f, %f, %f", 
-    //     active_camera->view_perspective.data[0],
-    //     active_camera->view_perspective.data[1],
-    //     active_camera->view_perspective.data[2],
-    //     active_camera->view_perspective.data[3],
-    //     active_camera->view_perspective.data[4],
-    //     active_camera->view_perspective.data[5],
-    //     active_camera->view_perspective.data[6],
-    //     active_camera->view_perspective.data[7]
-    // );
 
     // Check if a previous frame is using this image (i.e. there is its fence to wait on)
     // if (context.images_in_flight[current_img_idx] != VK_NULL_HANDLE) 
