@@ -28,21 +28,42 @@
 
 // Smallest positive number where 1.0 + FLOAT_EPSILON != 0
 #define FLOAT_EPSILON 1.192092896e-07f
+// TODO! own fast math implementation
+#include <math.h>
+FORCEINLINE f32 gsin(f32 x) 
+{
+    return sinf(x);
+}
 
-// sin fn
-f32 gsin(f32 x);
-// cos fn
-f32 gcos(f32 x);
-// acos fn
-f32 gacos(f32 x);
-// tan fn
-f32 gtan(f32 x);
-// sqrt fn
-f32 gsqrt(f32 x);
-// abs value fn
-f32 gabs(f32 x);
-// power fn
-f32 gpowf(f32 x, f32 pow);
+FORCEINLINE f32 gcos(f32 x) 
+{
+    return cosf(x);
+}
+
+FORCEINLINE f32 gtan(f32 x) 
+{
+    return tanf(x);
+}
+
+FORCEINLINE f32 gacos(f32 x) 
+{
+    return acosf(x);
+}
+
+FORCEINLINE f32 gsqrt(f32 x) 
+{
+    return sqrtf(x);
+}
+
+FORCEINLINE f32 gabs(f32 x) 
+{
+    return fabsf(x);
+}
+
+FORCEINLINE f32 gpowf(f32 x, f32 pow)
+{
+    return powf(x, pow);
+}
 
 i32 random();
 i32 random_in_range(i32 min, i32 max);

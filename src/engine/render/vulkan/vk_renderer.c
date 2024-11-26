@@ -377,6 +377,13 @@ bool __create_swapchain_and_images(Renderer* backend, vk_renderer_context* conte
     };
     sc_create_info.clipped = VK_TRUE;
 
+    // TODO! actually run checks against this
+    __query_swapchain_support(
+        context->device.physical_info->handle,
+        context->surface,
+        &context->device.physical_info->sc_support_info
+    );
+
     // Set extent
     context->swapchain.extent.width = backend->framebuffer_width;
     context->swapchain.extent.height = backend->framebuffer_height;

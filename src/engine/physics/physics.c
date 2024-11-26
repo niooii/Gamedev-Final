@@ -43,7 +43,6 @@ bool physics_update(PhysicsEngine engine, World* world, f64 dt)
         Entity* entity = engine->entities[i];
 
         f32 drag = entity->grounded ? engine->ground_drag : engine->air_drag;
-        LOG_INFO("DT: %f", dt);
         // TODO! this aint quite right..
         if (engine->gravity_active)
         {

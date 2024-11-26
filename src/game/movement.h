@@ -2,7 +2,8 @@
 
 #include "core.h"
 #include "engine/physics/physics.h"
-#include "game/entity/humanoid.h"
+
+typedef struct HumanoidEntity HumanoidEntity;
 
 // 1 is default
 void jump(HumanoidEntity* humanoid, f32 jump_power);
@@ -18,8 +19,16 @@ void player_apply_movement(
     f32 speed
 );
 
+typedef struct MovementState {
+    bool can_dash;
+    bool in_dash;
+    vec3 dash_dir;
+} MovementState;
+
 void dash(
     HumanoidEntity* humanoid, 
     f32 dash_power,
     vec3 forward
 );
+
+void movement_update(HumanoidEntity* hum);

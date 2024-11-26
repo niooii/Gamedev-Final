@@ -1,4 +1,5 @@
 #include "movement.h"
+#include "game/entity/humanoid.h"
 
 void jump(HumanoidEntity* humanoid, f32 jump_power)
 {
@@ -79,9 +80,27 @@ void dash(
     vec3 forward
 )
 {
+    if (!humanoid->movement_state.can_dash)
+        return;
     vec3 dash_vec = vec3_mul_scalar(forward, dash_power * 40);
     dash_vec.y *= 0.4;
     // vec3_add_to(&humanoid->base.vel, dash_vec);
     humanoid->base.vel = dash_vec;
-    humanoid->in_dash = true;
+    humanoid->movement_state.in_dash = true;
+    humanoid->movement_state.can_dash = false;
+}
+
+void movement_update(HumanoidEntity* hum)
+{
+    if (hum->movement_state.in_dash)
+    {
+        if (hum->base.grounded || vec3_length(hum->base.vel) < 10)
+        {
+            hum->movement_state.in_dash = false;
+            LOG_DEBUG("DASH FINISH");
+        }
+    }
+
+    if (hum->base.grounded)
+        hum->movement_state.can_dash = true;
 }

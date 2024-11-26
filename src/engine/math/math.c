@@ -1,44 +1,8 @@
 #include "math.h"
 
 #include "core/os/sysinfo.h"
-#include <math.h>
 
 static bool RAND_SEEDED = FALSE;
-
-f32 gsin(f32 x) 
-{
-    return sinf(x);
-}
-
-f32 gcos(f32 x) 
-{
-    return cosf(x);
-}
-
-f32 gtan(f32 x) 
-{
-    return tanf(x);
-}
-
-f32 gacos(f32 x) 
-{
-    return acosf(x);
-}
-
-f32 gsqrt(f32 x) 
-{
-    return sqrtf(x);
-}
-
-f32 gabs(f32 x) 
-{
-    return fabsf(x);
-}
-
-f32 gpowf(f32 x, f32 pow)
-{
-    return powf(x, pow);
-}
 
 i32 random() 
 {

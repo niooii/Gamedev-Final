@@ -24,6 +24,7 @@ static bool __on_block_touch(u16 event_code, void* sender, void* listener_instan
         return false;
 
     HumanoidEntity* hum = entity->parent;
+
     return false;
 }
 
