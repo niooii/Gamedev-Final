@@ -10,15 +10,22 @@ bool chunk_init(Chunk* out_chunk)
     return true;
 }
 
-Block* chunk_getblock(
+static FORCEINLINE i32 __to_idx(
+    RelBlockCoord bc
+)
+{
+    return bc.block_x + (bc.block_y * CHUNK_SIZE_XZ) + (bc.block_z * CHUNK_SIZE_XZ * CHUNK_SIZE_Y);
+}
+
+Block* chunk_get_block(
     Chunk* chunk, 
-    u8 block_x, 
-    u8 block_y, 
-    u8 block_z
+    RelBlockCoord bc
 )
 {
     Block* chunk_block = &chunk->block_arr[
-        block_x + (block_y * CHUNK_SIZE_XZ) + (block_z * CHUNK_SIZE_XZ * CHUNK_SIZE_Y)
+        __to_idx(
+            bc
+        )
     ];
     
     if (!chunk_block->exists)
@@ -27,33 +34,46 @@ Block* chunk_getblock(
         return chunk_block;
 }
 
-bool chunk_setblock(
+bool chunk_set_block(
     Chunk* chunk, 
-    GDF_ChunkBlockCreateInfo* chunk_block_info
+    BlockCreateInfoChunk* chunk_block_info
 )
 {
     Block* block = &chunk->block_arr[
-        chunk_block_info->block_x + (chunk_block_info->block_y * CHUNK_SIZE_XZ) + (chunk_block_info->block_z * CHUNK_SIZE_XZ * CHUNK_SIZE_Y)
+        __to_idx(
+            chunk_block_info->block_coord
+        )
     ];
 
     block->exists = true;
-    block->x_rel = chunk_block_info->block_x;
-    block->y_rel = chunk_block_info->block_y;
-    block->z_rel = chunk_block_info->block_z;
+    block->x_rel = chunk_block_info->block_coord.block_x;
+    block->y_rel = chunk_block_info->block_coord.block_y;
+    block->z_rel = chunk_block_info->block_coord.block_z;
 
     block->data.type = chunk_block_info->type;
-    // if (!cube_textures_get_default(block->data.type, &block->data.textures))
-    // {
-    //     LOG_ERR("No default textures for block type %u", block->data.type);
-    //     return false;
-    // }
 
     GDF_LIST_Push(chunk->block_list, block);
 
     return true;
 }
 
-void chunk_recalc_faces(Chunk* chunk)
+void chunk_destroy_block(
+    Chunk* chunk, 
+    RelBlockCoord bc,
+    Block* out
+)
 {
+    Block* block = &chunk->block_arr[
+        __to_idx(
+            bc
+        )
+    ];
+    block->exists = false;
+    // TODO! THIS IS HORRIBLE USE A HASHMAP
     
 }
+
+void chunk_recalc_faces(Chunk* chunk)
+{
+    TODO("recalc chunk faces");
+} 

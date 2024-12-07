@@ -127,16 +127,54 @@ bool GDF_GAME_Update(f32 dt)
     camera_recalc_view_matrix(camera);
     world_update(GAME->world, dt);
 
-    RaycastInfo raycast_info = raycast_info_new(
-        GAME->world,
-        camera->pos,
-        camera_forward,
-        2
-    );
-    RaycastBlockHitInfo result = raycast_blocks(&raycast_info);
-    if (result.status == RAYCAST_STATUS_HIT) 
+    // TODO! make a isbuttonpressed like iskeypressed
+    if (GDF_INPUT_IsButtonDown(GDF_MBUTTON_RIGHT))
     {
-        LOG_DEBUG("HIT BLOCK LETS GIO");
+        LOG_INFO("RAYING..");
+        RaycastInfo raycast_info = raycast_info_new(
+            GAME->world,
+            camera->pos,
+            camera_forward,
+            4
+        );
+        RaycastBlockHitInfo result;
+        raycast_blocks(&raycast_info, &result);
+        if (result.status == RAYCAST_STATUS_HIT) 
+        {
+            LOG_DEBUG("HIT BLOCK LETS GIO");
+            u8 x_dif=0, y_dif=0, z_dif=0;
+            switch (result.hit_face)
+            {
+                case BLOCK_FACE_BOT:
+                    y_dif = -1;
+                    break;
+                case BLOCK_FACE_TOP:
+                    y_dif = 1;
+                    break;
+                case BLOCK_FACE_BACK:
+                    z_dif = -1;
+                    break;
+                case BLOCK_FACE_FRONT:
+                    z_dif = 1;
+                    break;
+                case BLOCK_FACE_LEFT:
+                    x_dif = -1;
+                    break;
+                case BLOCK_FACE_RIGHT:
+                    x_dif = 1;
+                    break;
+            }
+            vec3 place_pos = vec3_new(
+                result.block_world_pos.x + x_dif,
+                result.block_world_pos.y + y_dif,
+                result.block_world_pos.z + z_dif
+            );
+            BlockCreateInfo info = {
+                .type = GDF_BLOCKTYPE_Grass,
+                .world_pos = place_pos
+            };
+            world_set_block(result.chunk, &info);
+        }
     }
     // LOG_DEBUG("pos: %f %f %f", player->base.aabb.min.x, player->base.aabb.min.y, player->base.aabb.min.z);
     // LOG_DEBUG("vel: %f %f %f", player_comp->vel.x, player_comp->vel.y, player_comp->vel.z);

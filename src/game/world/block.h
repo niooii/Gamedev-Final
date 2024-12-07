@@ -33,12 +33,15 @@ typedef struct BlockData {
     BLOCKTYPE type;
 } BlockData;
 
-typedef struct GDF_ChunkBlockCreateInfo {
+typedef struct BlockCreateInfoChunk {
     BLOCKTYPE type;
-    u8 block_x;
-    u8 block_y;
-    u8 block_z;
-} GDF_ChunkBlockCreateInfo;
+    RelBlockCoord block_coord
+} BlockCreateInfoChunk;
+
+typedef struct BlockCreateInfo {
+    BLOCKTYPE type;
+    vec3 world_pos;
+} BlockCreateInfo;
 
 typedef struct Block {
     BlockData data;

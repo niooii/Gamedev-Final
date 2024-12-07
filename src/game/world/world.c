@@ -110,6 +110,19 @@ Chunk* world_get_or_create_chunk(World* world, ChunkCoord coord)
     return c;
 }
 
+void world_destroy_block(World* world, vec3 block_world_pos, Block* destroyed_block)
+{
+    ChunkCoord cc = world_pos_to_chunk_coord(block_world_pos);
+    u8 block_x = FLOOR(block_world_pos.x - cc.x * CHUNK_SIZE_XZ);
+    u8 block_y = FLOOR(block_world_pos.y - cc.y * CHUNK_SIZE_XZ);
+    u8 block_z = FLOOR(block_world_pos.z - cc.z * CHUNK_SIZE_XZ);
+}
+
+Block* world_set_block(World* world, BlockCreateInfo* create_info)
+{
+
+}
+
 u32 world_get_blocks_touching(
     World* world, 
     AxisAlignedBoundingBox* aabb, 
@@ -165,7 +178,7 @@ Block* world_get_block_at(
     u8 rel_x = pos.x - cc.x * CHUNK_SIZE_XZ;
     u8 rel_y = pos.y - cc.y * CHUNK_SIZE_Y;
     u8 rel_z = pos.z - cc.z * CHUNK_SIZE_XZ;
-    return chunk_getblock(chunk, rel_x, rel_y, rel_z);
+    return chunk_get_block(chunk, rel_x, rel_y, rel_z);
 }
 
 void world_tick(World* world)

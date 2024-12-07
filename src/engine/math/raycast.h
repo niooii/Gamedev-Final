@@ -42,6 +42,7 @@ typedef struct RaycastBlockHitInfo {
     RAYCAST_STATUS status;
 
     Block* block;
+    vec3 block_world_pos;
     Chunk* chunk;
     ChunkCoord chunk_coord;
     WORLD_DIRECTION direction;
@@ -56,5 +57,5 @@ typedef struct RaycastEntityHitInfo {
     Entity* entity;
 } RaycastEntityHitInfo;
 
-RaycastBlockHitInfo raycast_blocks(RaycastInfo* info);
+void raycast_blocks(RaycastInfo* info, RaycastBlockHitInfo* result);
 RaycastEntityHitInfo raycast_entity(RaycastInfo* info);

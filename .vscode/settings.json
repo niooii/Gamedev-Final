@@ -164,6 +164,7 @@
         "limits": "c",
         "entity.h": "c",
         "*.rh": "c",
-        "renderer.h": "c"
+        "renderer.h": "c",
+        "raycast.h": "c"
     },
 }

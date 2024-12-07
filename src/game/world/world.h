@@ -42,6 +42,12 @@ void world_update(World* world, f64 dt);
  */
 Chunk* world_get_or_create_chunk(World* world, ChunkCoord coord);
 
+// Pass NULL for destroyed_block if you don't care 
+// about the properties of the destroyed block.
+void world_destroy_block(World* world, vec3 block_world_pos, Block* destroyed_block);
+
+Block* world_set_block(World* world, BlockCreateInfo* create_info);
+
 typedef struct BlockTouchingResult {
     Block* block;
     AxisAlignedBoundingBox box;

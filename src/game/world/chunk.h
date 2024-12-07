@@ -5,15 +5,24 @@
 #include "core/collections/list.h"
 #include "world_types.h"
 
+typedef struct RelBlockCoord {
+    u8 block_x; 
+    u8 block_y; 
+    u8 block_z;
+} RelBlockCoord;
+
 bool chunk_init(Chunk* out_chunk);
-Block* chunk_getblock(
+Block* chunk_get_block(
     Chunk* out_chunk, 
-    u8 block_x, 
-    u8 block_y, 
-    u8 block_z
+    RelBlockCoord block_coord
 );
-bool chunk_setblock(
+bool chunk_set_block(
     Chunk* out_chunk, 
-    GDF_ChunkBlockCreateInfo* chunk_block_info
+    BlockCreateInfoChunk* chunk_block_info
+);
+void chunk_destroy_block(
+    Chunk* chunk, 
+    RelBlockCoord block_coord,
+    Block* out
 );
 void chunk_recalc_faces(Chunk* chunk);
